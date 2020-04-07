@@ -23,8 +23,8 @@ class SudokuGame extends React.Component {
 
 	render() {
 		return (
-			<div>
-				<div>
+			<div key={3}>
+				<div key={4}>
 				    Hi.  This is the Sudoku game tree.  My responsibilities
 				    are as follows:
 				    <ul>
@@ -37,8 +37,11 @@ class SudokuGame extends React.Component {
 				            be established.</li>
 				    </ul>
 				</div>
-				<div>
-					<SudokuBoard degree={this.state.initialBoardDegree} />
+				<div key={5}>
+					<SudokuBoard 
+						degree={this.state.initialBoardDegree} 
+						key={6}
+					/>
 				</div>
 			</div>
 			);
