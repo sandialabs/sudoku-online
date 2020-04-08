@@ -24,34 +24,104 @@ class SudokuBoard extends React.Component {
 		};
 	}
 
-	/// Make the array of squares, blocks, and whatnot.
+	/// Make the board as an array of blocks.
 	//
-	// We can't have loops inside the return() clause in render(). 
-	// Instead, what we do is set up a dummy element in return()
-	// and inside that dummy element put the result of a function
-	// call.  
-	makeBoardComponents(moveLists) {
-		const D = this.props.degree;
-		var r, c;
-		var thisRow;
+	// In order to draw thick borders around the D x D blocks of
+	// squares, and in order to keep the code simple, we build up
+	// the board as a grid of D x D blocks instead of a (D*D) x (D*D)
+	// array of squares.
+	// 
+	// This function assembles the grid of blocks.
 	
-		// This is the top-level container for everything.
-		var table = [];
-		var children = [];
+	// Assemble the entire table for the board.
+	// 
+	// The table is just an array of rows.  
+	makeBoardTable(moveLists) {
+		const D = this.props.degree;
+		var row;
+		var blockRows = [];
 
-		for (r = 0; r < D; ++r) {
-			thisRow = [];
-			for (c = 0; c < D; ++c) {
-				thisRow.push(<span key={D*r + c}>({r},{c})</span>);
-			}
-			children.push(<div key={r}>{thisRow}</div>);
+		for (row = 0; row < D; ++row) {
+			blockRows.push(this.makeBlockRow(row, moveLists));
 		}
 
-		table.push(children);
-		return table;
+		return (
+			<div className="boardTable">
+				{blockRows}
+			</div>
+			);
 	}
 
+	// Assemble a single row containing D blocks.
+	// 
+	// 
+	makeBlockRow(row, moveLists) {
+		const D = this.props.degree;
+		var blocks = [];
+		var column;
 
+		for (column = 0; column < D; ++column) {
+			blocks.push(this.makeBlock(row, column, moveLists));
+		}
+
+		return (
+			<span className="blockRow" key={row}>
+				{blocks}
+			</span>
+			);
+
+	}
+
+	makeBlock(blockRow, blockColumn, moveLists) {
+		return (
+			<span className="block" key={blockRow}>
+				{this.makeBlockContents(blockRow, blockColumn, moveLists)}
+			</span>
+			);
+	}
+
+	makeBlockContents(blockRow, blockColumn, moveLists) {
+		const D = this.props.degree;
+		var rows = [];
+		var row;
+
+		for (row = 0; row < D; ++row) {
+			rows.push(this.makeSquareRow(blockRow, blockColumn, row, moveLists));
+		}
+
+		return (
+			<span className="blockSquares">
+				{rows}
+			</span>
+		);
+	}
+
+	makeSquareRow(blockRow, blockColumn, squareRow, moveLists) {
+		const D = this.props.degree;
+		var squaresInRow = [];
+		var squareColumn;
+		var boardRowId, boardColumnId;
+
+		for (squareColumn = 0; squareColumn < D; ++squareColumn) {
+			boardRowId = D*blockRow + squareRow;
+			boardColumnId = D*blockColumn + squareColumn;
+			squaresInRow.push(this.makeSquare(boardRowId, boardColumnId, moveLists));
+		}
+
+		return (
+			<span className="squareRow" key={squareRow}>
+				{squaresInRow}
+			</span>
+			);
+	}
+
+	makeSquare(row, column, moveLists) {
+		return (
+			<span className="square" key={column}>
+				S({row},{column})
+			</span>
+			);
+	}
 	render() {
 		return (
 			<div key="10" className="entireBoardPlusDecorations">
@@ -66,8 +136,8 @@ class SudokuBoard extends React.Component {
 					</ul>
 				</div>
 				<p key="2">The next element down is the number board.</p>
-				<div key="3" id="board-{this.state.serialNumber}">
-					{this.makeBoardComponents({})}
+				<div key="3" id="board-{this.state.serialNumber}" className="board">
+					{this.makeBoardTable({})}
 				</div>
 			</div>
 		);
