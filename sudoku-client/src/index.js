@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import SudokuGame from './SudokuGame';
+import SudokuMain from './SudokuMain';
 import './index.css';
 
 
@@ -20,7 +20,7 @@ ReactDOM.render(
 	    <p key={1}>
     	Hi.  This is the Sudoku client app.
     	</p>
-    	<SudokuGame key={2}/>
+    	<SudokuMain key={2} degree={3}/>
     </div>,
   document.getElementById('root')
 );
