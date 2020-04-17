@@ -44,6 +44,8 @@ import React from 'react';
 // The hierarchy will go farther down when we render the move list
 // in each cell.
                                
+import { reshape1Dto2D } from './ArrayUtilities';
+
 class SudokuBoard extends React.Component {
 	constructor(props) {
 		super(props);
@@ -68,13 +70,13 @@ class SudokuBoard extends React.Component {
 	// Returns:
 	//     A new <div> containing the entire board.
 	//     
-	makeBoardTable(moveLists) {
+	makeBoardTable(assignments, moveLists) {
 		const D = this.props.degree;
 		var row;
 		var blockRows = [];
 
 		for (row = 0; row < D; ++row) {
-			blockRows.push(this.makeBlockRow(row, moveLists));
+			blockRows.push(this.makeBlockRow(row, assignments, moveLists));
 		}
 
 		return (
@@ -95,13 +97,13 @@ class SudokuBoard extends React.Component {
 	//     
 	// Returns:
 	//     <span> element for a row of blocks in the table
-	makeBlockRow(row, moveLists) {
+	makeBlockRow(row, assignments, moveLists) {
 		const D = this.props.degree;
 		var blocks = [];
 		var column;
 
 		for (column = 0; column < D; ++column) {
-			blocks.push(this.makeBlock(row, column, moveLists));
+			blocks.push(this.makeBlock(row, column, assignments, moveLists));
 		}
 
 		return (
@@ -112,21 +114,21 @@ class SudokuBoard extends React.Component {
 
 	}
 
-	makeBlock(blockRow, blockColumn, moveLists) {
+	makeBlock(blockRow, blockColumn, assignments, moveLists) {
 		return (
 			<span className="block" key={blockRow}>
-				{this.makeBlockContents(blockRow, blockColumn, moveLists)}
+				{this.makeBlockContents(blockRow, blockColumn, assignments, moveLists)}
 			</span>
 			);
 	}
 
-	makeBlockContents(blockRow, blockColumn, moveLists) {
+	makeBlockContents(blockRow, blockColumn, assignments, moveLists) {
 		const D = this.props.degree;
 		var rows = [];
 		var row;
 
 		for (row = 0; row < D; ++row) {
-			rows.push(this.makeSquareRow(blockRow, blockColumn, row, moveLists));
+			rows.push(this.makeSquareRow(blockRow, blockColumn, row, assignments, moveLists));
 		}
 
 		return (
@@ -136,7 +138,7 @@ class SudokuBoard extends React.Component {
 		);
 	}
 
-	makeSquareRow(blockRow, blockColumn, squareRow, moveLists) {
+	makeSquareRow(blockRow, blockColumn, squareRow, assignments, moveLists) {
 		const D = this.props.degree;
 		var squaresInRow = [];
 		var squareColumn;
@@ -145,7 +147,7 @@ class SudokuBoard extends React.Component {
 		for (squareColumn = 0; squareColumn < D; ++squareColumn) {
 			boardRowId = D*blockRow + squareRow;
 			boardColumnId = D*blockColumn + squareColumn;
-			squaresInRow.push(this.makeSquare(boardRowId, boardColumnId, moveLists));
+			squaresInRow.push(this.makeSquare(boardRowId, boardColumnId, assignments, moveLists));
 		}
 
 		return (
@@ -155,14 +157,28 @@ class SudokuBoard extends React.Component {
 			);
 	}
 
-	makeSquare(row, column, moveLists) {
-		return (
-			<span className="square" key={column}>
-				S({row},{column})
-			</span>
+	makeSquare(row, column, assignments, moveLists) {
+		if (assignments[row][column] !== null) {
+			return (
+				<span className="square assigned">
+					{assignments[row][column]}
+				</span>
+				);
+		} else {
+			return (
+				<span className="square moveList" key={column}>
+					S({row},{column}): {moveLists[row][column]}
+				</span>
 			);
+		}
 	}
+	
 	render() {
+		const D = this.props.degree;
+		const moveListArray = reshape1Dto2D(this.props.board.availableMoves,
+											D*D, D*D);
+		const assignmentArray = reshape1Dto2D(this.props.board.assignments,
+											  D*D, D*D);
 		return (
 			<div key="10" className="entireBoardPlusDecorations">
 				<div key="1">
@@ -177,7 +193,7 @@ class SudokuBoard extends React.Component {
 				</div>
 				<p key="2">The next element down is the number board.</p>
 				<div key="3" id="board-{this.state.serialNumber}" className="board">
-					{this.makeBoardTable({})}
+					{this.makeBoardTable(assignmentArray, moveListArray)}
 				</div>
 			</div>
 		);
