@@ -16,6 +16,34 @@
 import React from 'react';
 // import { range } from './SudokuUtilities';
 
+/// SudokuBoard: Renderable, interactive Sudoku board
+//
+// Props: 
+//     degree (int): Degree of board (will usually be 2 or 3)
+//
+// NOTE: We will probably start keeping the move lists and the
+// assignments in the object's state so that it knows when
+// to re-render.  Until then, we pass moveLists down to each
+// function in its entirety instead of trying to subset it for
+// each specific block, row, and column.
+//
+// NOTE: We nest <span> elements pretty deeply in order to take
+// advantage of the CSS display attributes table, table-row,
+// and table-data.  The containment hierarchy looks like this:
+// 
+// <div class='boardTable'> (entire board)
+//   <span class='blockRow'> (one row of blocks; there are D of these)
+//     <span class='block'> (one DxD block of cells; there are D of
+//                           these in each row of blocks)
+//       <span class='blockSquares'> (table containing the cells for
+//                                    one block)
+//         <span class='squareRow'> (table row containing D cells;
+//                                   there are D of these in block)
+//           <span class='square'> (one cell in the Sudoku board)
+//           
+// The hierarchy will go farther down when we render the move list
+// in each cell.
+                               
 class SudokuBoard extends React.Component {
 	constructor(props) {
 		super(props);
@@ -32,10 +60,14 @@ class SudokuBoard extends React.Component {
 	// array of squares.
 	// 
 	// This function assembles the grid of blocks.
-	
-	// Assemble the entire table for the board.
 	// 
-	// The table is just an array of rows.  
+	// Arguments:
+	//     moveLists: 2D array of move lists, one for each cell in 
+	//         the board.
+	//         
+	// Returns:
+	//     A new <div> containing the entire board.
+	//     
 	makeBoardTable(moveLists) {
 		const D = this.props.degree;
 		var row;
@@ -54,7 +86,15 @@ class SudokuBoard extends React.Component {
 
 	// Assemble a single row containing D blocks.
 	// 
+	// This function creates D blocks and attaches them to a 
+	// container.  No real work is done, just delegation.
 	// 
+	// Arguments:
+	//     row: Integer index of the row to generate
+	//     moveLists: 2D array of move lists for the entire board
+	//     
+	// Returns:
+	//     <span> element for a row of blocks in the table
 	makeBlockRow(row, moveLists) {
 		const D = this.props.degree;
 		var blocks = [];
