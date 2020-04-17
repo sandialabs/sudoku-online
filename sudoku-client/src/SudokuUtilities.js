@@ -121,7 +121,7 @@ function assignmentsInRow(board, row) {
 			noNulls.push(board[row][c]);
 		}
 	}
-	return Set(noNulls);
+	return new Set(noNulls);
 }
 
 
@@ -141,7 +141,7 @@ function assignmentsInColumn(board, column) {
 			noNulls.push(board[r][column]);
 		}
 	}
-	return Set(noNulls);
+	return new Set(noNulls);
 }
 
 
@@ -166,7 +166,7 @@ function assignmentsInBlock(board, blockRow, blockColumn) {
 			}
 		}
 	}
-	return Set(noNulls);
+	return new Set(noNulls);
 }
 
 /// Compute the move lists for every cell in a board.
@@ -209,11 +209,11 @@ function moveLists(board) {
 		for (let c = 0; c < columns; ++c) {
 			const blockRow = Math.floor(r/D);
 			const blockColumn = Math.floor(c/D);
+			const foo = setUnion(rowAssignments[r], columnAssignments[c]);
 			const assignmentSet = setUnion(
-				blockAssignments[r][c],
-				setUnion(
-					rowAssignments[r],
-					columnAssignments[c]));
+				blockAssignments[blockRow][blockColumn],
+				foo
+				);
 
 			const moveSet = setDifference(
 				fullMoveSet, assignmentSet
