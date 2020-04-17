@@ -17,13 +17,13 @@ class SudokuMain extends React.Component {
 		super(props);
 
 		this.state = {
-			initialBoardReceived: false,
+			initialBoard: null,
 			initialBoardDegree: false,
 		};
 	}
 
 	render() {
-		if (this.state.initialBoardReceived) {
+		if (this.state.initialBoard !== null) {
 			return (
 				<div key={3}>
 					<div key={4}>
@@ -35,7 +35,10 @@ class SudokuMain extends React.Component {
 					    </ul>
 					</div>
 					<div key={5}>
-						<SudokuGame />
+						<SudokuGame 
+							degree={this.props.degree}
+							initialBoard={this.state.initialBoard}
+						/>
 					</div>
 				</div>
 			);
@@ -49,13 +52,16 @@ class SudokuMain extends React.Component {
 	componentDidMount() {
 		console.log('Main panel mounted.  Call out to get the initial game state.');
 		// This will be replaced with a server call once we have a server to call
-		this.setState({
-			initialBoardReceived: true
-		});
+
 
 		const initialBoard = requestInitialBoard(this.props.degree);
 		console.log('initialBoard follows:');
 		console.log(initialBoard);
+
+		this.setState({
+			initialBoard: initialBoard
+		});
+
 		
 	}
 }
