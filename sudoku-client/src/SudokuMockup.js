@@ -17,7 +17,7 @@ function boardAsJson(degree, board) {
 	return ({
 		degree: degree,
 		assignments: jsonBoardAssignments(board),
-//		availableMoves: jsonMoveLists(board)
+		availableMoves: jsonMoveLists(board)
 	});
 }
 
@@ -27,7 +27,7 @@ function jsonBoardAssignments(board) {
 	return flatten(board);
 }
 
-function availableMoves(board) {
+function jsonMoveLists(board) {
 	return flatten(moveLists(board)); 
 }
 
