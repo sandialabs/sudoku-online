@@ -110,10 +110,58 @@ function flatten(array) {
 	return result;
 }
 
+// Reshape the elements of an existing array into a new array.
+//
+// Arguments:
+//     inputArray: 1D array to reshape
+//     rows (integer): Rows for the output
+//     columns (integer): Columns for the output
+//     deepCopy (boolean): if true, elements in the new array
+//         will be copies of the originals.  If false, elements
+//         in the new array will be the values from the original.
+//         Defaults to true.
+//         
+// Throws:
+//     InvalidShapeException: requested shape doesn't match number
+//         of elements 
+function reshape1Dto2D(inputArray, rows, columns, deepCopy=true) {
+	if (inputArray.length !== rows*columns) {
+		const neededElements = rows * columns;
+		throw new InvalidShapeException(
+			'Cannot reshape an array with length ' + inputArray.length 
+			+ ' to one with dimensions ' + rows + ' x ' + columns 
+			+ ': element counts do not match (' 
+			+ inputArray.length + ' vs. ' + rows*columns + ')'
+			 );
+	}
+
+	let result = array2D(rows, columns);
+	let i = 0;
+	for (let r = 0; r < rows; ++r) {
+		for (let c = 0; c < columns; ++c) {
+			if (deepCopy) {
+				result[r][c] = clone(inputArray[i]);
+			} else {
+				result[r][c] = inputArray[i];
+			}
+			++i;
+		}
+	}
+	return result;
+}
+
+function InvalidShapeException(message) {
+	const error = new Error(message);
+	return error;
+}
+
+InvalidShapeException.prototype = Object.create(Error.prototype);
+
 export { 
 	array2D, 
 	dimensions,
 	flatten, 
+	reshape1Dto2D,
 	swapRows2D, 
 	swapColumns2D,
 	arrayRotateLeft,
