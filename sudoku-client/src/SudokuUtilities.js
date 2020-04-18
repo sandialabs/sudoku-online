@@ -258,7 +258,44 @@ function randomizeFilledBoard(board, numSwaps=100) {
 	}
 }
 
-// This function will be used for testing
+// Return a random int in the range [min, max)
+ function randomInt(min, max) {
+ 	return Math.floor(Math.random() * max) + min;
+ }
+ 
+// Null out zero or more cells from an existing board.
+// 
+// This function will take an existing board and choose (uniformly 
+// at random) a user-specified number of cells to replace with nulls.
+// A new board is returned: the argument is not modified.
+// 
+// Note: cells that are already null will remain that way.
+// 
+// Arguments:
+//     board: 2D square array filled with integers and nulls
+//     numEmpties (int): How many cells to make empty
+//     
+// Returns:
+//     New board with same dimensions and contents, but some cells
+//     will have their values replaced with 'null'
+ 
+
+ function clearRandomCells(board, numEmpties) {
+ 	const result = clone(board);
+ 	const [rows,columns] = dimensions(board);
+
+ 	for (let i = 0; i < numEmpties; ++i) {
+ 		let r = randomInt(0, rows);
+ 		let c = randomInt(0, columns);
+ 		while (result[r][c] == null) {
+ 			r = randomInt(0, rows);
+ 			c = randomInt(0, columns);
+ 		}
+ 		result[r][c] = null;
+ 	}
+ 	return result;
+ }
+
 function boardIsConsistent(board) {
 	const D = getDegree(board);
 	const [rows, columns] = dimensions(board);
@@ -318,6 +355,7 @@ function boardIsConsistent(board) {
 }
 
 export { 
+	clearRandomCells,
 	filledBoard,
 	initialMoveList,
 	moveLists,
