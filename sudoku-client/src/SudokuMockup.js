@@ -1,15 +1,15 @@
 // SudokuMockup.js -- mocked-up functions that will be replaced
 // with server requests
 
-import { filledBoard, randomizeBoard, moveLists } from './SudokuUtilities';
+import { clearRandomCells, filledBoard, randomizeBoard, moveLists } from './SudokuUtilities';
 import { dimensions, flatten } from './ArrayUtilities';
 
 function requestInitialBoard(degree) {
 	const solution = filledBoard(degree);
 	// const randomized = randomizeBoard(solution, 100);
-	// const opened = removeRandomCells(randomized, 
-	// 									Math.floor(degree*degree*degree*degree/2));
-	return boardAsJson(degree, solution);
+	 const opened = clearRandomCells(solution, 
+	 								 Math.floor(degree*degree*degree*degree/2));
+	return boardAsJson(degree, opened);
 }  
 
 
