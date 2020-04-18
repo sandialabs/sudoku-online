@@ -12,14 +12,9 @@ import React from 'react';
 import SudokuBoard from './SudokuBoard';
 
 class SudokuGame extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			initialBoard: null,
-			// This will ultimately come from the server
-			initialBoardDegree: 3,
-		};
-	}
+	// constructor(props) {
+	// 	super(props);
+	// }
 
 	render() {
 		return (
@@ -39,7 +34,8 @@ class SudokuGame extends React.Component {
 				</div>
 				<div key={5}>
 					<SudokuBoard 
-						degree={this.state.initialBoardDegree} 
+						degree={this.props.degree}
+						board={this.props.initialBoard} 
 						key={6}
 					/>
 				</div>
