@@ -54,7 +54,7 @@ class SudokuMain extends React.Component {
 		// This will be replaced with a server call once we have a server to call
 
 
-		const initialBoard = requestInitialBoard(this.props.degree);
+		const initialBoard = JSON.parse(requestInitialBoard(this.props.degree));
 		console.log('initialBoard follows:');
 		console.log(initialBoard);
 

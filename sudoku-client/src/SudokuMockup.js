@@ -14,7 +14,7 @@ function requestInitialBoard(degree) {
 
 
 function boardAsJson(degree, board) {
-	return ({
+	return JSON.stringify({
 		degree: degree,
 		assignments: jsonBoardAssignments(board),
 		availableMoves: jsonMoveLists(board)
