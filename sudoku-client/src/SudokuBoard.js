@@ -80,9 +80,9 @@ class SudokuBoard extends React.Component {
 		}
 
 		return (
-			<div className="boardTable">
-				{blockRows}
-			</div>
+			<table className="boardTable">
+				<tbody>{blockRows}</tbody>
+			</table>
 			);
 	}
 
@@ -107,34 +107,35 @@ class SudokuBoard extends React.Component {
 		}
 
 		return (
-			<span className="blockRow" key={row}>
-				{blocks}
-			</span>
+			<tr className="blockRow" key={row}>{blocks}</tr>
 			);
 
 	}
 
 	makeBlock(blockRow, blockColumn, assignments, moveLists) {
+		const blockContents = this.makeBlockContents(
+			blockRow,
+			blockColumn,
+			assignments,
+			moveLists);
+
 		return (
-			<span className="block" key={blockRow}>
-				{this.makeBlockContents(blockRow, blockColumn, assignments, moveLists)}
-			</span>
-			);
+			<td className="block" key={blockColumn}>{blockContents}</td>
+		);
 	}
 
 	makeBlockContents(blockRow, blockColumn, assignments, moveLists) {
 		const D = this.props.degree;
 		var rows = [];
-		var row;
 
-		for (row = 0; row < D; ++row) {
+		for (let row = 0; row < D; ++row) {
 			rows.push(this.makeSquareRow(blockRow, blockColumn, row, assignments, moveLists));
 		}
 
 		return (
-			<span className="blockSquares">
-				{rows}
-			</span>
+			<table className="blockSquares">
+				<tbody>{rows}</tbody>
+			</table>
 		);
 	}
 
@@ -151,28 +152,61 @@ class SudokuBoard extends React.Component {
 		}
 
 		return (
-			<span className="squareRow" key={squareRow}>
-				{squaresInRow}
-			</span>
+			<tr className="squareRow" key={squareRow}>{squaresInRow}</tr>
 			);
 	}
 
 	makeSquare(row, column, assignments, moveLists) {
 		if (assignments[row][column] !== null) {
 			return (
-				<span className="square assigned">
+				<td className="square assigned">
 					{assignments[row][column]}
-				</span>
+				</td>
 				);
 		} else {
+			const choiceGrid = this.makeChoiceGrid(moveLists[row][column]);
 			return (
-				<span className="square moveList" key={column}>
-					S({row},{column}): {moveLists[row][column]}
-				</span>
+				<td>
+					<table className="square choiceGrid" key={column}>
+						<tbody>{choiceGrid}</tbody>
+					</table>
+				</td>
 			);
 		}
 	}
-	
+
+	makeChoiceGrid(moveList) {
+		const D = this.props.degree;
+		const choices = new Set(moveList);
+		var rows = [];
+		for (let row = 0; row < D; ++row) {
+			rows.push(this.makeChoiceRow(choices, row));
+		}
+		return rows;
+	}
+
+	makeChoiceRow(choices, row) {
+		const D = this.props.degree;
+		const choiceSquares = []
+		for (let column = 0; column < D; ++column) {
+			const value = D*row + column;
+			let squareValue = '\u00A0';
+			let squareClass = 'choiceSquare ';
+			if (choices.has(value)) {
+				squareValue = value;
+				squareClass += 'choiceAvailable';
+			} else {
+				squareClass += 'choiceUnavailable';
+			}
+			choiceSquares.push(
+				<td className={squareClass}>{squareValue}</td>
+				);
+		}
+		return (
+			<tr className="choiceRow">{choiceSquares}</tr>
+		);
+	}
+
 	render() {
 		const D = this.props.degree;
 		const moveListArray = reshape1Dto2D(this.props.board.availableMoves,

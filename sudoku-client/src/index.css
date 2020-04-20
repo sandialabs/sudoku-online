@@ -12,8 +12,14 @@ code {
     monospace;
 }
 
+table {
+	table-layout: fixed;
+	margin: 0;
+	padding: 0;
+	border-collapse: collapse;
+}
+
 .board {
-	display: table;
 	border-style: solid;
 	border-color: black;
 	border-width: 3px;
@@ -22,32 +28,73 @@ code {
 }
 
 .blockRow {
-	display: table-row;
-	margin: -5px;
+	height: 33%;
 }
 
 .block {
-	display: table-cell;
 	border-style: solid;
 	border-color: #808080;
-	border-width: 2px;
+	border-width: 4px;
+	width: 33%;
+	height: 33%;
+	margin: 0px;
+	padding: 0px;
 }
 
 .blockSquares {
-	display: table;
+	border-collapse: collapse;
+	margin: 0px;
+	padding: 0px;
 }
 
 .squareRow {
-	display: table-row;
+	height: 33%;
 }
 
 .square {
-	display: table-cell;
-	border-width: 1px;
+	border-width: 3px;
 	border-style: solid;
-	border-color: #B0B0B0;
-	width: 81px;
-	height: 81px;
+	border-color: #B0FFB0;
+	width: 33%;
+	height: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+
+.assigned {
+	text-align: center;
+	width: 60px;
+	height: 60px;
+	font-size: 200%;
+}
+
+.choiceGrid {
+	border-collapse: collapse;
+	border: 0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+.choiceRow {
+}
+
+.choiceSquare {
+	border-style: solid;
+	border-color: #FFD0D0;
+	text-align: center;
+	border-width: 1px;
+	width: 20px;
+	height: 20px;
+	margin: 0px;
+	padding: 0px;
+}
+
+.choiceAvailable {
+	background-color: #E0E0FF;
+}
+
+.choiceUnavailable {
+	background-color: white;
 }
 
 .boardRegion {
