@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+table {
+	table-layout: fixed;
+	margin: 0;
+	padding: 0;
+	border-collapse: collapse;
+}
+
+.board {
+	border-style: solid;
+	border-color: black;
+	border-width: 3px;
+	padding: 0px;
+	margin: 0px;
+}
+
+.blockRow {
+	height: 33%;
+}
+
+.block {
+	border-style: solid;
+	border-color: #808080;
+	border-width: 4px;
+	width: 33%;
+	height: 33%;
+	margin: 0px;
+	padding: 0px;
+}
+
+.blockSquares {
+	border-collapse: collapse;
+	margin: 0px;
+	padding: 0px;
+}
+
+.squareRow {
+	height: 33%;
+}
+
+.square {
+	border-width: 3px;
+	border-style: solid;
+	border-color: #B0FFB0;
+	width: 33%;
+	height: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+
+.assigned {
+	text-align: center;
+	width: 60px;
+	height: 60px;
+	font-size: 200%;
+}
+
+.choiceGrid {
+	border-collapse: collapse;
+	border: 0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+.choiceRow {
+}
+
+.choiceSquare {
+	border-style: solid;
+	border-color: #FFD0D0;
+	text-align: center;
+	border-width: 1px;
+	width: 20px;
+	height: 20px;
+	margin: 0px;
+	padding: 0px;
+}
+
+.choiceAvailable {
+	background-color: #E0E0FF;
+}
+
+.choiceUnavailable {
+	background-color: white;
+}
+
+.boardRegion {
+	border-style: solid;
+	border-color: #404040;
+}
+
+.boardSquare {
+	border-width: 1px;
+}
+
+.boardBlock {
+	border-width: 2px;
+}
