@@ -11,10 +11,34 @@
 import React from 'react';
 import SudokuBoard from './SudokuBoard';
 
+class TreeNode {
+	constructor(parent) {
+		this.parent = parent;
+		this.children = [];
+		this.board = null;
+	}
+
+}
+
+
 class SudokuGame extends React.Component {
-	// constructor(props) {
-	// 	super(props);
-	// }
+	constructor(props) {
+	 	super(props);
+	 	const rootNode = new TreeNode(null);
+		this.state = {
+			treeRoot: rootNode
+		}
+	 	if (this.props.initialBoard !== null) {
+	 		this.state.treeRoot.board = this.props.initialBoard;
+	 	}
+	}
+
+	boardCellClicked(board, cell, choice) {
+		console.log("Board cell clicked: board serial number "
+					+ board.state.serialNumber 
+					+ ", clicked cell " 
+					+ cell);
+	}
 
 	render() {
 		return (
@@ -37,6 +61,7 @@ class SudokuGame extends React.Component {
 						degree={this.props.degree}
 						board={this.props.initialBoard} 
 						key={6}
+						announceChoice={this.boardCellClicked}
 					/>
 				</div>
 			</div>

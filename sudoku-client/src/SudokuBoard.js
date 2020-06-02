@@ -45,12 +45,15 @@ import React from 'react';
 // in each cell.
                                
 import { reshape1Dto2D } from './ArrayUtilities';
+import { newSerialNumber } from './SudokuUtilities';
+
 
 class SudokuBoard extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			serialNumber: -1,
+			serialNumber: newSerialNumber('board'),
+			active: true,
 		};
 	}
 
@@ -164,7 +167,7 @@ class SudokuBoard extends React.Component {
 				</td>
 				);
 		} else {
-			const choiceGrid = this.makeChoiceGrid(moveLists[row][column]);
+			const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
 			return (
 				<td>
 					<table className="square choiceGrid" key={column}>
@@ -175,17 +178,17 @@ class SudokuBoard extends React.Component {
 		}
 	}
 
-	makeChoiceGrid(moveList) {
+	makeChoiceGrid(moveList, boardRow, boardColumn) {
 		const D = this.props.degree;
 		const choices = new Set(moveList);
 		var rows = [];
 		for (let row = 0; row < D; ++row) {
-			rows.push(this.makeChoiceRow(choices, row));
+			rows.push(this.makeChoiceRow(choices, row, boardRow, boardColumn));
 		}
 		return rows;
 	}
 
-	makeChoiceRow(choices, row) {
+	makeChoiceRow(choices, row, boardRow, boardColumn) {
 		const D = this.props.degree;
 		const choiceSquares = []
 		for (let column = 0; column < D; ++column) {
@@ -198,9 +201,21 @@ class SudokuBoard extends React.Component {
 			} else {
 				squareClass += 'choiceUnavailable';
 			}
+			if (squareValue === value) {
+				choiceSquares.push(
+					<td className={squareClass}>
+						<button className='choiceSquare choiceAvailable isButton'
+								onClick={() => { this.handleChoiceClicked(boardRow, boardColumn, squareValue); }}
+								>
+								{squareValue}
+						</button>
+					</td>
+					);
+			} else {
 			choiceSquares.push(
 				<td className={squareClass}>{squareValue}</td>
 				);
+			}
 		}
 		return (
 			<tr className="choiceRow">{choiceSquares}</tr>
@@ -231,8 +246,19 @@ class SudokuBoard extends React.Component {
 				</div>
 			</div>
 		);
+
+		
 	}
 
+	handleChoiceClicked(row, column, choice) {
+		console.log('Click: ' + row + ', ' + column + ', ' + choice);
+		alert('Selected value ' + choice + ' at coordinates '
+			  + '(' + row + ', ' + column + ')');
+		console.log('this.state.active: ' + this.state.active)
+		if (this.state.active) {
+			this.props.announceChoice(this, [row, column], choice)
+		}
+	}
 
 }
 

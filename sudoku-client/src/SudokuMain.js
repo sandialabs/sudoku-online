@@ -38,6 +38,7 @@ class SudokuMain extends React.Component {
 						<SudokuGame 
 							degree={this.props.degree}
 							initialBoard={this.state.initialBoard}
+							issueBoardRequest={this.handleBoardRequest}
 						/>
 					</div>
 				</div>
@@ -47,6 +48,10 @@ class SudokuMain extends React.Component {
 				<div key={3}>Waiting for initial game state...</div>
 			);
 		}
+	}
+
+	handleBoardRequest(board, action) {
+		console.log("handleBoardRequest called");
 	}
 
 	componentDidMount() {
