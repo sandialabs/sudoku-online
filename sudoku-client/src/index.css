@@ -14,98 +14,76 @@ code {
 
 table {
 	table-layout: fixed;
-	margin: 0;
-	padding: 0;
 	border-collapse: collapse;
 }
 
-.board {
+
+.sudoku-board-table {
 	border-style: solid;
 	border-color: black;
-	border-width: 3px;
-	padding: 0px;
-	margin: 0px;
+	border-width: 5px;
 }
 
-.blockRow {
-	height: 33%;
+/*
+ * Handle the internal borders between each DxD block with nth-child. 
+ * Note that there is no every-nth-child selector so we have to hard-code 
+ * a few of these. 
+ */
+
+/* Internal borders between blocks */
+tr.sudoku-board-row.degree-3:nth-child(3) {
+	border-bottom: 3px solid black;
 }
 
-.block {
-	border-style: solid;
-	border-color: #808080;
-	border-width: 4px;
-	width: 33%;
-	height: 33%;
-	margin: 0px;
-	padding: 0px;
+tr.sudoku-board-row.degree-3:nth-child(6) {
+	border-bottom: 3px solid black;
 }
 
-.blockSquares {
-	border-collapse: collapse;
-	margin: 0px;
-	padding: 0px;
+td.sudoku-board-square.degree-3:nth-child(3) {
+	border-right: 3px solid black;
 }
 
-.squareRow {
-	height: 33%;
+td.sudoku-board-square.degree-3:nth-child(6) {
+	border-right: 3px solid black;
 }
 
-.square {
-	border-width: 3px;
-	border-style: solid;
-	border-color: #B0FFB0;
-	width: 33%;
-	height: 100%;
-	margin: 0px;
-	padding: 0px;
+
+/* Internal borders within each block */
+tr.sudoku-board-row.degree-3:nth-child(1) {
+	border-bottom: 1px solid green;
+}
+tr.sudoku-board-row.degree-3:nth-child(2) {
+	border-bottom: 1px solid green;
+}
+tr.sudoku-board-row.degree-3:nth-child(4) {
+	border-bottom: 1px solid green;
+}
+tr.sudoku-board-row.degree-3:nth-child(5) {
+	border-bottom: 1px solid green;
+}
+tr.sudoku-board-row.degree-3:nth-child(7) {
+	border-bottom: 1px solid green;
+}
+tr.sudoku-board-row.degree-3:nth-child(8) {
+	border-bottom: 1px solid green;
 }
 
-.assigned {
-	text-align: center;
-	width: 60px;
-	height: 60px;
-	font-size: 200%;
+td.sudoku-board-square.degree-3:nth-child(1) {
+	border-right: 1px solid green;
+}
+td.sudoku-board-square.degree-3:nth-child(2) {
+	border-right: 1px solid green;
+}
+td.sudoku-board-square.degree-3:nth-child(4) {
+	border-right: 1px solid green;
+}
+td.sudoku-board-square.degree-3:nth-child(5) {
+	border-right: 1px solid green;
+}
+td.sudoku-board-square.degree-3:nth-child(7) {
+	border-right: 1px solid green;
+}
+td.sudoku-board-square.degree-3:nth-child(8) {
+	border-right: 1px solid green;
 }
 
-.choiceGrid {
-	border-collapse: collapse;
-	border: 0px;
-	margin: 0px;
-	padding: 0px;
-}
-
-.choiceRow {
-}
-
-.choiceSquare {
-	border-style: solid;
-	border-color: #FFD0D0;
-	text-align: center;
-	border-width: 1px;
-	width: 20px;
-	height: 20px;
-	margin: 0px;
-	padding: 0px;
-}
-
-.choiceAvailable {
-	background-color: #E0E0FF;
-}
-
-.choiceUnavailable {
-	background-color: white;
-}
-
-.boardRegion {
-	border-style: solid;
-	border-color: #404040;
-}
-
-.boardSquare {
-	border-width: 1px;
-}
-
-.boardBlock {
-	border-width: 2px;
-}

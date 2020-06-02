@@ -80,10 +80,9 @@ class SudokuBoard extends React.Component {
 					{this.makeBoardTable(assignmentArray, moveListArray)}
 				</div>
 			</div>
-		);
-
-		
+		);	
 	}
+
 
 	/// Make the board as an array of blocks.
 	//
@@ -105,6 +104,7 @@ class SudokuBoard extends React.Component {
 		const D = this.props.degree;
 		const tableRows = [];
 
+		const rowStyleName = 'sudoku-board-row degree-' + D;
 		for (let row = 0; row < D*D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D*D; ++col) {
@@ -113,28 +113,31 @@ class SudokuBoard extends React.Component {
 					);
 			}
 			tableRows.push(
-				<tr>{squaresInRow}</tr>
+				<tr className={rowStyleName} key={row}>{squaresInRow}</tr>
 				);
 		}
 
 		return (
-			<table className="boardTable">
+			<table className="sudoku-board-table">
 				<tbody>{tableRows}</tbody>
 			</table>
 			);
 	}
 
 	makeSquare(row, column, assignments, moveLists) {
+		const cellStyleName = 'sudoku-board-square degree-' + this.props.degree;
+		//const allCellStyleNames = 'square assigned ' + cellStyleName;
+		const allCellStyleNames = cellStyleName;
 		if (assignments[row][column] !== null) {
 			return (
-				<td className="square assigned">
+				<td className={allCellStyleNames} key={column}>
 					{assignments[row][column]}
 				</td>
 				);
 		} else {
 			const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
 			return (
-				<td>
+				<td className={allCellStyleNames} key={column}>
 					{choiceGrid}
 				</td>
 			);
