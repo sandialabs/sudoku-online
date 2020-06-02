@@ -44,11 +44,9 @@ class SudokuChoiceGrid extends React.Component {
 	}
 
 	render() {
-		console.log('Rendering choiceGrid for square ' + this.props.boardRow + ', ' + this.props.boardColumn);
-		console.log('Move list: ' + this.props.moveList);
 		let gridRows = this.makeChoiceGridContents();
 		return (
-			<table>
+			<table className="sudoku-choice-grid">
 				{gridRows}
 			</table>
 			)
@@ -63,28 +61,24 @@ class SudokuChoiceGrid extends React.Component {
 			for (let col = 0; col < D; ++col) {
 				const value = row*D + col;
 				if (this.props.moveList.includes(value)) {
-					console.log('\tValue ' + value + ' is valid for this square');
-					squaresInRow.push(this.makeChoiceButton(value));
+					squaresInRow.push(this.makeChoiceButton(col, value));
 				} else {
-					squaresInRow.push(this.makeBlankSquare());
+					squaresInRow.push(this.makeBlankSquare(col));
 				}
 			}
 			rows.push(
-				<tr>{squaresInRow}</tr>
+				<tr key={row} className='sudoku-choice-grid'>{squaresInRow}</tr>
 				);
-			console.log('DEBUG: After rows.push, squaresInRow.length is ' + squaresInRow.length + ', rows.length is ' + rows.length);
 		}
-
-		console.log('DEBUG: Rows: ' + rows);
 		return (
 			<tbody>{rows}</tbody>
 			);
 	}
 
-	makeChoiceButton(value) {
+	makeChoiceButton(key, value) {
 		return (
-			<td className="choiceAvailable">
-				<button className="choiceButton"
+			<td className='sudoku-choice-grid available' key={key}>
+				<button className='sudoku-choice-grid'
 						onClick={() => {this.handleClick(value);}}
 					>
 					{value}
@@ -93,10 +87,12 @@ class SudokuChoiceGrid extends React.Component {
 		);
 	}
 
-	makeBlankSquare() {
+	makeBlankSquare(key) {
 		const blankSpace = '\u00A0';
 		return (
-			<td className="choiceUnavailable">{blankSpace}</td>
+			<td className='sudoku-choice-grid unavailable' key={key}>
+				<button className='sudoku-choice-grid unavailable'>{blankSpace}</button>
+			</td>
 			);
 	}
 
