@@ -45,166 +45,18 @@ import React from 'react';
 // in each cell.
                                
 import { reshape1Dto2D } from './ArrayUtilities';
+import { newSerialNumber } from './SudokuUtilities';
+import SudokuChoiceGrid from './SudokuChoiceGrid';
 
 class SudokuBoard extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			serialNumber: -1,
+			serialNumber: newSerialNumber('board'),
+			active: true,
 		};
-	}
-
-	/// Make the board as an array of blocks.
-	//
-	// In order to draw thick borders around the D x D blocks of
-	// squares, and in order to keep the code simple, we build up
-	// the board as a grid of D x D blocks instead of a (D*D) x (D*D)
-	// array of squares.
-	// 
-	// This function assembles the grid of blocks.
-	// 
-	// Arguments:
-	//     moveLists: 2D array of move lists, one for each cell in 
-	//         the board.
-	//         
-	// Returns:
-	//     A new <div> containing the entire board.
-	//     
-	makeBoardTable(assignments, moveLists) {
-		const D = this.props.degree;
-		var row;
-		var blockRows = [];
-
-		for (row = 0; row < D; ++row) {
-			blockRows.push(this.makeBlockRow(row, assignments, moveLists));
-		}
-
-		return (
-			<table className="boardTable">
-				<tbody>{blockRows}</tbody>
-			</table>
-			);
-	}
-
-	// Assemble a single row containing D blocks.
-	// 
-	// This function creates D blocks and attaches them to a 
-	// container.  No real work is done, just delegation.
-	// 
-	// Arguments:
-	//     row: Integer index of the row to generate
-	//     moveLists: 2D array of move lists for the entire board
-	//     
-	// Returns:
-	//     <span> element for a row of blocks in the table
-	makeBlockRow(row, assignments, moveLists) {
-		const D = this.props.degree;
-		var blocks = [];
-		var column;
-
-		for (column = 0; column < D; ++column) {
-			blocks.push(this.makeBlock(row, column, assignments, moveLists));
-		}
-
-		return (
-			<tr className="blockRow" key={row}>{blocks}</tr>
-			);
-
-	}
-
-	makeBlock(blockRow, blockColumn, assignments, moveLists) {
-		const blockContents = this.makeBlockContents(
-			blockRow,
-			blockColumn,
-			assignments,
-			moveLists);
-
-		return (
-			<td className="block" key={blockColumn}>{blockContents}</td>
-		);
-	}
-
-	makeBlockContents(blockRow, blockColumn, assignments, moveLists) {
-		const D = this.props.degree;
-		var rows = [];
-
-		for (let row = 0; row < D; ++row) {
-			rows.push(this.makeSquareRow(blockRow, blockColumn, row, assignments, moveLists));
-		}
-
-		return (
-			<table className="blockSquares">
-				<tbody>{rows}</tbody>
-			</table>
-		);
-	}
-
-	makeSquareRow(blockRow, blockColumn, squareRow, assignments, moveLists) {
-		const D = this.props.degree;
-		var squaresInRow = [];
-		var squareColumn;
-		var boardRowId, boardColumnId;
-
-		for (squareColumn = 0; squareColumn < D; ++squareColumn) {
-			boardRowId = D*blockRow + squareRow;
-			boardColumnId = D*blockColumn + squareColumn;
-			squaresInRow.push(this.makeSquare(boardRowId, boardColumnId, assignments, moveLists));
-		}
-
-		return (
-			<tr className="squareRow" key={squareRow}>{squaresInRow}</tr>
-			);
-	}
-
-	makeSquare(row, column, assignments, moveLists) {
-		if (assignments[row][column] !== null) {
-			return (
-				<td className="square assigned">
-					{assignments[row][column]}
-				</td>
-				);
-		} else {
-			const choiceGrid = this.makeChoiceGrid(moveLists[row][column]);
-			return (
-				<td>
-					<table className="square choiceGrid" key={column}>
-						<tbody>{choiceGrid}</tbody>
-					</table>
-				</td>
-			);
-		}
-	}
-
-	makeChoiceGrid(moveList) {
-		const D = this.props.degree;
-		const choices = new Set(moveList);
-		var rows = [];
-		for (let row = 0; row < D; ++row) {
-			rows.push(this.makeChoiceRow(choices, row));
-		}
-		return rows;
-	}
-
-	makeChoiceRow(choices, row) {
-		const D = this.props.degree;
-		const choiceSquares = []
-		for (let column = 0; column < D; ++column) {
-			const value = D*row + column;
-			let squareValue = '\u00A0';
-			let squareClass = 'choiceSquare ';
-			if (choices.has(value)) {
-				squareValue = value;
-				squareClass += 'choiceAvailable';
-			} else {
-				squareClass += 'choiceUnavailable';
-			}
-			choiceSquares.push(
-				<td className={squareClass}>{squareValue}</td>
-				);
-		}
-		return (
-			<tr className="choiceRow">{choiceSquares}</tr>
-		);
+		console.log('constructor: props are...');
+		console.log(props)
 	}
 
 	render() {
@@ -230,10 +82,97 @@ class SudokuBoard extends React.Component {
 					{this.makeBoardTable(assignmentArray, moveListArray)}
 				</div>
 			</div>
-		);
+		);	
 	}
 
 
+	/// Make the board as an array of blocks.
+	//
+	// In order to draw thick borders around the D x D blocks of
+	// squares, and in order to keep the code simple, we build up
+	// the board as a grid of D x D blocks instead of a (D*D) x (D*D)
+	// array of squares.
+	// 
+	// This function assembles the grid of blocks.
+	// 
+	// Arguments:
+	//     moveLists: 2D array of move lists, one for each cell in 
+	//         the board.
+	//         
+	// Returns:
+	//     A new <div> containing the entire board.
+	//     
+	makeBoardTable(assignments, moveLists) {
+		const D = this.props.degree;
+		const tableRows = [];
+
+		const rowStyleName = 'sudoku-board-row degree-' + D;
+		for (let row = 0; row < D*D; ++row) {
+			const squaresInRow = [];
+			for (let col = 0; col < D*D; ++col) {
+				squaresInRow.push(
+					this.makeSquare(row, col, assignments, moveLists)
+					);
+			}
+			tableRows.push(
+				<tr className={rowStyleName} key={row}>{squaresInRow}</tr>
+				);
+		}
+
+		return (
+			<table className="sudoku-board-table">
+				<tbody>{tableRows}</tbody>
+			</table>
+			);
+	}
+
+	makeSquare(row, column, assignments, moveLists) {
+		const cellStyleName = 'sudoku-board-square degree-' + this.props.degree;
+		//const allCellStyleNames = 'square assigned ' + cellStyleName;
+		const allCellStyleNames = cellStyleName;
+		if (assignments[row][column] !== null) {
+			return (
+				<td className={allCellStyleNames} key={column}>
+					{assignments[row][column]}
+				</td>
+				);
+		} else {
+			const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
+			return (
+				<td className={allCellStyleNames} key={column}>
+					{choiceGrid}
+				</td>
+			);
+		}
+	}
+
+	makeChoiceGrid(moveList, boardRow, boardColumn) {
+		return (
+			<SudokuChoiceGrid
+				degree={this.props.degree}
+				moveList={moveList}
+				boardRow={boardRow}
+				boardColumn={boardColumn}
+				announceChoiceSelection={ (row, column, value) => {this.choiceSelected(row, column, value);} }
+				/>
+			);
+	}
+
+	choiceSelected(row, column, value) {
+		console.log('Board: User chose value ' + value + ' in cell (' + row + ', ' + column + ')');
+		this.props.announceChoice(this, [row, column], value);
+	}
+
+	asJson() {
+		const result = {
+			degree: this.props.degree,
+			serial: this.state.serialNumber,
+			active: this.state.isActive,
+			availableMoves: this.props.board.availableMoves,
+			assignments: this.props.board.assignments
+		};
+		return JSON.stringify(result);
+	}
 }
 
 
