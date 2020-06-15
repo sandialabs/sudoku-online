@@ -19,6 +19,8 @@ class SudokuMain extends React.Component {
 		this.state = {
 			initialBoard: null,
 			initialBoardDegree: false,
+			availableHeuristics: ['include/exclude'],
+			selectedHeuristic: 'include/exclude'
 		};
 	}
 
@@ -35,11 +37,15 @@ class SudokuMain extends React.Component {
 					    </ul>
 					</div>
 					<div key={5}>
+						<p>Available Heuristics</p>
+						<p>(fill this in)</p>
+					</div>
+					<div key={6}>
 						<SudokuGame 
 							degree={this.props.degree}
 							initialBoard={this.state.initialBoard}
-							issueBoardRequest={this.handleBoardRequest}
-						/>
+							issueBoardRequest={(board, move) => {this.handleBoardRequest(board, move);}}
+							/>
 					</div>
 				</div>
 			);
@@ -51,8 +57,24 @@ class SudokuMain extends React.Component {
 	}
 
 	handleBoardRequest(board, action) {
-		console.log("handleBoardRequest called");
+		console.log("handleBoardRequest called, current heuristic is " + this.state.selectedHeuristic);
+		const request = {
+			board: board.asJson(),
+			action: JSON.stringify(action),
+			heuristic: this.state.selectedHeuristic
+		};
+		this.requestHeuristicResults(request,
+									 (result) => {this.heuristicResultsArrived(board, action, result);});
 	}
+
+	heuristicResultsArrived(parentBoard, action, results) {
+		console.log('UNIMPLEMENTED: heuristicResultsArrived called');
+	}
+
+	requestHeuristicResults(request, resultCallback) {
+		console.log('UNIMPLEMENTED: requestHeuristicResults');
+	}
+
 
 	componentDidMount() {
 		console.log('Main panel mounted.  Call out to get the initial game state.');

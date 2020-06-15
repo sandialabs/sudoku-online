@@ -18,6 +18,7 @@ class TreeNode {
 		this.board = null;
 	}
 
+
 }
 
 
@@ -33,11 +34,19 @@ class SudokuGame extends React.Component {
 	 	}
 	}
 
-	boardCellClicked(board, cell, choice) {
-		console.log("Board cell clicked: board serial number "
+	boardAnnouncesChoice(board, cell, choice) {
+		console.log("Board announcing choice: board serial number "
 					+ board.state.serialNumber 
 					+ ", clicked cell " 
 					+ cell);
+		console.log('this.props:');
+		console.log(this.props);
+		const action = {
+			'action': 'selectValueForCell',
+			'cell': cell,
+			'value': choice
+		};
+		this.props.issueBoardRequest(board, action);
 	}
 
 	render() {
@@ -61,7 +70,7 @@ class SudokuGame extends React.Component {
 						degree={this.props.degree}
 						board={this.props.initialBoard} 
 						key={6}
-						announceChoice={this.boardCellClicked}
+						announceChoice={ (board, cell, choice) => {this.boardAnnouncesChoice(board,cell,choice);} }
 					/>
 				</div>
 			</div>

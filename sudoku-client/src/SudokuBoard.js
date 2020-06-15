@@ -55,6 +55,8 @@ class SudokuBoard extends React.Component {
 			serialNumber: newSerialNumber('board'),
 			active: true,
 		};
+		console.log('constructor: props are...');
+		console.log(props)
 	}
 
 	render() {
@@ -151,13 +153,25 @@ class SudokuBoard extends React.Component {
 				moveList={moveList}
 				boardRow={boardRow}
 				boardColumn={boardColumn}
-				announceChoiceSelection={this.choiceSelected}
+				announceChoiceSelection={ (row, column, value) => {this.choiceSelected(row, column, value);} }
 				/>
 			);
 	}
 
 	choiceSelected(row, column, value) {
 		console.log('Board: User chose value ' + value + ' in cell (' + row + ', ' + column + ')');
+		this.props.announceChoice(this, [row, column], value);
+	}
+
+	asJson() {
+		const result = {
+			degree: this.props.degree,
+			serial: this.state.serialNumber,
+			active: this.state.isActive,
+			availableMoves: this.props.board.availableMoves,
+			assignments: this.props.board.assignments
+		};
+		return JSON.stringify(result);
 	}
 }
 
