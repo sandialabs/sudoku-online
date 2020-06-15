@@ -181,7 +181,7 @@ function assignmentsInBlock(board, blockRow, blockColumn) {
 // Returns: 
 //     2D array of move lists
 
-function moveLists(board) {
+function computeMoveLists(board) {
 	const D = getDegree(board);
 	const [rows, columns] = dimensions(board);
 	const rowIndices = range(rows);
@@ -358,7 +358,7 @@ export {
 	clearRandomCells,
 	filledBoard,
 	initialMoveList,
-	moveLists,
+	computeMoveLists,
 	newSerialNumber, 
 	range, 
 	setDifference, 

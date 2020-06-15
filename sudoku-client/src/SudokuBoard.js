@@ -171,7 +171,7 @@ class SudokuBoard extends React.Component {
 			availableMoves: this.props.board.availableMoves,
 			assignments: this.props.board.assignments
 		};
-		return JSON.stringify(result);
+		return result;
 	}
 }
 

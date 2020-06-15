@@ -10,7 +10,7 @@
 // 
 import React from 'react';
 import SudokuGame from './SudokuGame';
-import { requestInitialBoard } from './SudokuMockup';
+import { requestInitialBoard, executeHeuristic } from './SudokuMockup';
 
 class SudokuMain extends React.Component {
 	constructor(props) {
@@ -60,7 +60,7 @@ class SudokuMain extends React.Component {
 		console.log("handleBoardRequest called, current heuristic is " + this.state.selectedHeuristic);
 		const request = {
 			board: board.asJson(),
-			action: JSON.stringify(action),
+			action: action,
 			heuristic: this.state.selectedHeuristic
 		};
 		this.requestHeuristicResults(request,
@@ -73,6 +73,12 @@ class SudokuMain extends React.Component {
 
 	requestHeuristicResults(request, resultCallback) {
 		console.log('UNIMPLEMENTED: requestHeuristicResults');
+		console.log('request:');
+		console.log(request);
+		const result = executeHeuristic(JSON.stringify(request));
+		console.log('Heuristic results:');
+		console.log(result);
+
 	}
 
 

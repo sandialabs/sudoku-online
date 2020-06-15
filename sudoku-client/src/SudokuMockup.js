@@ -1,8 +1,9 @@
 // SudokuMockup.js -- mocked-up functions that will be replaced
 // with server requests
 
-import { clearRandomCells, filledBoard, randomizeBoard, moveLists } from './SudokuUtilities';
-import { dimensions, flatten } from './ArrayUtilities';
+import { clearRandomCells, filledBoard, randomizeBoard, computeMoveLists } from './SudokuUtilities';
+import { dimensions, flatten, reshape1Dto2D } from './ArrayUtilities';
+import { dispatch as dispatchHeuristic } from './Heuristics';
 
 function requestInitialBoard(degree) {
 	const solution = filledBoard(degree);
@@ -28,9 +29,14 @@ function jsonBoardAssignments(board) {
 }
 
 function jsonMoveLists(board) {
-	return flatten(moveLists(board)); 
+	return flatten(computeMoveLists(board)); 
+}
+
+function executeHeuristic(requestString) {
+	return JSON.stringify(dispatchHeuristic(JSON.parse(requestString)));
 }
 
 export {
-	requestInitialBoard
+	requestInitialBoard,
+	executeHeuristic
 };
