@@ -59,6 +59,12 @@ class SudokuBoard extends React.Component {
 		console.log(props)
 	}
 
+	toggleActive() {
+		this.setState({
+			active: !this.state.active
+		});
+	}
+	
 	render() {
 		const D = this.props.degree;
 		const moveListArray = reshape1Dto2D(this.props.board.availableMoves,
@@ -76,6 +82,7 @@ class SudokuBoard extends React.Component {
 						<li>Pass the relevant "permitted moves" list to each square</li>
 						<li>Identify which square has been clicked</li>
 					</ul>
+				<button name="toggleActive" onClick={() => {this.toggleActive();}}>Toggle Active State</button>
 				</div>
 				<p key="2">The next element down is the number board.</p>
 				<div key="3" id="board-{this.state.serialNumber}" className="board">
@@ -127,8 +134,12 @@ class SudokuBoard extends React.Component {
 	}
 
 	makeSquare(row, column, assignments, moveLists) {
-		const cellStyleName = 'sudoku-board-square degree-' + this.props.degree;
-		//const allCellStyleNames = 'square assigned ' + cellStyleName;
+		let cellStyleName = 'sudoku-board-square degree-' + this.props.degree;
+		if (this.state.active) {
+			cellStyleName += ' active'; 
+		} else {
+			cellStyleName += ' inactive';
+		}
 		const allCellStyleNames = cellStyleName;
 		if (assignments[row][column] !== null) {
 			return (
@@ -137,12 +148,18 @@ class SudokuBoard extends React.Component {
 				</td>
 				);
 		} else {
-			const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
-			return (
-				<td className={allCellStyleNames} key={column}>
-					{choiceGrid}
-				</td>
-			);
+			if (this.state.active) {
+				const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
+				return (
+					<td className={allCellStyleNames} key={column}>
+						{choiceGrid}
+					</td>
+				);
+			} else {
+				return (
+					<td className={allCellStyleNames} key={column}></td>
+					);
+			}
 		}
 	}
 

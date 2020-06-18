@@ -45,7 +45,7 @@ tr.sudoku-board-row {
 	border-bottom: 1px solid red;
 }
 
-td.sudoku-board-square {
+td.sudoku-board-square.active {
 	width: 90px;
 	height: 90px;
 	padding: 0px;
@@ -53,11 +53,18 @@ td.sudoku-board-square {
 	border-right: 1px solid red;
 }
 
+td.sudoku-board-square.inactive {
+    width: 30px;
+    height: 30px;
+    padding: 0px;
+    margin: 0px;
+    border-right: 1px solid red;
+}
+
 table.sudoku-choice-grid {
 	margin: 0;
 	padding: 0;
 }
-
 
 tr.sudoku-choice-grid {
 	border-top: 1px solid green;
