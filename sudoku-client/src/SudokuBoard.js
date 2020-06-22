@@ -44,7 +44,6 @@ import React from 'react';
 // The hierarchy will go farther down when we render the move list
 // in each cell.
                                
-import { reshape1Dto2D } from './ArrayUtilities';
 import { newSerialNumber } from './SudokuUtilities';
 import SudokuChoiceGrid from './SudokuChoiceGrid';
 
@@ -67,10 +66,10 @@ class SudokuBoard extends React.Component {
 	
 	render() {
 		const D = this.props.degree;
-		const moveListArray = reshape1Dto2D(this.props.board.availableMoves,
-											D*D, D*D);
-		const assignmentArray = reshape1Dto2D(this.props.board.assignments,
-											  D*D, D*D);
+
+		const moveListArray = this.props.board.availableMoves;
+		const assignmentArray = this.props.board.assignments;
+
 		return (
 			<div key="10" className="entireBoardPlusDecorations">
 				<div key="1">
@@ -189,6 +188,10 @@ class SudokuBoard extends React.Component {
 			assignments: this.props.board.assignments
 		};
 		return result;
+	}
+
+	serial() {
+		return this.state.serialNumber;
 	}
 }
 

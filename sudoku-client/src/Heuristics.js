@@ -19,9 +19,9 @@ function dispatch(request) {
 
 function evaluateIncludeExclude(request) {
     const D = request.board.degree;
-    const assignments = reshape1Dto2D(request.board.assignments, D*D, D*D);
-    const moveLists = reshape1Dto2D(request.board.availableMoves, D*D, D*D);
-
+    const assignments = request.board.assignments;
+    const moveLists = request.board.availableMoves;
+    
     // Assumption check: the cell the user wants to assign cannot 
     // already be assigned.
     const chosenCell = request.action.cell;
