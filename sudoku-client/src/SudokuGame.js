@@ -19,12 +19,21 @@ class GameTree {
     }
 
     nodeBySerialNumber(serialNumber) {
+        console.log('nodeBySerialNumber: Requested node for board ' + serialNumber);
+        const boardNode = this.allNodes[serialNumber];
+        console.log('retrieved node: ');
+        console.log(boardNode);
         return this.allNodes[serialNumber];
+    }
+
+    boardBySerialNumber(serialNumber) {
+        return this.nodeBySerialNumber(serialNumber).board;
     }
 
     addBoard(newBoard, parentId) {
         newBoard.serialNumber = newSerialNumber('board');
         console.log('addBoard: Assigned serial number ' + newBoard.serialNumber);
+        let newNode = null;
         if (this.root === null || parentId === undefined) {
             if (this.root === null) {
                 console.log('First board received.  Setting game tree root to board ' 
@@ -32,7 +41,8 @@ class GameTree {
             } else {
                 console.log('addBoard: parentId is ' + parentId + '.  Setting game tree root.');
             }
-            this.root = new TreeNode(null);
+            newNode = new TreeNode(null);
+            this.root = newNode;
             this.root.board = newBoard;
         } else {
             const parentNode = this.nodeBySerialNumber(parentId);
@@ -40,9 +50,9 @@ class GameTree {
                 console.log('ERROR: Couldn\'t find tree node for board ' + parentId);
                 return;
             }
-            parentNode.addChildBoard(newBoard);
+            newNode = parentNode.addChildBoard(newBoard);
         }
-        this.allNodes[newBoard.serialNumber] = newBoard;
+        this.allNodes[newBoard.serialNumber] = newNode;
         console.log('After adding board with serial number ' 
                     + newBoard.serialNumber 
                     + ', board array length is ' + this.allNodes.length);
@@ -62,6 +72,7 @@ class TreeNode {
         const childNode = new TreeNode(this);
         childNode.board = board;
         this.children.push(childNode);
+        return childNode;
     }
 }
 
@@ -71,12 +82,13 @@ class SudokuGame extends React.Component {
         super(props);
 
         this.state = {
-            gameTree: null
-        }
+            gameTree: null,
+        };
         if (this.props.initialBoard !== null) {
             console.log('SudokuGame: Non-null initial board supplied with props for constructor.');
             this.state.gameTree = new GameTree();
             this.state.gameTree.addBoard(this.props.initialBoard);
+            this.state.activeBoardId = this.state.gameTree.root.board.serialNumber;
         }
     }
 
@@ -91,7 +103,8 @@ class SudokuGame extends React.Component {
         const newGameTree = new GameTree();
         newGameTree.addBoard(rootBoard);
         this.setState({
-            gameTree: newGameTree
+            gameTree: newGameTree,
+            activeBoardId: newGameTree.root.board.serialNumber,
         });
     }
 
@@ -122,9 +135,16 @@ class SudokuGame extends React.Component {
         this.setState({gameTree: updatedTree});
     }
 
+    activeBoard() {
+        if (!this.state.hasOwnProperty('activeBoardId')) {
+            console.log('ERROR: Game has no active board.  This shouldn\'t happen.');
+        } else {
+            console.log('active board ID: ' + this.state.activeBoardId);
+            return this.state.gameTree.boardBySerialNumber(this.state.activeBoardId);
+        }
+    }
+
     render() {
-        console.log('SudokuGame.render(): this.props.initialBoard:');
-        console.log(this.props.initialBoard);
         if (this.state.gameTree === null) {
             return (
                 <div>
@@ -139,30 +159,28 @@ class SudokuGame extends React.Component {
                 </div>
             );
         } else {
+            const board = this.activeBoard();
+            console.log('active board:');
+            console.log(board);
             return (
-                <div key={3}>
-                    <div key={4}>
-                        Hi.  This is the Sudoku game tree.  My responsibilities
-                        are as follows:
-                        <ul>
-                            <li>On startup, go ask some server for an initial board.</li>
-                            <li>Set up, maintain, and render the game tree.</li>
-                            <li>When the user makes a move on a board, contact the
-                                server to get the child nodes resulting from that move.</li>
-                            <li>When the user has finished the game, transmit the entire
-                                game tree to the server along with some metadata yet to
-                                be established.</li>
-                        </ul>
-                    </div>
-                    <div key={5}>
-                        <SudokuBoard 
-                            degree={this.props.degree}
-                            board={this.state.gameTree.root.board} 
-                            key={6}
-                            announceChoice={ (board, cell, choice) => {this.boardAnnouncesChoice(board,cell,choice);} }
-                        />
-                    </div>
-                </div>
+                <table id="gameTable">
+                    <tbody>
+                        <tr>
+                            <td id="entireTreeCell">
+                               This cell will contain the entire game tree.
+                            </td>
+                            <td id="activeBoardCell">
+                               This cell will contain just the active board.
+                               <SudokuBoard
+                                    degree={this.props.degree}
+                                    board={board}
+                                    active={true}
+                                    announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
+                                    />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 );
         }
     }
