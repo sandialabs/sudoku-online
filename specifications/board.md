@@ -51,7 +51,7 @@ The example move lists are probably incorrect.  They're intended as examples of 
 
 {
     degree: 2,
-    serial_number: 12345,
+    serialNumber: 12345,
     assignments: [ 
                    [ 1,    2,    null, 4    ],
                    [ 3,    null, 1,    2    ],
@@ -59,7 +59,7 @@ The example move lists are probably incorrect.  They're intended as examples of 
                    [ null, 1,    2,    null ] 
                  ],
 
-    moveLists: [ 
+    availableMoves: [ 
                  [ [], [],     [3],    []     ],
                  [ [], [4, 1], [1, 2], []     ],
                  [ [], [],     [3, 4], []     ],
