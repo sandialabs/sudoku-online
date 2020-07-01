@@ -110,7 +110,7 @@ class SudokuGame extends React.Component {
 
     boardAnnouncesChoice(board, cell, choice) {
         console.log("Board announcing choice: board serial number "
-                    + board.state.serialNumber 
+                    + board.serialNumber 
                     + ", clicked cell " 
                     + cell);
         const action = {
