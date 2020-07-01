@@ -42,10 +42,10 @@ function evaluateIncludeExclude(request) {
     const tempAssignments = clone(assignments);
     tempAssignments[chosenCell[0]][chosenCell[1]] = request.action.value;
     const [newAssignments, newMoveLists] = propagateConstraints(D, tempAssignments, moveLists);
-    return {
+    return [{
         'assignments': newAssignments,
-        'movesAvailable': newMoveLists
-    };
+        'availableMoves': newMoveLists
+    }];
 
 }
 
