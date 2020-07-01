@@ -51,11 +51,8 @@ class SudokuBoard extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			serialNumber: newSerialNumber('board'),
 			active: true,
 		};
-		console.log('constructor: props are...');
-		console.log(props)
 	}
 
 	toggleActive() {
@@ -84,7 +81,7 @@ class SudokuBoard extends React.Component {
 				<button name="toggleActive" onClick={() => {this.toggleActive();}}>Toggle Active State</button>
 				</div>
 				<p key="2">The next element down is the number board.</p>
-				<div key="3" id="board-{this.state.serialNumber}" className="board">
+				<div key="3" id="board-{this.props.board.serialNumber}" className="board">
 					{this.makeBoardTable(assignmentArray, moveListArray)}
 				</div>
 			</div>
@@ -182,7 +179,7 @@ class SudokuBoard extends React.Component {
 	asJson() {
 		const result = {
 			degree: this.props.degree,
-			serial: this.state.serialNumber,
+			serial: this.props.board.serialNumber,
 			active: this.state.isActive,
 			availableMoves: this.props.board.availableMoves,
 			assignments: this.props.board.assignments
@@ -191,7 +188,7 @@ class SudokuBoard extends React.Component {
 	}
 
 	serial() {
-		return this.state.serialNumber;
+		return this.props.board.serialNumber;
 	}
 }
 
