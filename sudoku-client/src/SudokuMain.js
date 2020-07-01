@@ -44,7 +44,7 @@ class SudokuMain extends React.Component {
 						<SudokuGame 
 							degree={this.props.degree}
 							initialBoard={this.state.initialBoard}
-							issueBoardRequest={(board, move) => {this.handleBoardRequest(board, move);}}
+							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 							/>
 					</div>
 				</div>
@@ -56,6 +56,16 @@ class SudokuMain extends React.Component {
 		}
 	}
 
+	/* Send off a request for someone else to evaluate a heuristic on a board.
+	 *
+	 * Arguments:
+	 *     board: Sudoku board to send (should it already be JSON?)
+	 *     action: struct containing the request being made
+	 *
+	 * Returns:
+	 *     Promise that will resolve with the results of whatever heuristic runs.
+	 */
+
 	handleBoardRequest(board, action) {
 		console.log("handleBoardRequest called, current heuristic is " + this.state.selectedHeuristic);
 		const request = {
@@ -63,22 +73,26 @@ class SudokuMain extends React.Component {
 			action: action,
 			heuristic: this.state.selectedHeuristic
 		};
-		this.requestHeuristicResults(request,
-									 (result) => {this.heuristicResultsArrived(board, action, result);});
+
+		// When we switch over to an actual server, this line will be replaced
+		// with something that makes an actual HTTP request.
+		return this.mockupHeuristicRequest(request);
 	}
 
-	heuristicResultsArrived(parentBoard, action, results) {
-		console.log('UNIMPLEMENTED: heuristicResultsArrived called');
-	}
+	/* Pretend that we're calling out to a server to evaluate a heuristic
+	 *
+	 * At present, our heuristics are all in Heuristics.js and SudokuMockup.js
+	 * and are called as (synchronous) functions.  In order to move this prototype
+	 * closer to the regime where we're actually calling out to a distant server,
+	 * we wrap that function call in a Javascript Promise object to force the
+	 * recipient to work as if it's asynchronous.
+	 */
 
-	requestHeuristicResults(request, resultCallback) {
-		console.log('UNIMPLEMENTED: requestHeuristicResults');
-		console.log('request:');
-		console.log(request);
-		const result = executeHeuristic(JSON.stringify(request));
-		console.log('Heuristic results:');
-		console.log(result);
-
+	mockupHeuristicRequest(request) {
+		return Promise.resolve(
+			JSON.parse(
+				executeHeuristic(
+					JSON.stringify(request))));
 	}
 
 
