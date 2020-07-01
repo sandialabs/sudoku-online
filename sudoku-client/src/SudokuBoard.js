@@ -154,14 +154,15 @@ class SudokuBoard extends React.Component {
 	}
 
 	asJson() {
-		const result = {
-			degree: this.props.degree,
-			serial: this.props.board.serialNumber,
-			active: this.state.isActive,
-			availableMoves: this.props.board.availableMoves,
-			assignments: this.props.board.assignments
-		};
-		return result;
+		return this.props.board;
+		
+		// const result = {
+		// 	degree: this.props.degree,
+		// 	serial: this.props.board.serialNumber,
+		// 	availableMoves: this.props.board.availableMoves,
+		// 	assignments: this.props.board.assignments
+		// };
+		// return result;
 	}
 
 	serial() {
