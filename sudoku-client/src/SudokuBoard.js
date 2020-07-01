@@ -50,15 +50,6 @@ import SudokuChoiceGrid from './SudokuChoiceGrid';
 class SudokuBoard extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {
-			active: true,
-		};
-	}
-
-	toggleActive() {
-		this.setState({
-			active: !this.state.active
-		});
 	}
 	
 	render() {
@@ -68,22 +59,8 @@ class SudokuBoard extends React.Component {
 		const assignmentArray = this.props.board.assignments;
 
 		return (
-			<div key="10" className="entireBoardPlusDecorations">
-				<div key="1">
-					This is a Sudoku board.  Its degree is {this.props.degree}.
-					This object's responsibilities are as follows:
-					<ul>
-						<li>Receive the board state from the game tree</li>
-						<li>Set up a D^2 x D^2 array of SudokuSquare objects</li>
-						<li>Pass the relevant "permitted moves" list to each square</li>
-						<li>Identify which square has been clicked</li>
-					</ul>
-				<button name="toggleActive" onClick={() => {this.toggleActive();}}>Toggle Active State</button>
-				</div>
-				<p key="2">The next element down is the number board.</p>
-				<div key="3" id="board-{this.props.board.serialNumber}" className="board">
+			<div key="3" id="board-{this.props.board.serialNumber}" className="board">
 					{this.makeBoardTable(assignmentArray, moveListArray)}
-				</div>
 			</div>
 		);	
 	}
@@ -131,7 +108,7 @@ class SudokuBoard extends React.Component {
 
 	makeSquare(row, column, assignments, moveLists) {
 		let cellStyleName = 'sudoku-board-square degree-' + this.props.degree;
-		if (this.state.active) {
+		if (this.props.active) {
 			cellStyleName += ' active'; 
 		} else {
 			cellStyleName += ' inactive';
@@ -144,7 +121,7 @@ class SudokuBoard extends React.Component {
 				</td>
 				);
 		} else {
-			if (this.state.active) {
+			if (this.props.active) {
 				const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
 				return (
 					<td className={allCellStyleNames} key={column}>
