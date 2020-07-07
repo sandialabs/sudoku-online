@@ -58,6 +58,17 @@ class GameTree {
                     + ', board array length is ' + this.allNodes.length);
     }
         
+    boardStructureForTreeView() {
+        if (this.root === null) {
+            return ({
+                'name': 'empty tree',
+                'toggled': false,
+                'children': []
+            }); 
+        } else {
+            return this.root.treeStructure();
+        }
+    }
 }
 
 
@@ -73,6 +84,18 @@ class TreeNode {
         childNode.board = board;
         this.children.push(childNode);
         return childNode;
+    }
+
+    treeStructure() {
+        const childStructure = this.children.map(
+            child => { return child.treeStructure(); }
+            );
+
+        return {
+            'name': 'Board ' + this.board.serialNumber,
+            'toggled': false,
+            'children': childStructure
+        }
     }
 }
 
@@ -159,6 +182,7 @@ class SudokuGame extends React.Component {
                 </div>
             );
         } else {
+            const gameTree = JSON.stringify(this.state.gameTree.boardStructureForTreeView());
             const board = this.activeBoard();
             console.log('render(): active board serial number: ' + board.serialNumber);
             console.log('active board:');
@@ -168,7 +192,7 @@ class SudokuGame extends React.Component {
                     <tbody>
                         <tr>
                             <td id="entireTreeCell">
-                               This cell will contain the entire game tree.
+                               This cell will contain the entire game tree.  Structure: {gameTree}
                             </td>
                             <td id="activeBoardCell">
                                This cell will contain just the active board.
