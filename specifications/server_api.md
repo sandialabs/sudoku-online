@@ -37,6 +37,22 @@ Do we need any other parameters for this request?
 
 The caller is responsible for keeping track of where in the game tree the new boards should be added.
 
+### List Heuristics
+
+*URL*: `/sudoku/request/list_heuristics`
+
+*Body*: No body required.
+
+*Response*: List of heuristics with both internal name and user-visible name.  Note: This may be modified to include the cost of applying each heuristic.
+
+Example response:
+
+```json
+[
+    { 'internal_name': 'include/exclude', 'user_name': 'Include/Exclude' },
+    { 'internal_name': 'pivot', 'user_name': 'Expand All Choices' }
+]
+```
 
 ### Submit Game Record
 
