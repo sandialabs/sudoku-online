@@ -50,7 +50,8 @@ function swapRows2D(array, row1, row2) {
 function swapColumns2D(array, col1, col2) {
 	var newArray = clone(array);
 	var row, tmp;
-	const [rows, columns] = dimensions(newArray);
+	const dims = dimensions(newArray);
+	const rows = dims[0];
 
 	for (row = 0; row < rows; ++row) {
 		tmp = newArray[row][col1];
@@ -102,7 +103,7 @@ function arrayRotateRightInPlace(array, count) {
 // Lay out an array in row-major order.
 function flatten(array) {
 	let result = [];
-	const [rows, columns] = dimensions(array);
+	const rows = dimensions(array)[0];
 
 	for (let r = 0; r < rows; ++r) {
 		result.push(...array[r]);
@@ -126,7 +127,6 @@ function flatten(array) {
 //         of elements 
 function reshape1Dto2D(inputArray, rows, columns, deepCopy=true) {
 	if (inputArray.length !== rows*columns) {
-		const neededElements = rows * columns;
 		throw new InvalidShapeException(
 			'Cannot reshape an array with length ' + inputArray.length 
 			+ ' to one with dimensions ' + rows + ' x ' + columns 

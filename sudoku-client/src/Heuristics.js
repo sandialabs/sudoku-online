@@ -1,8 +1,7 @@
 // Heuristics.js -- dummy implementation of Sudoku heuristics
 
-import { reshape1Dto2D } from './ArrayUtilities';
 import { computeMoveLists, makeBoard } from './SudokuUtilities';
-import { clone, filter } from 'ramda';
+import { clone } from 'ramda';
 
 function dispatch(request) {
 

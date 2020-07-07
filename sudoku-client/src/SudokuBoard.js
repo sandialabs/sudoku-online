@@ -44,7 +44,6 @@ import React from 'react';
 // The hierarchy will go farther down when we render the move list
 // in each cell.
                                
-import { newSerialNumber } from './SudokuUtilities';
 import SudokuChoiceGrid from './SudokuChoiceGrid';
 
 class SudokuBoard extends React.Component {
@@ -53,8 +52,6 @@ class SudokuBoard extends React.Component {
 	}
 	
 	render() {
-		const D = this.props.degree;
-
 		const moveListArray = this.props.board.availableMoves;
 		const assignmentArray = this.props.board.assignments;
 
