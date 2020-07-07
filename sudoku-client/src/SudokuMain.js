@@ -19,12 +19,25 @@ class SudokuMain extends React.Component {
 		this.state = {
 			initialBoard: null,
 			initialBoardDegree: false,
-			availableHeuristics: ['include/exclude'],
-			selectedHeuristic: 'include/exclude'
+			availableHeuristics: null,
+			selectedHeuristic: null
 		};
 	}
 
 	render() {
+		let heuristicPanelContents = [];
+
+		if (this.state.availableHeuristics === null) {
+			heuristicPanelContents.push(<p>Heuristic list is not yet available.</p>);
+		} else {
+			heuristicPanelContents = 
+				this.state.availableHeuristics.map(
+					heuristic => {
+						return this.makeHeuristicRadioButton(heuristic.internal_name, heuristic.user_name);
+					}
+				);
+		}
+
 		if (this.state.initialBoard !== null) {
 			return (
 				<div key={3}>
@@ -38,7 +51,7 @@ class SudokuMain extends React.Component {
 					</div>
 					<div key={5}>
 						<p>Available Heuristics</p>
-						<p>(fill this in)</p>
+						{heuristicPanelContents}
 					</div>
 					<div key={6}>
 						<SudokuGame 
@@ -56,8 +69,39 @@ class SudokuMain extends React.Component {
 		}
 	}
 
-	/* Send off a request for someone else to evaluate a heuristic on a board.
+	makeHeuristicRadioButton(internalName, userName) {
+		console.log('makeHeuristicRadioButton: internalName ' + internalName + ', userName ' + userName + ', selectedHeuristic ' + this.state.selectedHeuristic);
+		return (
+			<div className='heuristic-form' key={internalName}>
+			  <label>
+			    <input
+			      type='radio'
+			      name='selectHeuristic'
+			      value={internalName}
+			      checked={this.state.selectedHeuristic === internalName}
+			      onChange={event => {this.handleHeuristicSelection(event);}}
+			      className='heuristic-radio-button'
+			      />
+			    {userName}
+			  </label>
+			</div>
+			);
+	}
+
+	handleHeuristicSelection(changeEvent) {
+		console.log('handleHeuristicSelection: Currently selected heuristic before change is ' + this.state.selectedHeuristic);
+		console.log('handleHeuristicSelection: New heuristic is ' + changeEvent.target.value);
+		this.setState({
+			'selectedHeuristic': changeEvent.target.value
+		});
+	}
+
+	/* Send off a request for asynchronous evaluation of a heuristic.
 	 *
+	 * This function will eventually make an HTTP call to an external
+	 * server.  For now, it calls a mockup function that pretends
+	 * to be asynchronous.
+	 * 
 	 * Arguments:
 	 *     board: Sudoku board to send (should it already be JSON?)
 	 *     action: struct containing the request being made
@@ -89,6 +133,14 @@ class SudokuMain extends React.Component {
 	 */
 
 	mockupHeuristicRequest(request) {
+		const requestAsString = JSON.stringify(request);
+		const resultAsString = executeHeuristic(requestAsString);
+
+		console.log('Heuristic request as string:');
+		console.log(requestAsString);
+		console.log('Heuristic result as string:');
+		console.log(resultAsString);
+
 		return Promise.resolve(
 			JSON.parse(
 				executeHeuristic(
@@ -96,12 +148,29 @@ class SudokuMain extends React.Component {
 	}
 
 
+	requestHeuristicList() {
+		const request = { 'heuristic': 'listHeuristics', 
+	                      'board': null };
+
+	    return Promise.resolve(
+	    	JSON.parse(
+	    		executeHeuristic(
+	    			JSON.stringify(request))));
+	}
+
+	populateHeuristicList(resultFromServer) {
+		console.log('Heuristic list from server:');
+		console.log(resultFromServer);
+		this.setState({'availableHeuristics': resultFromServer});
+	}
+
 	componentDidMount() {
 		console.log('Main panel mounted.  Call out to get the initial game state.');
 		// This will be replaced with a server call once we have a server to call
 
+		const initialBoardAsString = requestInitialBoard(this.props.degree);
 
-		const initialBoard = JSON.parse(requestInitialBoard(this.props.degree));
+		const initialBoard = JSON.parse(initialBoardAsString);
 		console.log('initialBoard follows:');
 		console.log(initialBoard);
 
@@ -109,6 +178,9 @@ class SudokuMain extends React.Component {
 			initialBoard: initialBoard
 		});
 
+		this.requestHeuristicList().then(
+			heuristicList => { this.populateHeuristicList(heuristicList); }
+			);
 		
 	}
 }
