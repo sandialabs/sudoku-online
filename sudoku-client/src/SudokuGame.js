@@ -126,7 +126,7 @@ class SudokuGame extends React.Component {
     }
 
     handleNewBoards(parentSerial, action, response) {
-        console.log('UNIMPLEMENTED: handleNewBoards');
+        console.log('handleNewBoards: parentSerial is ' + parentSerial);
         console.log('type of response: ' + typeof(response));
         console.log(response);
         const updatedTree = this.state.gameTree;
@@ -160,6 +160,7 @@ class SudokuGame extends React.Component {
             );
         } else {
             const board = this.activeBoard();
+            console.log('render(): active board serial number: ' + board.serialNumber);
             console.log('active board:');
             console.log(board);
             return (

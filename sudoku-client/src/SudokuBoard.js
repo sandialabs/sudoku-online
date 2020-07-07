@@ -147,7 +147,7 @@ class SudokuBoard extends React.Component {
 
 	choiceSelected(row, column, value) {
 		console.log('Board: User chose value ' + value + ' in cell (' + row + ', ' + column + ')');
-		this.props.announceChoice(this, [row, column], value);
+		this.props.announceChoice(this.props.board, [row, column], value);
 	}
 
 	asJson() {

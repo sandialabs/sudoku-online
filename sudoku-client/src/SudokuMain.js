@@ -113,7 +113,7 @@ class SudokuMain extends React.Component {
 	handleBoardRequest(board, action) {
 		console.log("handleBoardRequest called, current heuristic is " + this.state.selectedHeuristic);
 		const request = {
-			board: board.asJson(),
+			board: board,
 			action: action,
 			heuristic: this.state.selectedHeuristic
 		};
