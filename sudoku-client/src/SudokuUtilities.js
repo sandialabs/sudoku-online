@@ -354,11 +354,20 @@ function boardIsConsistent(board) {
 	return true;
 }
 
+function makeBoard(degree, assignments, availableMoves) {
+	return {
+		'degree': degree,
+		'assignments': clone(assignments),
+		'availableMoves': clone(availableMoves)
+	};
+}
+
 export { 
 	clearRandomCells,
+	computeMoveLists,
 	filledBoard,
 	initialMoveList,
-	computeMoveLists,
+	makeBoard,
 	newSerialNumber, 
 	range, 
 	setDifference, 
