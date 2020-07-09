@@ -20,14 +20,15 @@ import puzzles
 
 
 def test_sudoku(args):
-    board.Board.initialize()
+    # board.Board.initialize()
     operators.set_verbosity(args.verbosity)
 
     my_ops = []
     if args.opselector == "all_logical_operators_ordered":
         my_ops = solvers.select_all_logical_operators_ordered()
     if args.parameterizeoperators:
-        my_ops = solvers.parameterize_logical_operators(args.parameterizeoperators)
+        my_ops = solvers.parameterize_logical_operators(
+            args.parameterizeoperators)
 
     if not args.puzzles:
         args.puzzles = puzzles.puzzles.keys()
@@ -67,7 +68,8 @@ def test_sudoku(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Call sudoku solver, parameterized as desired')
+    parser = argparse.ArgumentParser(
+        description='Call sudoku solver, parameterized as desired')
     parser.add_argument('--puzzles', metavar='NAME', type=str, nargs='*',
                         help='puzzles to run through the solver; do not use argument to run all puzzles.')
     parser.add_argument('--verbosity', '-v', action='count', default=1)

@@ -20,7 +20,8 @@ class Cell():
     candidate values that the Cell may take.
     """
 
-    value_set = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+    value_set = ['1', '2', '3', '4', '5', '6', '7',
+                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 
     def __init__(self, identifier, value='.', degree=3):
         """ Initializes a Cell with an identifier and valueset or another cell.
@@ -44,9 +45,11 @@ class Cell():
             assert isinstance(self._id, str), "Cell's id should be a string"
             self._propagated = identifier._propagated
             # TODO: MAL: Michael, what is propagated for?
-            assert isinstance(self._propagated, bool), "Cell's _propagated should be a boolean"
+            assert isinstance(self._propagated, bool), \
+                "Cell's _propagated should be a boolean"
             self._values = identifier._values.copy()
-            assert isinstance(self._values, set), "Cell's values should be a set"
+            assert isinstance(self._values, set), \
+                "Cell's values should be a set"
             self._degree = identifier._degree
         else:
             # If identifier is a unique ID (str or int)
@@ -101,7 +104,8 @@ class Cell():
         """
         # TODO Is this assertion a problem?
         assert value in self._values, \
-            "Cannot assign %s to Cell %s" % (str(value), str(self.getIdentifier))
+            "Cannot assign %s to Cell %s" % (
+                str(value), str(self.getIdentifier))
         if len(self._values) > 1:
             self._values = {value}
             return True
@@ -215,7 +219,7 @@ class Board():
     @classmethod
     def getSortedRows(cls, degree=3):
         """ Get all unit names in a puzzle of degree. """
-        return sorted([name for name in filter(lambda x : cls.getUnitType(x) == 'row',
+        return sorted([name for name in filter(lambda x: cls.getUnitType(x) == 'row',
                                                cls.unit_defns[degree].keys())])
 
     @classmethod
@@ -259,7 +263,8 @@ class Board():
         common_cell_set = set(cls.getAssociatedCells(cell_id_list[0]))
 
         for cell_id in cell_id_list:
-            common_cell_set = common_cell_set & set(cls.getAssociatedCells(cell_id))
+            common_cell_set = common_cell_set & set(
+                cls.getAssociatedCells(cell_id))
 
         return list(common_cell_set)
 
@@ -348,7 +353,7 @@ class Board():
         rows and columns and then creates the unit map by inverting the
         unit defns.
         """
-        for degree in [degree]: #range(2, 4):
+        for degree in [degree]:  # range(2, 4):
             width = degree ** 2
 
             # Map from each unit to cell names in that unit
@@ -399,7 +404,8 @@ class Board():
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
-            assignments = [item for row in state['assignments'] for item in row]
+            assignments = [item
+                           for row in state['assignments'] for item in row]
             options = [item for row in state['availableMoves'] for item in row]
             self._id = state['serialNumber']
             self._degree = state['degree']
@@ -508,7 +514,8 @@ class Board():
                         # For each column, have one - for each possibility plus a space.
                         # Have degree columns per section, a + between each section,
                         #   and degree number of sections
-                        output += '+-'.join([('-' * (degree ** 2) + '-') * degree] * degree) + '\n'
+                        output += '+-'.join([('-' * (degree ** 2) + '-')
+                                             * degree] * degree) + '\n'
                     else:
                         # Have two -- for each column (degree), a + between each section,
                         #   and degree number of sections
@@ -520,18 +527,18 @@ class Board():
 
     def getSimpleJson(self):
         """ Return simple json listing possible values across the board. """
-        def sorted_row_cells(row) :
+        def sorted_row_cells(row):
             return sorted(Board.getUnitCells(row, self.getDegree()))
         brd = {
-            'degree' : self.getDegree(),
-            'serialNumber' : self.getIdentifier(),
-            'assignments' : [[self.getCell(identifier).getCertainValue()
-                              for identifier in sorted_row_cells(row)]
-                             for row in Board.getSortedRows(self.getDegree())],
-            'availableMoves' : [[sorted(filter(lambda x : x != self.getCell(identifier).getCertainValue(),
-                                               self.getCell(identifier).getValueSet()))
-                                 for identifier in sorted_row_cells(row)]
-                                for row in Board.getSortedRows(self.getDegree())],
+            'degree': self.getDegree(),
+            'serialNumber': self.getIdentifier(),
+            'assignments': [[self.getCell(identifier).getCertainValue()
+                             for identifier in sorted_row_cells(row)]
+                            for row in Board.getSortedRows(self.getDegree())],
+            'availableMoves': [[sorted(filter(lambda x: x != self.getCell(identifier).getCertainValue(),
+                                              self.getCell(identifier).getValueSet()))
+                                for identifier in sorted_row_cells(row)]
+                               for row in Board.getSortedRows(self.getDegree())],
         }
         return brd
         # return json.dumps(brd)

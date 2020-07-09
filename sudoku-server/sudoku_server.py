@@ -16,8 +16,8 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 
-#@app.route('/sudoku/request/initialize', methods=['GET'])
-#def do_initialize_board_class():
+# @app.route('/sudoku/request/initialize', methods=['GET'])
+# def do_initialize_board_class():
 #    board.Board.initialize()
 #    print(board.Board.unit_map)
 #    return jsonify("Welcome")
@@ -40,6 +40,8 @@ def get_initial_board():
     # TODO MAL add parent
 
 # MAL TODO talk to Andy about changing this to a different name
+
+
 @app.route('/sudoku/request/heuristic', methods=['POST'])
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.

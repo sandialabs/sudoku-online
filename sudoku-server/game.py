@@ -24,7 +24,8 @@ def get_initial_board(content, simplify=True):
     until no more progress can be made.
     """
     puzzle = None
-    assert isinstance(content, dict), "Failed assumption that request for initial board is formatted as a dict"
+    assert isinstance(content, dict), \
+        "Failed assumption that request for initial board is formatted as a dict"
     name = content['name'] if 'name' in content else None
     degree = content['degree'] if 'degree' in content else 3
 
@@ -38,6 +39,7 @@ def get_initial_board(content, simplify=True):
     if simplify:
         solvers.singles_operators(full_board)
     return full_board.getSimpleJson()
+
 
 def parse_and_apply_action(content, simplify=True):
     """
@@ -53,50 +55,59 @@ def parse_and_apply_action(content, simplify=True):
     Returns:
         [Boards] : a collection of boards resulting from the selection action.
     """
-    assert isinstance(content, dict), "Failed assumption that request for action on board is formatted as a dict"
+    assert isinstance(content, dict), \
+        "Failed assumption that request for action on board is formatted as a dict"
     if 'board' not in content:
-        return {'error' : 'You must specify a board to act upon.'}
+        return {'error': 'You must specify a board to act upon.'}
     board_dict = content['board']
-    assert isinstance(board_dict, dict), "Failed assumption that the parsed board is a dict."
+    assert isinstance(
+        board_dict, dict), "Failed assumption that the parsed board is a dict."
     board_object = board.Board(board_dict)
 
     if 'action' not in content:
-        return {'error' : 'You must specify an action to take on the given board.'}
+        return {'error': 'You must specify an action to take on the given board.'}
     action_dict = content['action']
-    assert isinstance(action_dict, dict), "Failed assumption that the parsed action is a dict."
+    assert isinstance(action_dict, dict), \
+        "Failed assumption that the parsed action is a dict."
     assert 'action' in action_dict, "Failed assumption that action request specified the action to take."
     action_choice = action_dict['action']
 
     result = []
     if action_choice == "selectValueForCell":
         # Assign the value to the given cell
-        assert 'cell' in action_dict and 'value' in action_dict, "Must specify cell and value in selectValueForCell action"
+        assert 'cell' in action_dict and 'value' in action_dict, \
+            "Must specify cell and value in selectValueForCell action"
         cell_loc = action_dict['cell']
-        assert isinstance(cell_loc, list) and 2 == len(cell_loc), "Must specify cell using [x,y] location notation."
+        assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
+            "Must specify cell using [x,y] location notation."
         cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
         value = action_dict['value']
-        result = solvers.assign_cell_action(board_object, cell_id, value, simplify)
+        result = solvers.assign_cell_action(
+            board_object, cell_id, value, simplify)
     elif action_choice == "pivotOnCell":
         # Expand the cell specified by the string parameter
         assert 'cell' in action_dict, "Must specify cell in pivotOnCell action"
-        # MAL TODO copied code -- bad!
+        # MAL TODO copied code from above - refactor?
         cell_loc = action_dict['cell']
-        assert isinstance(cell_loc, list) and 2 == len(cell_loc), "Must specify cell using [x,y] location notation."
+        assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
+            "Must specify cell using [x,y] location notation."
         cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
         result = solvers.expand_cell_action(board_object, cell_id, simplify)
     elif action_choice == "applyLogicalOperators":
         # Apply the logical operators specified by the op/param list of pairs
-        assert 'operators' in action_dict, "Must specify list of operators in applyLogicalOperators action"
+        assert 'operators' in action_dict, \
+            "Must specify list of operators in applyLogicalOperators action"
         operators = action_dict['operators']
-        result = [solvers.logical_solve(board.Board(board_object), parameter)]
+        result = [solvers.logical_solve(board.Board(board_object), operators)]
     else:
-        return {'error' : ('unknown action ' + str(action_choice))}
+        return {'error': ('unknown action ' + str(action_choice))}
 
     jsoned_result = []
     for full_board in result:
         jsoned_result.append(full_board.getSimpleJson())
 
     return jsoned_result
+
 
 class ActiveGameTreeState():
     """
@@ -133,7 +144,7 @@ class ActiveGameTreeState():
         if len(self._active_nodes) > 1:
             print("Choose a board to explore:\n")
             # MAL TODO gross
-            for i in range(len(self._active_nodes)) :
+            for i in range(len(self._active_nodes)):
                 node = self._active_nodes[i]
                 print("{}\n{}".format(i, node.board.getStateStr(True)))
             idx = int(input())
@@ -141,7 +152,8 @@ class ActiveGameTreeState():
             self._active_nodes.remove(active)
         else:
             active = self._active_nodes.pop()
-        print("DEBUG: Exploring board \n{}".format(active.board.getStateStr(True)))
+        print("DEBUG: Exploring board \n{}".format(
+            active.board.getStateStr(True)))
         return active
 
     def addSuccessNode(self, node):
@@ -154,7 +166,8 @@ class ActiveGameTreeState():
         """
         Print all successful game boards discovered.
         """
-        print("Successful boards: \n{}".format("\n".join([node.board.getStateStr() for node in self._success_nodes])))
+        print("Successful boards: \n{}".format(
+            "\n".join([node.board.getStateStr() for node in self._success_nodes])))
 
 
 class GameTreeNode():
@@ -209,7 +222,8 @@ class GameTreeNode():
 
         # If the board is fully constrained and a valid solution
         if self.board.isSolved():
-            self._debug("Puzzle solved!  Board:\n{}".format(self.board.getStateStr()))
+            self._debug("Puzzle solved!  Board:\n{}".format(
+                self.board.getStateStr()))
             success_node = GameTreeNode(self.board,
                                         parent=self,
                                         success=True,
@@ -238,7 +252,8 @@ class GameTreeNode():
         new_board = board.Board(self.board)
         my_ops = solvers.select_all_logical_operators_ordered()
         resboard = solvers.logical_solve(new_board, my_ops)
-        determined_moves = [item for item in resboard.getCertainCells() if item not in self.board.getCertainCells()]
+        determined_moves = [item
+                            for item in resboard.getCertainCells() if item not in self.board.getCertainCells()]
 
         # We applied rules and made progress.  Recurse.
         if len(determined_moves) > 0:
@@ -293,16 +308,19 @@ class GameTreeNode():
 
         # Select a cell to pivot
         names = [cell.getIdentifier() for cell in options]
-        print("Which cell do you want to expand into all possible options? {}".format(names))
+        print(
+            "Which cell do you want to expand into all possible options? {}".format(names))
         selected = input()
         pivot = self.board.getCell(selected)
-        new_boards = solvers.expand_cell_action(self.board, pivot.getIdentifier())
+        new_boards = solvers.expand_cell_action(
+            self.board, pivot.getIdentifier())
 
         # Make a new board for each possible value for that cell
         children = []
         for child in new_boards:
             move = set()
-            move.add(pivot.getIdentifier())  # WARNING: PROBABLY BREAKS ABSTRACTION BARRIER
+            # WARNING: PROBABLY BREAKS ABSTRACTION BARRIER
+            move.add(pivot.getIdentifier())
             child_node = GameTreeNode(child,
                                       parent=self,
                                       moves=move,
@@ -322,7 +340,7 @@ class GameTreeNode():
 
 
 def test_sudoku():
-    board.Board.initialize()
+    # board.Board.initialize()
     root = board.Board(puzzles.puzzles['underconstrained1'])
 
     # solver = Solver(board)

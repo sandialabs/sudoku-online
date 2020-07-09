@@ -179,6 +179,7 @@ def logical_solve(sboard, logical_ops, restart=True):
 # BEYOND-LOGICAL PUZZLE SOLVER SUPPORT METHODS
 # -----------------------------------------------------------------------------
 
+
 def simplify_expansions(sboard_collection, simplify):
     """ If simplify is true, apply singles_operators to all boards in sboard_collection. """
     ret = []
@@ -189,6 +190,7 @@ def simplify_expansions(sboard_collection, simplify):
     else:
         ret = sboard_collection
     return ret
+
 
 def expand_cell_action(sboard, cell_id, simplify=True):
     """ Expand all possible values of cell and simplify resulting boards.
@@ -270,7 +272,7 @@ def select(sboard, heuristic, criterion, selector):
     cell_list = sboard.getUncertainCells()
 
     # Apply heuristic to get list of (cell, score) tuples
-    hscores = list(map(lambda cell : (cell, heuristic(cell)), cell_list))
+    hscores = list(map(lambda cell: (cell, heuristic(cell)), cell_list))
 
     # Apply criterion to determine the best score
     selection = criterion([score for (cell, score) in hscores])
@@ -328,7 +330,7 @@ def users_choice(cell_list):
     print("Which cell do you want to expand? {}".format(names))
     selected = input()
     print(selected)
-    return next(filter(lambda x : x.getIdentifier() == selected, cell_list))
+    return next(filter(lambda x: x.getIdentifier() == selected, cell_list))
 
 # -----------------------------------------------------------------------------
 # LOGIC/SEARCH COMBINED PUZZLE SOLVERS
@@ -362,8 +364,8 @@ def combined_solve(sboard, logical_ops=[], cellselector=None):
         return None
 
     # Some action needs to be taken
-    if (operators.verbosity > 2) :
-        print("Taking selecting cell using " + str(cellselector) \
+    if (operators.verbosity > 2):
+        print("Taking selecting cell using " + str(cellselector)
               + " and expanding cell using " + str(expand_cell_action))
     cell = cellselector(result)
     expansion = expand_cell_action(result, cell.getIdentifier())
