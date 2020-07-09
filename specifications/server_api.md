@@ -1,6 +1,6 @@
 # Sudoku Server API
 
-This file specifies the URLs that correspond to functions that the server will evaluate.  
+This file specifies the URLs that correspond to functions that the server will evaluate.
 
 THIS IS JUST A DRAFT.  Shelley and Andy will fill this out as they discuss what the interface will look like.
 
@@ -9,7 +9,9 @@ THIS IS JUST A DRAFT.  Shelley and Andy will fill this out as they discuss what 
 
 *URL*: `/sudoku/request/initialBoard`
 
-*Body*: `{ degree: N }` (N is an integer, probably 2 or 3)
+*Body*: `{ 'degree': N, 'name': <string_name> }` (N is an integer, probably 2 or 3),
+and the optional parameter name specifies which puzzle to pull.
+In SudokuOnline, this will be used to identify how far into the series of puzzles a player is.
 
 *Response*: Single board represented as JSON
 
@@ -19,7 +21,7 @@ Do we need any other parameters for this request?
 
 *URL*: `/sudoku/request/heuristic`
 
-*Body*: 
+*Body*:
 
 ```json
 {
@@ -57,4 +59,3 @@ Example response:
 ### Submit Game Record
 
 To be determined.
-
