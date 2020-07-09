@@ -46,8 +46,7 @@ def get_initial_board():
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.
 
-    Possible actions include selectValueForCell (cell_id, value), pivotOnCell (cell_id),
-    and applyLogicalOperators (list of logical operators to apply)
+    Possible actions can be obtained by calling list_heuristics.
     """
     content = request.json
     if content is None:
@@ -55,6 +54,16 @@ def take_given_action():
         return jsonify(None)
 
     return jsonify(game.parse_and_apply_action(content))
+
+
+@app.route('/sudoku/request/list_heuristics', methods=['GET'])
+def list_possible_actions():
+    """ Returns the possible actions that could be applied.
+
+    Possible actions include selectValueForCell (cell_id, value), pivotOnCell (cell_id),
+    and applyLogicalOperators (list of logical operators to apply)
+    """
+    return jsonify(game.get_possible_actions())
 
 
 if __name__ == '__main__':

@@ -14,6 +14,7 @@ import board
 import solvers
 import puzzles
 import random
+import logger
 
 
 def get_initial_board(content, simplify=True):
@@ -107,6 +108,33 @@ def parse_and_apply_action(content, simplify=True):
         jsoned_result.append(full_board.getSimpleJson())
 
     return jsoned_result
+
+
+def get_possible_actions():
+    """ Return a list of all possible actions for this game.
+
+    May eventually want to update to alter possible actions for all possible games. """
+    actions = list()
+    actions.append({'internal_name': 'pivotOnCell',
+                    'user_name': 'Expand All Choices'})
+    actions.append({'internal_name': 'selectValueForCell',
+                    'user_name': 'Make an assignment'})
+    # actions.append({'internal_name': 'include/exclude',
+    #                'user_name': 'Propagate assignments',
+    #                'cost': logger.COST_INCLUSION})
+    actions.append({'internal_name': 'applyLogicalOperators',
+                    'user_name': 'Apply selected operators',
+                    'operators': [{'operator': 'xwing/ywing/zwing', 'cost': logger.COST_XWINGS},
+                                  {'operator': 'pointing/naked/hidden pairs',
+                                      'cost': logger.COST_HIDDEN_PAIRS},
+                                  {'operator': 'pointing/naked/hidden triples',
+                                      'cost': logger.COST_HIDDEN_TRIPLES},
+                                  {'operator': 'naked/hidden quads',
+                                      'cost': logger.COST_HIDDEN_QUADS},
+                                  ]})
+
+    print(actions)
+    return actions
 
 
 class ActiveGameTreeState():

@@ -18,7 +18,7 @@ if res.ok:
     result = res.json()
     print(json.dumps(result))
 
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard')
+res = requests.get('http://localhost:5000/sudoku/request/initialBoard')
 if res.ok:
     result = res.json()
     print(json.dumps(result))
@@ -35,5 +35,10 @@ with open('../tests/json/fiendish2-5788010997871579626.assign-1-4-to6.json') as 
     action = json.load(f)
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=action)
+if res.ok:
+    print(json.dumps(res.json()))
+
+print("Trying to list heuristics")
+res = requests.get('http://localhost:5000/sudoku/request/list_heuristics')
 if res.ok:
     print(json.dumps(res.json()))
