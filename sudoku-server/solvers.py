@@ -223,8 +223,27 @@ def assign_cell_action(sboard, cell_id, value, simplify=True):
             cell to the value, and the board from removing that value from the options.
 
     Inclusion and exclusion have been applied to each possible board.
+    The board with all the other options is set to a background board.
     """
     expansion = operators.expand_cell_with_assignment(sboard, cell_id, value)
+    return simplify_expansions(expansion, simplify)
+
+
+def exclude_cell_value_action(sboard, cell_id, value, simplify=True):
+    """ Assign value to cell_id, returning the board with value removed and the one with that value assigned.
+
+    Args:
+        sboard (Board)   : the Board containing the Cell to be expanded.
+        cell_id (String) : the name of the Cell to remove value from
+    Returns:
+        [Boards] : the board that result from assigning the selected
+            cell to the value, and the board from removing that value from the options.
+
+    Inclusion and exclusion have been applied to each possible board.
+    The board with the assignment is set to a background board.
+    """
+    expansion = operators.expand_cell_with_assignment(
+        sboard, cell_id, value, make_exclusion_primary=True)
     return simplify_expansions(expansion, simplify)
 
 

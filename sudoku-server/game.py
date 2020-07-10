@@ -77,25 +77,25 @@ def parse_and_apply_action(content, simplify=True):
     action_choice = action_dict['action']
 
     result = []
-    if action_choice == "selectValueForCell":
-        # Assign the value to the given cell
-        assert 'cell' in action_dict and 'value' in action_dict, \
-            "Must specify cell and value in selectValueForCell action"
+    cell_loc = None
+    value = None
+    if "Cell" in action_choice:
+        assert 'cell' in action_dict, "Must specify cell in a *Cell action"
         cell_loc = action_dict['cell']
         assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
             "Must specify cell using [x,y] location notation."
         cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
+    if "Value" in action_choice:
+        assert 'value' in action_dict, "Must specify cell value in *Value* actions"
         value = action_dict['value']
+    if action_choice == "selectValueForCell":
         result = solvers.assign_cell_action(
+            board_object, cell_id, value, simplify)
+    elif action_choice == "excludeValueFromCell":
+        result = solvers.exclude_cell_value_action(
             board_object, cell_id, value, simplify)
     elif action_choice == "pivotOnCell":
         # Expand the cell specified by the string parameter
-        assert 'cell' in action_dict, "Must specify cell in pivotOnCell action"
-        # MAL TODO copied code from above - refactor?
-        cell_loc = action_dict['cell']
-        assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
-            "Must specify cell using [x,y] location notation."
-        cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
         result = solvers.expand_cell_action(board_object, cell_id, simplify)
     elif action_choice == "applyLogicalOperators":
         # Apply the logical operators specified by the op/param list of pairs
@@ -118,10 +118,13 @@ def get_possible_actions():
 
     May eventually want to update to alter possible actions for all possible games. """
     actions = list()
+    # MAL TODO Do we want to take in multiple actions and apply them all?
     actions.append({'internal_name': 'pivotOnCell',
                     'user_name': 'Expand All Choices'})
     actions.append({'internal_name': 'selectValueForCell',
                     'user_name': 'Make an assignment'})
+    actions.append({'internal_name': 'excludeValueFromCell',
+                    'user_name': 'Remove possible value from a cell'})
     # actions.append({'internal_name': 'include/exclude',
     #                'user_name': 'Propagate assignments',
     #                'cost': logger.COST_INCLUSION})

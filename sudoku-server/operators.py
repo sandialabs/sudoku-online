@@ -1250,7 +1250,7 @@ def expand_cell(sboard, cell_id):
     return expansion
 
 
-def expand_cell_with_assignment(sboard, cell_id, value):
+def expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=False):
     """
     Expands the board cell identified by cell_id into partitions specified.
 
@@ -1291,11 +1291,15 @@ def expand_cell_with_assignment(sboard, cell_id, value):
     removed = board.Board(sboard)
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
-    removed.setToBackground()
     if(verbosity > 1):
         print("Removing %s from %s, resulting in %s" % (str(bcell.getIdentifier()),
                                                         str(value),
                                                         str(bcell.getValueSet())))
     expansion.append(removed)
+
+    if make_exclusion_primary:
+        assigned.setToBackground()
+    else:
+        removed.setToBackground()
 
     return expansion
