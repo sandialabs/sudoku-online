@@ -1291,6 +1291,7 @@ def expand_cell_with_assignment(sboard, cell_id, value):
     removed = board.Board(sboard)
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
+    removed.setToBackground()
     if(verbosity > 1):
         print("Removing %s from %s, resulting in %s" % (str(bcell.getIdentifier()),
                                                         str(value),

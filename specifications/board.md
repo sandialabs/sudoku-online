@@ -23,9 +23,12 @@ Required:
 
 We may want to highlight certain cells in the board.
 
-- *Board parent serial number*: unique integer
+- *Board parent serial number*: optional unique integer of parent board
 - *Goal cells*: cells whose values we want the user to affect indirectly
 - *Accessible cells*: cells the user is permitted to act upon
+- *Conflicting cells*: optional cells that have no possible solution (structured as a list just like accessibleCells)
+- *solved*: optional boolean indicating whether this board represents an acceptable and complete solution
+- *backtrackingBoard*: optional boolean indicating whether this board is only available to allow the user to backtrack and handle incorrect assignments or exclusions
 
 ### Current Assignments
 
@@ -69,6 +72,8 @@ The example move lists are probably incorrect.  They're intended as examples of 
                ],
 
     goalCell: [0, 2],
-    accessibleCells: [ [3, 0], [3, 3] ]
+    accessibleCells: [ [3, 0], [3, 3] ],
+    solved: True
+
 }
 ```

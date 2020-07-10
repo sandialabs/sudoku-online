@@ -404,6 +404,7 @@ class Board():
         # (though it's been pointed out that they might leak a little information about MAC address)
         self._id = uuid.uuid1().int >> 64
         self._parent_id = None
+        self._is_background = False
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
@@ -449,6 +450,14 @@ class Board():
             output += str(self._state[key]) + '\n'
 
         return output
+
+    def setToBackground(self):
+        """ Sets this board to indicate whether it should be considered a background board.
+
+        Background boards represent places to which a user can back up over his own decision
+        if he accidentally placed himself in a corner.  They are lower priority.
+        """
+        self._is_background = True
 
     def getDegree(self):
         """ Returns the degree of this puzzle board. """
@@ -573,6 +582,8 @@ class Board():
             invalid_locs = [list(type(self).getLocations(
                 id, self.getDegree())) for id in invalid_cells]
             brd['conflictingCells'] = invalid_locs
+        if self._is_background:
+            brd['backtrackingBoard'] = True
         return brd
         # return json.dumps(brd)
 
