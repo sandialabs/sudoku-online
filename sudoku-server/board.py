@@ -30,7 +30,7 @@ class Cell():
         Args:
             identifier   : a string identifier within a board (value expected),
                             or a cell to copy
-            value        : the set of potential values, or '.' for complete value set
+            value        : the collection of potential values, or '.' for complete value set
             degree (int) : the number of blocks on a side (determines values)
         Returns:
             Cell   : a new cell.
@@ -51,9 +51,7 @@ class Cell():
             self._propagated = identifier._propagated
             assert isinstance(self._propagated, bool), \
                 "Cell's _propagated should be a boolean"
-            self._values = identifier._values.copy()
-            assert isinstance(self._values, set), \
-                "Cell's values should be a set"
+            self._values = sorted(list(identifier._values))
             self._degree = identifier._degree
         else:
             # If identifier is a unique ID (str or int)
@@ -62,14 +60,16 @@ class Cell():
             self._degree = degree
             if (value == '0' or value == '.'):
                 # Get all possible values
-                self._values = set(Cell.getPossibleValuesByDegree(degree))
+                self._values = sorted(Cell.getPossibleValuesByDegree(degree))
             elif isinstance(value, str):
-                self._values = {self.getValueDisplays(
-                    self._degree).index(value)}
+                self._values = [self.getValueDisplays(
+                    self._degree).index(value)]
             elif isinstance(value, list):
-                self._values = set(value)
+                self._values = sorted((value))
             elif isinstance(value, int):
-                self._values = {value}
+                self._values = [value]
+
+        assert isinstance(self._values, list), "Cell's values should be a list"
 
     @ classmethod
     def getPossibleValuesByDegree(cls, degree=3):
@@ -111,7 +111,7 @@ class Cell():
             "Cannot assign %s to Cell %s" % (
                 str(value), str(self.getIdentifier))
         if len(self._values) > 1:
-            self._values = {value}
+            self._values = [value]
             return True
         return False
 
@@ -120,12 +120,10 @@ class Cell():
         Remove value from self's set of candidate values.
         Return True if the value was present, False otherwise.
         """
-        assert isinstance(
-            self._values, set), "Got wrong type : " + str(type(self._values))
         try:
             self._values.remove(value)
             return True
-        except KeyError:
+        except ValueError:
             return False
 
     def getCertainValue(self):
@@ -134,7 +132,7 @@ class Cell():
         Otherwise return None
         """
         if(len(self._values) == 1):
-            return list(self._values)[0]
+            return self._values[0]
         return None
 
     def getIdentifier(self):
