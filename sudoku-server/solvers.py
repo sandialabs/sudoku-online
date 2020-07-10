@@ -112,7 +112,8 @@ def select_all_logical_operators_ordered():
 def parameterize_logical_operators(ops_list):
     """ Returns a logical operator selector ordered as the pairs given in ops_list. """
     my_ops = []
-    print(str(ops_list))
+    if (operators.verbosity > 1):
+        print(str(ops_list))
     it = iter(ops_list)
     for op in it:
         # TODO MAL BAD PRACTICE - ask cll for help

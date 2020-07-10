@@ -115,7 +115,7 @@ def logical_inclusion(sboard):
 
         # init dict to track cells for which each value is a candidate
         value_dict = {}
-        for value in board.Cell.getPossibleValueSet(sboard.getDegree()):
+        for value in board.Cell.getPossibleValuesByDegree(sboard.getDegree()):
             value_dict[value] = []
 
         # for each cell in the unit
@@ -898,7 +898,7 @@ def __find_xwings(sboard):
     # iterate through all units in the baord
     for unit in sboard.getAllUnits():
         # iterate through all possible values
-        for value in board.Cell.getPossibleValues():
+        for value in board.Cell.getPossibleValuesByDegree(sboard.getDegree()):
 
             # this function count the number of times a value is present in a unit
             # and returns the count and the cells that contain this value
@@ -947,7 +947,7 @@ def __find_xwings(sboard):
                          sboard.getUnitType(second_intersection_unit_list[0]))):
                         # we've found an x-wing!
 
-                        exclusion_string = str(current_value)
+                        exclusion_value = current_value
                         excluded_cells = []
 
                         # we iterate through the units common to the candidates
@@ -963,16 +963,16 @@ def __find_xwings(sboard):
                                     cell = sboard.getCell(cell_name)
 
                                     # if the value is presentin a cell, we exclude it
-                                    if exclusion_string in cell.getValueSet():
+                                    if exclusion_value in cell.getValueSet():
                                         excluded_cells.append(cell_name)
-                                        cell.exclude(exclusion_string)
+                                        cell.exclude(exclusion_value)
 
                         if len(excluded_cells) > 0:
                             sboard.log.logOperator(
                                 'xwings', sboard.getStateStr(True, False))
 
                             if(verbosity > 1):
-                                print('X-WING', candidates, 'excludes', exclusion_string,
+                                print('X-WING', candidates, 'excludes', str(exclusion_value),
                                       'from', sorted(excluded_cells))
     return sboard
 
@@ -1062,8 +1062,7 @@ def __find_ywings(sboard):
 
                                 # The value common to the two pincer's is the one we can elminate
                                 # From any cell that's common to both of them
-                                exclusion_string = str(
-                                    candidate_intersection_value_set.pop())
+                                exclusion_value = candidate_intersection_value_set.pop()
                                 excluded_cells = []
 
                                 # We iterate through the cells associated with both pincers
@@ -1072,16 +1071,16 @@ def __find_ywings(sboard):
                                     associated_cell = sboard.getCell(
                                         associated_cell_name)
 
-                                    if (associated_cell.hasValue(exclusion_string) and
+                                    if (associated_cell.hasValue(exclusion_value) and
                                             associated_cell_name not in y_wing):
                                         found_ywing = True
                                         associated_cell.exclude(
-                                            exclusion_string)
+                                            exclusion_value)
                                         excluded_cells.append(
                                             associated_cell_name)
 
                                 if verbosity > 1 and len(excluded_cells) > 0:
-                                    print('Y-WING', y_wing, 'excludes', exclusion_string, 'from',
+                                    print('Y-WING', y_wing, 'excludes', str(exclusion_value), 'from',
                                           sorted(excluded_cells))
 
                                 if found_ywing:
@@ -1146,17 +1145,17 @@ def __find_xyzwings(sboard):
                             # in common
                             common_cells = sboard.getCommonCells(xyz_wing)
                             exclusion_set = current_value_set & candidate_intersection_set
-                            exclusion_string = exclusion_set.pop()
+                            exclusion_value = exclusion_set.pop()
                             excluded_cells = []
 
                             for cell_name in common_cells:
                                 cell = sboard.getCell(cell_name)
-                                if cell.hasValue(exclusion_string):
+                                if cell.hasValue(exclusion_value):
                                     found_xyz_wing = True
                                     excluded_cells.append(cell_name)
-                                    cell.exclude(exclusion_string)
+                                    cell.exclude(exclusion_value)
                             if verbosity > 1 and len(excluded_cells) > 0:
-                                print('XYZ-WING', xyz_wing, 'excludes', exclusion_string,
+                                print('XYZ-WING', xyz_wing, 'excludes', str(exclusion_value),
                                       'from', sorted(excluded_cells))
                             if found_xyz_wing:
                                 sboard.log.logOperator(

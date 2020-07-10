@@ -35,6 +35,10 @@ class Cell():
         Returns:
             Cell   : a new cell.
 
+        Fields:
+            propagated (boolean) : True if the cell assignment has been propagated to
+                sister cells (i.e., removing values from that cell)
+
         Identifier parameter must be either a string or a Cell.
         NOTE: the value set is copied via set.copy(), which is fine for
               ints and strs, but won't work if the values become some other
@@ -45,7 +49,6 @@ class Cell():
             self._id = identifier._id
             assert isinstance(self._id, str), "Cell's id should be a string"
             self._propagated = identifier._propagated
-            # TODO: MAL: Michael, what is propagated for?
             assert isinstance(self._propagated, bool), \
                 "Cell's _propagated should be a boolean"
             self._values = identifier._values.copy()
@@ -59,7 +62,7 @@ class Cell():
             self._degree = degree
             if (value == '0' or value == '.'):
                 # Get all possible values
-                self._values = Cell.getPossibleValueSet(degree)
+                self._values = set(Cell.getPossibleValuesByDegree(degree))
             elif isinstance(value, str):
                 self._values = {self.getValueDisplays(
                     self._degree).index(value)}
@@ -69,8 +72,7 @@ class Cell():
                 self._values = {value}
 
     @ classmethod
-    # TODO getAllValues
-    def getPossibleValues(cls, degree=3):
+    def getPossibleValuesByDegree(cls, degree=3):
         """ Returns sorted list of all possible values for puzzle of degree.
         Raises:
             TypeError if degree is not squareable
@@ -86,14 +88,7 @@ class Cell():
 
         Note: this could be canonicalized to save memory, but it isn't.
         """
-        return [cls.display_list[idx] for idx in cls.getPossibleValues(degree)]
-
-    @ classmethod
-    # TODO remove this
-    def getPossibleValueSet(cls, degree=3):
-        """ Returns set of all possible values for puzzle of degree.
-        """
-        return set(cls.getPossibleValues(degree))
+        return [cls.display_list[idx] for idx in cls.getPossibleValuesByDegree(degree)]
 
     def __str__(self):
         return 'Cell(ID=' + str(self._id) + \
@@ -155,8 +150,7 @@ class Cell():
         displays = Cell.getValueDisplays(self._degree)
         width = sum([len(x) for x in displays]) + 1
         if(uncertain):
-            # TODO MAL self.getValues
-            s = [displays[val] for val in sorted(self.getValueSet())]
+            s = [displays[val] for val in sorted(self.getValues())]
             if not s:
                 # Underconstrained: highlight a conflict
                 return str.center('!', width)
@@ -166,9 +160,13 @@ class Cell():
         else:
             return '. '
 
+    def getValues(self):
+        """ Return ordered list of current possible values. """
+        return self._values
+
     def getValueSet(self):
         """ Return set of current possible values. """
-        return self._values
+        return set(self._values)
 
     def hasValue(self, value):
         """ Return True iff value is possible in this Cell. """
@@ -398,7 +396,6 @@ class Board():
         Initialize a board for a puzzle of degree with the given state.
         State parameter can be a string, a json, or a Board to copy.
         """
-        # MAL TODO Make sure the class was initialized before we started
         try:
             Board.unit_map[degree]
         except KeyError:
@@ -463,7 +460,7 @@ class Board():
 
         for cell in self.getCells():
             if(not cell.isCertain()):
-                n += len(cell.getValueSet())
+                n += len(cell.getValues())
 
         return n
 
@@ -477,7 +474,7 @@ class Board():
             value = str(value)
         for cell_name in self.getUnitCells(unit_name):
             cell = self.getCell(cell_name)
-            if value in cell.getValueSet():
+            if value in cell.getValues():
                 value_count += 1
                 cells_with_value.append(cell_name)
         return value_count, cells_with_value
@@ -551,7 +548,7 @@ class Board():
                              for identifier in sorted_row_cells(row)]
                             for row in Board.getSortedRows(self.getDegree())],
             'availableMoves': [[sorted(filter(lambda x: x != self.getCell(identifier).getCertainValue(),
-                                              self.getCell(identifier).getValueSet()))
+                                              self.getCell(identifier).getValues()))
                                 for identifier in sorted_row_cells(row)]
                                for row in Board.getSortedRows(self.getDegree())],
         }
@@ -570,7 +567,7 @@ class Board():
         """
 
         for cell in self.getCells():
-            if len(cell.getValueSet()) == 0:
+            if len(cell.getValues()) == 0:
                 return True
         return False
 
@@ -633,7 +630,7 @@ class Board():
                     values.add(cell_val)
 
             # If the set of values for the unit is not the full set of values
-            if(values != Cell.getPossibleValueSet()):
+            if(values != set(Cell.getPossibleValuesByDegree(self.getDegree()))):
                 return False
 
         return True
