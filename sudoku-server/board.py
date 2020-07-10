@@ -20,8 +20,9 @@ class Cell():
     candidate values that the Cell may take.
     """
 
-    value_set = ['1', '2', '3', '4', '5', '6', '7',
-                 '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
+    # An ordered list of
+    display_list = ['1', '2', '3', '4', '5', '6', '7',
+                    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G']
 
     def __init__(self, identifier, value='.', degree=3):
         """ Initializes a Cell with an identifier and valueset or another cell.
@@ -56,30 +57,39 @@ class Cell():
             self._id = identifier
             self._propagated = False
             self._degree = degree
-            # TODO MAL come back to this as it will cause problems integrating with Andy
             if (value == '0' or value == '.'):
-                # Collect those values up to degree^2
-                # Slicing should automatically copy it
+                # Get all possible values
                 self._values = Cell.getPossibleValueSet(degree)
-            else:
+            elif isinstance(value, str):
+                self._values = {self.getValueDisplays(
+                    self._degree).index(value)}
+            elif isinstance(value, list):
                 self._values = set(value)
+            elif isinstance(value, int):
+                self._values = {value}
 
-    @classmethod
-    def getNumPossibleValues(cls, degree=3):
-        """ Returns the number of possible values: degee ^ 2
-        """
-        return degree ** 2
-
-    @classmethod
+    @ classmethod
+    # TODO getAllValues
     def getPossibleValues(cls, degree=3):
         """ Returns sorted list of all possible values for puzzle of degree.
+        Raises:
+            TypeError if degree is not squareable
         """
         try:
-            return cls.value_set[:cls.getNumPossibleValues(degree)]
+            return [x for x in range(degree ** 2)]
         except TypeError:
             assert False, "Cell's degree must be square-able (**2)"
 
-    @classmethod
+    @ classmethod
+    def getValueDisplays(cls, degree=3):
+        """ Returns sorted list of all display values for puzzle of degree.
+
+        Note: this could be canonicalized to save memory, but it isn't.
+        """
+        return [cls.display_list[idx] for idx in cls.getPossibleValues(degree)]
+
+    @ classmethod
+    # TODO remove this
     def getPossibleValueSet(cls, degree=3):
         """ Returns set of all possible values for puzzle of degree.
         """
@@ -97,12 +107,11 @@ class Cell():
         Args:
             value   : the only value this cell can take on
         Returns:
-            boolean : True if otherh values were eliminated by this assignment
+            boolean : True if other values were eliminated by this assignment
                       False if no cell update occurred
         Raises:
             AssertionError  : if value was not a valid possibility
         """
-        # TODO Is this assertion a problem?
         assert value in self._values, \
             "Cannot assign %s to Cell %s" % (
                 str(value), str(self.getIdentifier))
@@ -116,6 +125,8 @@ class Cell():
         Remove value from self's set of candidate values.
         Return True if the value was present, False otherwise.
         """
+        assert isinstance(
+            self._values, set), "Got wrong type : " + str(type(self._values))
         try:
             self._values.remove(value)
             return True
@@ -127,7 +138,6 @@ class Cell():
         If cell has only one candidate value, return it
         Otherwise return None
         """
-
         if(len(self._values) == 1):
             return list(self._values)[0]
         return None
@@ -142,15 +152,17 @@ class Cell():
                                otherwise return '.'
         If uncertain is True, return the value set as a string
         """
-        width = Cell.getNumPossibleValues(self._degree) + 1
+        displays = Cell.getValueDisplays(self._degree)
+        width = sum([len(x) for x in displays]) + 1
         if(uncertain):
-            s = sorted(self.getValueSet())
+            # TODO MAL self.getValues
+            s = [displays[val] for val in sorted(self.getValueSet())]
             if not s:
                 # Underconstrained: highlight a conflict
                 return str.center('!', width)
             return str.center(''.join(s), width)
-        elif(len(self._values) == 1):
-            return list(self._values)[0] + ' '
+        elif self.isCertain():
+            return displays[self.getCertainValue()] + ' '
         else:
             return '. '
 
@@ -191,7 +203,7 @@ class Board():
     unit_defns = {}
     unit_map = {}
 
-    @classmethod
+    @ classmethod
     def getCellUnits(cls, cell_id, degree=3):
         """ Return units associated with cell_id in a puzzle of degree.
 
@@ -201,28 +213,28 @@ class Board():
             cell_id = cell_id.getIdentifier()
         return cls.unit_map[degree][cell_id]
 
-    @classmethod
+    @ classmethod
     def getUnitCells(cls, unit_id, degree=3):
         """ Return cells associated with unit_id in a puzzle of degree. """
         return cls.unit_defns[degree][unit_id]
 
-    @classmethod
+    @ classmethod
     def getAllCells(cls, degree=3):
         """ Get all cell names in a puzzle of degree. """
         return cls.unit_map[degree].keys()
 
-    @classmethod
+    @ classmethod
     def getAllUnits(cls, degree=3):
         """ Get all unit names in a puzzle of degree. """
         return cls.unit_defns[degree].keys()
 
-    @classmethod
+    @ classmethod
     def getSortedRows(cls, degree=3):
         """ Get all unit names in a puzzle of degree. """
         return sorted([name for name in filter(lambda x: cls.getUnitType(x) == 'row',
                                                cls.unit_defns[degree].keys())])
 
-    @classmethod
+    @ classmethod
     def getUnitType(cls, unit):
         """ Get the type of the unit.
 
@@ -239,7 +251,7 @@ class Board():
         else:
             return 'Invalid Input'
 
-    @classmethod
+    @ classmethod
     def getAssociatedCells(cls, cell_id):
         """
         Get all cells in units associated with
@@ -254,7 +266,7 @@ class Board():
                     associated_cells.append(unit_cell)
         return associated_cells
 
-    @classmethod
+    @ classmethod
     def getCommonCells(cls, cell_id_list):
         """
         Get list of all cells jointly associated
@@ -268,7 +280,7 @@ class Board():
 
         return list(common_cell_set)
 
-    @classmethod
+    @ classmethod
     def getCommonUnits(cls, cell_id_list):
         """
         Get list of all units jointly associated
@@ -281,7 +293,7 @@ class Board():
 
         return list(common_unit_set)
 
-    @classmethod
+    @ classmethod
     def getUnionUnitSet(cls, cell_id_list):
         """
         Get union set of units for the given cells
@@ -293,21 +305,21 @@ class Board():
 
         return union_unit_set
 
-    @classmethod
+    @ classmethod
     def getCellID(cls, row, col):
         """ Returns cell identifier given row and column identifier strings. """
         r = row[1]
         c = col[1:]
         return r + c
 
-    @classmethod
+    @ classmethod
     def getCellIDFromArrayIndex(cls, row, col):
         """ Returns cell identifier given row and column integer. """
         rnm = cls._rname(row)
         cnm = cls._cname(col)
         return cls.getCellID(rnm, cnm)
 
-    @classmethod
+    @ classmethod
     def getBoxID(cls, row, col, deg):
         """ Returns box identifier given row and column identifier and puzzle degree. """
         r = row[1]
@@ -318,7 +330,7 @@ class Board():
         box_base = (int((ord(r) - 64 + deg - 1) / deg) - 1) * deg
         return 'b' + str(box_base + box_off)
 
-    @classmethod
+    @ classmethod
     def getLocations(cls, id, deg):
         """ Returns the row, column location of cell id as ints
         in a puzzle of degree deg.
@@ -328,22 +340,22 @@ class Board():
         c = int(id[1:])
         return (r, c)
 
-    @classmethod
+    @ classmethod
     def _cname(cls, idx):
         # Start counting from 'c1'
         return 'c' + str(idx+1)
 
-    @classmethod
+    @ classmethod
     def _rname(cls, idx):
         # Start counting from 'rA'
         return 'r' + chr(65 + idx)
 
-    @classmethod
+    @ classmethod
     def _bname(cls, idx):
         # Start counting from 'b1'
         return 'b' + str(idx+1)
 
-    @classmethod
+    @ classmethod
     def initialize(cls, degree):
         """
         Initialize the unit definitions (mapping of unit names to cell names)
@@ -415,15 +427,18 @@ class Board():
                 cell_state = assignments[i] if assignments[i] else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
-        else:
+        elif isinstance(state, str):
             # State is a str; initialize it
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
                 self._state[identifier] = Cell(identifier, state[i])
                 i += 1
             self._degree = degree
+        else:
+            raise TypeError('Can\'t initialize Board from input type ' + type(state)
+                            + '. (Must be Board, dict, or str.)')
 
-        Board.log = logger.SudokuLogger(state)
+        Board.log = logger.SudokuLogger(self.getPuzzle())
 
     def __str__(self):
         output = "Board State:\n"

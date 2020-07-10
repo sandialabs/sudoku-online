@@ -15,6 +15,7 @@ import solvers
 import puzzles
 import random
 import logger
+import operators
 
 
 def get_initial_board(content, simplify=True):
@@ -37,6 +38,8 @@ def get_initial_board(content, simplify=True):
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
         print(name)
     full_board = board.Board(puzzle, degree)
+    if(operators.verbosity > 2):
+        print(str(full_board))
     if simplify:
         solvers.singles_operators(full_board)
     return full_board.getSimpleJson()

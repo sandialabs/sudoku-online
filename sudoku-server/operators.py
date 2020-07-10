@@ -15,7 +15,7 @@ import copy
 # GLOBAL METHODS
 # -----------------------------------------------------------------------------
 
-verbosity = 0
+verbosity = 1
 
 
 def set_verbosity(v):
@@ -86,6 +86,8 @@ def logical_exclusion(sboard):
                             print("Assigned", c_name,
                                   "=", c.getCertainValue(),
                                   "by exclusion")
+                            if(verbosity > 2):
+                                print(str(sboard))
 
         cell.setPropagated()
 
@@ -113,7 +115,7 @@ def logical_inclusion(sboard):
 
         # init dict to track cells for which each value is a candidate
         value_dict = {}
-        for value in board.Cell.value_set:
+        for value in board.Cell.getPossibleValueSet(sboard.getDegree()):
             value_dict[value] = []
 
         # for each cell in the unit
@@ -135,8 +137,11 @@ def logical_inclusion(sboard):
                 sboard.log.logOperator(
                     'inclusion', sboard.getStateStr(True, False))
                 if(verbosity > 1):
+                    # TODO MAL make logging print the display value, not just the idx
                     print("Assigned", cell_list[0].getIdentifier(),
                           "=", value, "by inclusion")
+                    if(verbosity > 2):
+                        print(str(sboard))
 
     return sboard
 
