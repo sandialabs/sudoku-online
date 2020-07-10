@@ -10,6 +10,7 @@
     "board": {
         "degree": 3,
         "serialNumber": 5788018997871579626,
+        "puzzleName": "fiendish2",
         "assignments": [[7, 4, null, null, null, 1, 3, null, null],
                         [6, 1, null, null, null, null, null, null, 8],
                         [null, null, 3, null, null, null, null, 1, null],

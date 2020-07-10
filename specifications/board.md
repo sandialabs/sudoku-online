@@ -21,7 +21,7 @@ Required:
 
 ### Other Metadata
 
-We may want to highlight certain cells in the board.
+We may want to highlight certain cells in the board, or pass around additional metadata about the board.
 
 - *Board parent serial number*: optional unique integer of parent board
 - *Goal cells*: cells whose values we want the user to affect indirectly
@@ -29,6 +29,7 @@ We may want to highlight certain cells in the board.
 - *Conflicting cells*: optional cells that have no possible solution (structured as a list just like accessibleCells)
 - *solved*: optional boolean indicating whether this board represents an acceptable and complete solution
 - *backtrackingBoard*: optional boolean indicating whether this board is only available to allow the user to backtrack and handle incorrect assignments or exclusions
+- *puzzleName*: optional string name of the puzzle
 
 ### Current Assignments
 
@@ -57,6 +58,7 @@ The example move lists are probably incorrect.  They're intended as examples of 
     degree: 2,
     serialNumber: 12345,
     parentSerialNumber: 1234,
+    puzzleName: "underconstrained1_4x4",
     assignments: [
                    [ 1,    2,    null, 4    ],
                    [ 3,    null, 1,    2    ],

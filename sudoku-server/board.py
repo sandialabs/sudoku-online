@@ -389,7 +389,7 @@ class Board():
                     else:
                         cls.unit_map[degree][cell] = [unit]
 
-    def __init__(self, state=['.' for i in range(0, 81)], degree=3):
+    def __init__(self, state=['.' for i in range(0, 81)], degree=3, name=None):
         """
         Initialize a board for a puzzle of degree with the given state.
         State parameter can be a string, a json, or a Board to copy.
@@ -405,12 +405,14 @@ class Board():
         self._id = uuid.uuid1().int >> 64
         self._parent_id = None
         self._is_background = False
+        self._puzzle_name = name
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
             self._parent_id = state._id
+            self._puzzle_name = state._puzzle_name
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
@@ -421,6 +423,8 @@ class Board():
             self._degree = state['degree']
             if 'parentSerialNumber' in state:
                 self._parent_id = state['parentSerialNumber']
+            if 'puzzleName' in state:
+                self._puzzle_name = state['puzzleName']
             # Initialize cell state
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
@@ -584,6 +588,8 @@ class Board():
             brd['conflictingCells'] = invalid_locs
         if self._is_background:
             brd['backtrackingBoard'] = True
+        if self._puzzle_name:
+            brd['puzzleName'] = self._puzzle_name
         return brd
         # return json.dumps(brd)
 

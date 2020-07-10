@@ -36,8 +36,9 @@ def get_initial_board(content, simplify=True):
         puzzle = puzzles.puzzles[name]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        print(name)
-    full_board = board.Board(puzzle, degree)
+        if(operators.verbosity > 0):
+            print(name)
+    full_board = board.Board(puzzle, degree, name)
     if(operators.verbosity > 2):
         print(str(full_board))
     if simplify:
