@@ -328,13 +328,13 @@ class Board():
 
     @ classmethod
     def getLocations(cls, id, deg):
-        """ Returns the row, column location of cell id as ints
+        """ Returns the row, column location of cell id as int indices into a 2D array
         in a puzzle of degree deg.
         TODO: Currently assumes id is of the form "rc[c]"
         """
         r = ord(id[0])-64
         c = int(id[1:])
-        return (r, c)
+        return (r-1, c-1)
 
     @ classmethod
     def _cname(cls, idx):
@@ -423,7 +423,7 @@ class Board():
             # Initialize cell state
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
-                cell_state = assignments[i] if assignments[i] else options[i]
+                cell_state = assignments[i] if assignments[i] is not None else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
         elif isinstance(state, str):
@@ -459,8 +459,12 @@ class Board():
         return self._id
 
     def countUncertainValues(self):
+        """ Counts the number of uncertain values summed across all uncertain cells.
+        """
+        # Alternate implementation:
+        # uncertain_cells = filter(lambda c: not c.isCertain(), self.getCells())
+        # n = sum([len(cell.getValues()) for cell in uncertain_cells])
         n = 0
-
         for cell in self.getCells():
             if(not cell.isCertain()):
                 n += len(cell.getValues())
@@ -468,13 +472,10 @@ class Board():
         return n
 
     def getValueCountAndCells(self, unit_name, value):
-        """
-        counts number of times a value is present in a unit
+        """ Counts number of times a value is present in a unit.
         """
         value_count = 0
         cells_with_value = []
-        if type(value) == int:
-            value = str(value)
         for cell_name in self.getUnitCells(unit_name):
             cell = self.getCell(cell_name)
             if value in cell.getValues():
@@ -515,16 +516,18 @@ class Board():
         for identifier in sorted(Board.getAllCells(degree)):
             if human_readable:
                 (row, col) = Board.getLocations(identifier, degree)
-                output += self.getCell(identifier).getStateStr(uncertain)
                 # Tricky formatting: first check if we should end a row
-                if col == (degree ** 2):
-                    output += '\n'
+                if 0 == col:
+                    # Have to have this as a separate check so our elif down below triggers properly
+                    # and we don't end up with an extra | right before the first line
+                    if 0 != row:
+                        output += '\n'
                 # Then, if we didn't end a row, check if we should end a section.
                 elif 0 == col % degree:
                     output += '| '
 
                 # Finally, insert row separators if needed
-                if(0 == row % degree and row != (degree ** 2) and col == (degree ** 2)):
+                if(0 == row % degree and row != 0 and col == 0):
                     if(uncertain):
                         # For each column, have one - for each possibility plus a space.
                         # Have degree columns per section, a + between each section,
@@ -535,6 +538,9 @@ class Board():
                         # Have two -- for each column (degree), a + between each section,
                         #   and degree number of sections
                         output += '+-'.join(['--' * degree] * degree) + '\n'
+
+                # Finally print the state string
+                output += self.getCell(identifier).getStateStr(uncertain)
             else:
                 output += (self.getCell(identifier).getStateStr(uncertain).strip() + '|')
 
@@ -552,11 +558,21 @@ class Board():
                             for row in Board.getSortedRows(self.getDegree())],
             'availableMoves': [[sorted(filter(lambda x: x != self.getCell(identifier).getCertainValue(),
                                               self.getCell(identifier).getValues()))
-                                for identifier in sorted_row_cells(row)]
+                                for identifier in sorted_row_cells(row)]  # for each cell id in the row,
+                               # print all the values for that cell that aren't the certain value
+                               # (this gives us an empty list when the cell is certain)
                                for row in Board.getSortedRows(self.getDegree())],
         }
         if self._parent_id:
             brd['parentSerialNumber'] = self._parent_id
+        if self.isSolved():
+            brd['solved']: True
+        invalid_cells = self.invalidCells()
+        if invalid_cells:
+            # Get the locations in row, column form of the given cell id
+            invalid_locs = [list(type(self).getLocations(
+                id, self.getDegree())) for id in invalid_cells]
+            brd['conflictingCells'] = invalid_locs
         return brd
         # return json.dumps(brd)
 
@@ -566,19 +582,9 @@ class Board():
         """
         return [cell for cell in self.getCells() if not cell.isCertain()]
 
-    def hasContradiction(self):
-        """
-        Returns True if any cell of the board has an empty value set.
-        """
-
-        for cell in self.getCells():
-            if len(cell.getValues()) == 0:
-                return True
-        return False
-
     def invalidCells(self):
         """
-        Returns the set of cells that make this board insoluble.
+        Returns the set of cell IDs for cells that make this board insoluble.
 
         Returns those cells that are over-constrained, i.e., that have no possible values left,
         and those cells that are assigned but that conflict with each other.
@@ -614,7 +620,7 @@ class Board():
                     # Save the current value -> cell id for later overlap detection
                     values[cell_val].add(cell_id)
 
-        return problem_cell_ids
+        return list(problem_cell_ids)
 
     def isSolved(self):
         """
@@ -630,12 +636,16 @@ class Board():
             for cell_id in cells:
                 cell_val = self.getCell(cell_id).getCertainValue()
                 if cell_val is None:
+                    # Cell hasn't been assigned yet, or is over-constrained
                     return False
                 else:
                     values.add(cell_val)
 
             # If the set of values for the unit is not the full set of values
             if(values != set(Cell.getPossibleValuesByDegree(self.getDegree()))):
+                # Assignment doesn't represent all possible values
+                # At least one cell has a conflicting assignment, or is over-constrained
+                #   (at least, you'll find that after applying exclusion if you haven't already)
                 return False
 
         return True

@@ -170,7 +170,7 @@ def logical_solve(sboard, logical_ops, restart=True):
                     sboard = singles_operators(sboard)
 
     # If we found a contradiction (bad guess earlier in search), return None
-    if(sboard.hasContradiction()):
+    if(sboard.invalidCells()):
         if(operators.verbosity > 1):
             print("Found logical contradiction.")
         return None
@@ -181,15 +181,17 @@ def logical_solve(sboard, logical_ops, restart=True):
 # -----------------------------------------------------------------------------
 
 
-def simplify_expansions(sboard_collection, simplify):
+def simplify_expansions(sboard_collection, simplify, include_invalid_boards=True):
     """ If simplify is true, apply singles_operators to all boards in sboard_collection. """
     ret = []
-    if simplify:
-        for brd in sboard_collection:
+    for brd in sboard_collection:
+        if simplify:
             # Apply inclusion and exclusion for free
-            ret.append(singles_operators(brd))
-    else:
-        ret = sboard_collection
+            brd = operators.logical_exclusion(brd)
+        if include_invalid_boards or not brd.invalidCells():
+            # Include the board if we're including everything
+            # OR if it's not got a proven contradiction yet
+            ret.append(brd)
     return ret
 
 
@@ -309,7 +311,7 @@ def select_by_user(sboard):
 
 def candidate_values_heuristic(cell):
     """ Taking in a Cell, return the number of candidate values. """
-    return len(cell.getValueSet())
+    return len(cell.getValues())
 
 
 def uniform_heuristic(cell):
@@ -359,7 +361,7 @@ def combined_solve(sboard, logical_ops=[], cellselector=None):
         return result
 
     # If we found a contradiction (bad guess earlier in search), return None
-    elif(not result or result.hasContradiction()):
+    elif(not result or result.invalidCells()):
         if(operators.verbosity > 1):
             print("Found contradiction.")
         return None

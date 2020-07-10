@@ -48,6 +48,7 @@ def logical_exclusion(sboard):
     Propagates the exclusion constraints from the constraint list.
     For each cell whose value set has been reduced to one value v
         remove v from the value set of all other cells in the same unit.
+    Iterate until there are no new single-value cells.
     See comments below for additional algorithmic details.
     """
 
