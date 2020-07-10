@@ -131,16 +131,16 @@ def get_possible_actions():
     #                'cost': logger.COST_INCLUSION})
     actions.append({'internal_name': 'applyLogicalOperators',
                     'user_name': 'Apply selected operators',
-                    'operators': [{'operator': 'xwing/ywing/zwing', 'cost': logger.COST_XWINGS},
-                                  {'operator': 'pointing/naked/hidden pairs',
+                    'operators': [{'operator': 'xwing', 'cost': logger.COST_XWINGS},
+                                  {'operator': 'ywing', 'cost': logger.COST_YWINGS},
+                                  {'operator': 'hidden pairs',
                                       'cost': logger.COST_HIDDEN_PAIRS},
-                                  {'operator': 'pointing/naked/hidden triples',
-                                      'cost': logger.COST_HIDDEN_TRIPLES},
-                                  {'operator': 'naked/hidden quads',
-                                      'cost': logger.COST_HIDDEN_QUADS},
+                                  {'operator': 'naked pairs',
+                                      'cost': logger.COST_NAKED_PAIRS},
+                                  {'operator': 'naked triples',
+                                      'cost': logger.COST_NAKED_TRIPLES},
                                   ]})
 
-    print(actions)
     return actions
 
 
