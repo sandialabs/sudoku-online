@@ -49,3 +49,15 @@ print("Trying to list heuristics")
 res = requests.get('http://localhost:5000/sudoku/request/list_heuristics')
 if res.ok:
     print(json.dumps(res.json()))
+
+res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "test2-i24e40",
+                                                                               'degree': 3})
+if res.ok:
+    result = res.json()
+    print(json.dumps(result))
+
+res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "test36-i30e33np2hp2yw1",
+                                                                               'degree': 3})
+if res.ok:
+    result = res.json()
+    print(json.dumps(result))
