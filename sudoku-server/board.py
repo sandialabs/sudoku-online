@@ -403,11 +403,13 @@ class Board():
         # Generate a UID integer from uuid1.  These bits are largely dependent on clock
         # (though it's been pointed out that they might leak a little information about MAC address)
         self._id = uuid.uuid1().int >> 64
+        self._parent_id = None
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
+            self._parent_id = state._id
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
@@ -416,6 +418,8 @@ class Board():
             options = [item for row in state['availableMoves'] for item in row]
             self._id = state['serialNumber']
             self._degree = state['degree']
+            if 'parentSerialNumber' in state:
+                self._parent_id = state['parentSerialNumber']
             # Initialize cell state
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
@@ -436,7 +440,8 @@ class Board():
         Board.log = logger.SudokuLogger(self.getPuzzle())
 
     def __str__(self):
-        output = "Board State:\n"
+        output = "Board " + str(self._id) \
+            + " (child of " + str(self._parent_id) + ") State:\n"
         output += self.getStateStr(True)
 
         output += '\nCells:\n'
@@ -550,6 +555,8 @@ class Board():
                                 for identifier in sorted_row_cells(row)]
                                for row in Board.getSortedRows(self.getDegree())],
         }
+        if self._parent_id:
+            brd['parentSerialNumber'] = self._parent_id
         return brd
         # return json.dumps(brd)
 
