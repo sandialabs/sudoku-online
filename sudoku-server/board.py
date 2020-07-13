@@ -442,7 +442,8 @@ class Board():
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
 
-        Board.log = logger.SudokuLogger(self.getPuzzle())
+        # TODO MAL move this to test / elsewhere ?
+        Board.log = logger.SudokuLogger(self.getStateStr(False, False, ''))
 
     def __str__(self):
         output = "Board " + str(self._id) \
@@ -512,12 +513,6 @@ class Board():
         """
         return [cell for cell in self.getCells() if cell.isCertain()]
 
-    def getPuzzle(self):
-        puzzle = ''
-        for identifier in sorted(Board.getAllCells(self.getDegree())):
-            puzzle += self.getCell(identifier).getStateStr(False).strip()
-        return puzzle
-
     def getStateStr(self, uncertain=False, human_readable=True, sep='|'):
         """
         Returns the board state as a string, with or without uncertainty information
@@ -555,7 +550,7 @@ class Board():
                 # Finally print the state string
                 output += self.getCell(identifier).getStateStr(uncertain)
             else:
-                output += (self.getCell(identifier).getStateStr(uncertain).strip() + '|')
+                output += (self.getCell(identifier).getStateStr(uncertain).strip() + sep)
 
         return output
 

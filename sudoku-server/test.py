@@ -56,7 +56,7 @@ def test_sudoku(args):
                 print('sboard,log,score', str(sboard.log.getDifficultyScore())+':',
                       sboard.log.getDifficultyLevel())
 
-                sboard.log.setSolution(sboard.getPuzzle())
+                sboard.log.setSolution(sboard.getStateStr(False, False, ''))
                 sboard.log.printLogJSON()
 
             print("Final State of %s:" % name)
