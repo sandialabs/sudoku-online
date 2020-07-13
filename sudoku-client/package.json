@@ -9,7 +9,9 @@
     "ramda": "^0.27.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "react-treebeard": "^3.2.4",
+    "typescript": "^3.9.6"
   },
   "scripts": {
     "start": "react-scripts start",
