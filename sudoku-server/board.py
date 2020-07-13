@@ -518,10 +518,10 @@ class Board():
             puzzle += self.getCell(identifier).getStateStr(False).strip()
         return puzzle
 
-    def getStateStr(self, uncertain=False, human_readable=True):
+    def getStateStr(self, uncertain=False, human_readable=True, sep='|'):
         """
-        Returns the board as a string, with or without the
-        uncertainty information
+        Returns the board state as a string, with or without uncertainty information
+        sep separates the cells in a non human-readable printing
         """
         degree = self.getDegree()
         output = ''

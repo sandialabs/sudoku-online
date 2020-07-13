@@ -225,7 +225,8 @@ def assign_cell_action(sboard, cell_id, value, simplify=True):
     Inclusion and exclusion have been applied to each possible board.
     The board with all the other options is set to a background board.
     """
-    expansion = operators.expand_cell_with_assignment(sboard, cell_id, value)
+    expansion = operators.expand_cell_with_assignment(
+        sboard, cell_id, value, make_exclusion_primary=False)
     return simplify_expansions(expansion, simplify)
 
 
