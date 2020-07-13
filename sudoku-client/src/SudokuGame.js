@@ -8,9 +8,13 @@
 //
 // This component manages the game tree, including initial setup.
 
+import { Treebeard, decorators } from 'react-treebeard';
 import React from 'react';
 import SudokuBoard from './SudokuBoard';
 import { newSerialNumber } from './SudokuUtilities';
+import { ExampleTree } from './ExampleTree';
+import { TestGameTree } from './TestGameTree';
+import { GameTreeRenderer } from './GameTreeRenderer';
 
 class GameTree {
     constructor() {
@@ -62,8 +66,7 @@ class GameTree {
         if (this.root === null) {
             return ({
                 'name': 'empty tree',
-                'toggled': false,
-                'children': []
+                'toggled': false
             }); 
         } else {
             return this.root.treeStructure();
@@ -87,15 +90,20 @@ class TreeNode {
     }
 
     treeStructure() {
-        const childStructure = this.children.map(
-            child => { return child.treeStructure(); }
-            );
-
-        return {
+        const result = { 
             'name': 'Board ' + this.board.serialNumber,
             'toggled': false,
-            'children': childStructure
+            'boardSerial': this.board.serialNumber,
+            'board': this.board
+        };
+
+        if (this.children.length > 0) {
+            result.children = this.children.map(
+                child => { return child.treeStructure(); }
+                );
         }
+        return result;
+
     }
 }
 
@@ -167,6 +175,17 @@ class SudokuGame extends React.Component {
         }
     }
 
+    toggleTreeNode(node, toggled) {
+        console.log('toggleTreeNode called: toggled = ' + toggled);
+        console.log('selected node: ');
+        console.log(node);
+        node.active = true;
+        if (node.children) {
+            node.toggled = toggled;
+        }
+    }
+
+
     render() {
         if (this.state.gameTree === null) {
             return (
@@ -182,30 +201,45 @@ class SudokuGame extends React.Component {
                 </div>
             );
         } else {
-            const gameTree = JSON.stringify(this.state.gameTree.boardStructureForTreeView());
+            const gameTree = this.state.gameTree.boardStructureForTreeView();
+            const gameTreeAsString = JSON.stringify(gameTree);
             const board = this.activeBoard();
             console.log('render(): active board serial number: ' + board.serialNumber);
             console.log('active board:');
             console.log(board);
+            console.log('gameTree in SudokuGame: ');
+            console.log(gameTree);
             return (
-                <table id="gameTable">
-                    <tbody>
-                        <tr>
-                            <td id="entireTreeCell">
-                               This cell will contain the entire game tree.  Structure: {gameTree}
-                            </td>
-                            <td id="activeBoardCell">
-                               This cell will contain just the active board.
-                               <SudokuBoard
-                                    degree={this.props.degree}
-                                    board={board}
-                                    active={true}
-                                    announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
-                                    />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <div>
+                        Here is the example tree.
+                        <ExampleTree />
+                    </div>
+                    <table id="gameTable">
+                        <tbody>
+                            <tr>
+                                <td id="entireTreeCell">
+                                    This cell will contain the entire game tree.
+                                    <div>
+                                        <p>Game tree:</p>
+                                        <GameTreeRenderer
+                                            tree={gameTree}
+                                            />
+                                    </div>
+                                </td>
+                                <td id="activeBoardCell">
+                                   This cell will contain just the active board.
+                                   <SudokuBoard
+                                        degree={this.props.degree}
+                                        board={board}
+                                        active={true}
+                                        announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
+                                        />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 );
         }
     }
