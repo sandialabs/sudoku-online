@@ -11,151 +11,8 @@ Sudoku Board operators.
 import board
 # from board import Cell
 import copy
-# -----------------------------------------------------------------------------
-# GLOBAL METHODS
-# -----------------------------------------------------------------------------
 
 verbosity = 1
-
-
-def set_verbosity(v):
-    """
-    Set verbosity level for the logical operators.
-
-    Verbosity levels:
-    0 = Silent
-    1 = Display initial and final board states only
-    2 = Indicate cell assignments and associated rule as they are made
-    3 = Show the board uncertainty state after each rule application
-    """
-    global verbosity
-    verbosity = v
-
-
-operators_description = {
-    'assign': {'function': 'expand_cell_with_assignment',
-               'requested_arguments': ['cell_id', 'value'],
-               'hardcoded_arguments': False,
-               'cost': 10,
-               'user_name': 'Assign: assign given value to cell.',
-               'description': 'Return one board with the assignment '
-               + 'and another (backup) with the exclusion.'},
-    'exclude': {'function': 'expand_cell_with_assignment',
-                'requested_arguments': ['cell_id', 'value'],
-                'hardcoded_arguments': True,
-                'cost': 10,
-                'user_name': 'Exclude: remove given value from cell.',
-                'description': 'Return one board with the exclusion '
-                + 'and another (backup) with the assignment done.'},
-    'pivot': {'function': 'expand_cell', 'requested_arguments': ['cell_id'],
-              'cost': 50,
-              'user_name': 'Pivot: expand all choices for cell.',
-              'description': 'Return a separate board for each possible value '
-              + 'in cell_id.'},
-    'exclusion': {'function': 'logical_exclusion',
-                  'cost': 100,
-                  'user_name': 'Exclusion: exclude assigned values from cells in unit.',
-                  'description': 'For each cell with a given value, remove '
-                  + 'that value from all other cells in the same unit '
-                  + '(row, column, and box)'},
-    'inclusion': {'function': 'logical_inclusion',
-                  'cost': 100,
-                  'user_name': 'Inclusion: assign values that have only one possible cell.',
-                  'description': 'Search board units for values '
-                  + 'that have only one possible cell and make that assignment.'},
-    'pointingpairs': {'function': 'find_pointing_candidates', 'hardcoded_arguments': 'pairs',
-                      'cost': 250,
-                      'user_name': 'Pointing pairs: remove aligned value pairs from other units.',
-                      'description': 'If any one value is present only two or three times in just one unit, '
-                      + 'then we can remove that number from the intersection of a number unit. '
-                      + 'There are four types of intersections: '
-                      + '1. A pair or triple in a box - if they are aligned on a row, the '
-                      + 'value can be removed from the rest of the row. '
-                      + '2. A pair or triple in a box, if they are aligned on a column, the '
-                      + 'value can be removed from the rest of the column. '
-                      + '3. A pair or triple on a row - if they are all in the same box, the '
-                      + 'value can be removed from the rest of the box. '
-                      + '4. A pair or triple on a column - if they are all in the same box, the '
-                      + 'value can be removed from the rest of the box.'},
-    'nakedpairs': {'function': 'find_naked_candidates', 'hardcoded_arguments': 'pairs',
-                   'cost': 500,
-                   'user_name': 'Naked pairs: remove exclusive value pairs from other cells in a unit.',
-                   'description': 'A Naked Pair is two cells in the same unit with the same two values remaining.'},
-    'hiddenpairs': {'function': 'find_hidden_candidates', 'hardcoded_arguments': 'pairs',
-                    'cost': 1200,
-                    'user_name': 'Hidden pairs: given exclusive value pairs, remove all other values from the two cells.',
-                    'description': 'The cells in a hidden set contain values amongst them '
-                    + 'that have been exlcuded from the rest of the cells in '
-                    + 'the hidden set\'s common unit.  Therefore we can exclude '
-                    + 'all other values from the cells in the set.'},
-    'pointingtriples': {'function': 'find_pointing_candidates', 'hardcoded_arguments': 'triples',
-                        'cost': 1300,
-                        'user_name': 'Pointing triples: remove aligned value triples from other units.',
-                        'description': 'If any one value is present only two or three times in just one unit, '
-                        + 'then we can remove that number from the intersection of a number unit. '
-                        + 'There are four types of intersections: '
-                        + '1. A pair or triple in a box - if they are aligned on a row, the '
-                        + 'value can be removed from the rest of the row. '
-                        + '2. A pair or triple in a box, if they are aligned on a column, the '
-                        + 'value can be removed from the rest of the column. '
-                        + '3. A pair or triple on a row - if they are all in the same box, the '
-                        + 'value can be removed from the rest of the box. '
-                        + '4. A pair or triple on a column - if they are all in the same box, the '
-                        + 'value can be removed from the rest of the box.'},
-    'nakedtriples': {'function': 'find_naked_candidates', 'hardcoded_arguments': 'triples',
-                     'cost': 1400,
-                     'user_name': 'Naked triples: remove exclusive value triples from other cells in a unit.',
-                     'description': 'A Naked Triple is any group of three cells in the same unit that contain'
-                     + 'IN TOTAL 3 values. The combinations of candidates for a Naked Triple will be '
-                     + 'one of the following: '
-                     + '(123)(123)(123) - {3/3/3} in terms of candidates per cell '
-                     + '(123)(123)(12) - {3/2/2} or some combination thereof '
-                     + '(123)(12)(23) - {3/2/2} '
-                     + '(12)(23)(13) - {2/2/2}'},
-    'hiddentriples': {'function': 'find_hidden_candidates', 'hardcoded_arguments': 'triples',
-                      'cost': 1600,
-                      'user_name': 'Hidden triples: given exclusive value triples, remove all other values from the three cells.',
-                      'description': 'The cells in a hidden set contain values amongst them '
-                      + 'that have been exlcuded from the rest of the cells in '
-                      + 'the hidden set\'s common unit.  Therefore we can exclude '
-                      + 'all other values from the cells in the set.'},
-    'xwings': {'function': 'find_wings', 'hardcoded_arguments': 'x',
-               'cost': 1600,
-               'user_name': 'X-wing.',
-               'description': 'An X-Wing ocurrs when there are only 2 candidates for a value in each of '
-               + '2 different units of the same kind and these candidates also lie on 2 other units '
-               + 'of the same kind.  Then we can exclude this value from the latter two units.'},
-    'ywings': {'function': 'find_wings', 'hardcoded_arguments': 'y',
-               'cost': 1600,
-               'user_name': 'Y-wing.',
-               'description': 'In a Y-wing, a "hinge" cell forms a conjugate pair with cells in '
-               + 'two different units.  For example if cell A1 has the values 2 and 1, cell '
-               + 'B2 has the values 3 and 1, and cell A5 has the values 3 and 2, then we '
-               + 'can elminate the value 3 from B5 or any other cell that is associated '
-               + 'with B2 and A5.'},
-    'xyzwings': {'function': 'find_wings', 'hardcoded_arguments': 'xyz',
-                 'cost': 1600,
-                 'user_name': 'XYZ-wing.',
-                 'description': 'An XYZ-wing is an extension of Y-Wing in which three cells '
-                 + 'contain only 3 different numbers between them, but they fall outside the '
-                 + 'confines of one row/column/box, with t the hinge being able to see the other '
-                 + 'two; those other two having only one number in common; and the apex having '
-                 + 'all three numbers as candidates.  For example, if F9 has the values 1, 2, '
-                 + 'and 4, D9 has 1 and 2, and F1 has 1 and 4, we can eliminate 1 from F7.'},
-    'nakedquads': {'function': 'find_naked_candidates', 'hardcoded_arguments': 'quads',
-                   'cost': 4000,
-                   'user_name': 'Naked quads: remove exclusive value quads from other cells in a unit.',
-                   'description': 'A Naked Quad is any group of four cells in the same unit '
-                   + 'that contain IN TOTAL 4 values.  Therefore we can exclude '
-                   + 'these four values from all other cells in the unit.'},
-    'hiddenquads': {'function': 'find_hidden_candidates', 'hardcoded_arguments': 'quads',
-                    'cost': 5000,
-                    'user_name': 'Hidden quads: given exclusive value quads, remove all other values from the four cells.',
-                    'description': 'The cells in a hidden set contain values amongst them '
-                    + 'that have been exlcuded from the rest of the cells in '
-                    + 'the hidden set\'s common unit.  Therefore we can exclude '
-                    + 'all other values from the cells in the set.'}
-}
 
 # -----------------------------------------------------------------------------
 # LOGICAL METHODS
@@ -207,14 +64,8 @@ def logical_exclusion(sboard):
                     # then add it to list of of constraints to propagate
                     if(excluded and c.isCertain()):
                         plist.append(c)
-                        sboard.log.logOperator(
-                            'exclusion', sboard.getStateStr(True, False))
-                        if(verbosity > 1):
-                            print("Assigned", c_name,
-                                  "=", c.getCertainValue(),
-                                  "by exclusion")
-                            if(verbosity > 2):
-                                print(str(sboard))
+                        sboard.log.logOperator('exclusion', sboard,
+                                               f'Assigned {c_name} = {c.getCertainValue()}')
 
         cell.setPropagated()
 
@@ -256,19 +107,13 @@ def logical_inclusion(sboard):
 
         # search the value dict for values that have only one cell
         for value, cell_list in value_dict.items():
-
             # if only one cell can take value and that cell is uncertain
             # then assign value to the cell and append to constraint list
             if(len(cell_list) == 1 and not cell_list[0].isCertain()):
-                cell_list[0].assign(value)
-                sboard.log.logOperator(
-                    'inclusion', sboard.getStateStr(True, False))
-                if(verbosity > 1):
-                    # TODO MAL make logging print the display value, not just the idx
-                    print("Assigned", cell_list[0].getIdentifier(),
-                          "=", value, "by inclusion")
-                    if(verbosity > 2):
-                        print(str(sboard))
+                assign_cell = cell_list[0]
+                assign_cell.assign(value)
+                sboard.log.logOperator('inclusion', sboard,
+                                       f'Assigned {assign_cell.getIdentifier()} = {assign_cell.getCertainValue()}')
 
     return sboard
 
@@ -279,7 +124,6 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
     verifies whether the candidates are indeed a hidden set and
     exlcudes the appropriate values.
     """
-    num_excluded_values = 0
     len_hidden_set = len(hidden_set)
     hidden_type = ''
     if len_hidden_set == 2:
@@ -293,6 +137,7 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
     for cell in hidden_set:
         hidden_set_names.append(cell.getIdentifier())
 
+    num_operated_cells = 0
     for unit in intersection_unit_list:
         unit_cells = sboard.getUnitCells(unit)
 
@@ -324,7 +169,6 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
                     if len(remaining_value_set) == len_hidden_set:
                         # we've found a hidden set!
 
-                        num_excluded_values = 0
                         for cell in hidden_set:
                             cell_name = cell.getIdentifier()
                             value_set = cell.getValueSet()
@@ -336,14 +180,17 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
                                 cell.exclude(value)
 
                             if len(exclusion_list) > 0:
-                                sboard.log.logOperator('hidden'+hidden_type.lower(),
-                                                       sboard.getStateStr(True, False))
-                                if(verbosity > 1):
-                                    print('HIDDEN ' + hidden_type, sorted(hidden_set_names),
-                                          cell_name, '-', sorted(
-                                              value_set_before_exclusion),
-                                          '->', sorted(value_set))
-    if num_excluded_values > 0:
+                                num_operated_cells += 1
+                                progress = f'HIDDEN {hidden_type} {cell_name}: {sorted(value_set_before_exclusion)} -> {sorted(value_set)}'
+                                sboard.log.logOperatorProgress('hidden'+hidden_type.lower(),
+                                                               sboard,
+                                                               progress)
+
+    if num_operated_cells > 0:
+        progress = f'HIDDEN {hidden_type} of {sorted(hidden_set_names)} excluded values from {num_operated_cells}'
+        sboard.log.logOperator('hidden'+hidden_type.lower(),
+                               sboard,
+                               progress)
         return True
     else:
         return False
@@ -412,7 +259,6 @@ def __find_hidden_triples(sboard, current_cell):
                     if len(candidates_intersection_value_set) > 1 and len(current_value_set |
                                                                           first_candidate_value_set |
                                                                           second_candidate_value_set) > 4:
-
                         second_candidate_units = sboard.getCellUnits(
                             second_candidate_name)
 
@@ -424,7 +270,7 @@ def __find_hidden_triples(sboard, current_cell):
                         if len(intersection_unit_list) > 0:
                             found_hidden_triple = __hidden_set_exclusion(sboard,
                                                                          [current_cell, first_candidate_cell,
-                                                                             second_candidate_cell],
+                                                                          second_candidate_cell],
                                                                          intersection_unit_list)
 
     return found_hidden_triple
@@ -487,13 +333,10 @@ def __find_hidden_quads(sboard, current_cell):
                                 if third_candidate_cell not in candidates:
 
                                     candidates.append(third_candidate_cell)
-                                    third_candidate_value_set = \
-                                        third_candidate_cell.getValueSet()
-                                    third_candidate_name = \
-                                        third_candidate_cell.getIdentifier()
-                                    third_candidate_units = \
-                                        sboard.getCellUnits(
-                                            third_candidate_name)
+                                    third_candidate_value_set = third_candidate_cell.getValueSet()
+                                    third_candidate_name = third_candidate_cell.getIdentifier()
+                                    third_candidate_units = sboard.getCellUnits(
+                                        third_candidate_name)
                                     intersection_unit_set = (intersection_unit_set &
                                                              set(third_candidate_units))
 
@@ -603,14 +446,17 @@ def __naked_set_exclusion(sboard, naked_set, exclusion_values):
                 exclusion_list.append(value)
                 num_operated_cells += 1
 
-        if verbosity > 1 and len(exclusion_list) > 0:
-            print('NAKED '+set_type, sorted(exclusion_values), sorted(naked_set),
-                  'removes', sorted(exclusion_list),
-                  'from', non_pair_cell_name)
+        if len(exclusion_list) > 0:
+            progress = f'NAKED {set_type} removes {sorted(exclusion_list)} from {non_pair_cell_name}'
+            sboard.log.logOperatorProgress('naked'+set_type.lower(),
+                                           sboard,
+                                           progress)
 
     if num_operated_cells > 0:
+        progress = f'NAKED {set_type} removes {sorted(exclusion_values)} from {num_operated_cells} because of {sorted(naked_set)}'
         sboard.log.logOperator('naked'+set_type.lower(),
-                               sboard.getStateStr(True, False))
+                               sboard,
+                               progress)
         return True
     else:
         return False
@@ -717,8 +563,8 @@ def __find_naked_quads(sboard, current_cell, candidate_cells):
 
                 for third_candidate_cell in candidate_cells:
                     third_candidate_name = third_candidate_cell.getIdentifier()
-                    third_candidate_unit_set = \
-                        set(sboard.getCellUnits(third_candidate_name))
+                    third_candidate_unit_set = set(
+                        sboard.getCellUnits(third_candidate_name))
 
                     # if the third candidate is not the same as the first and second
                     # and all three have acommon unit
@@ -990,12 +836,12 @@ def find_pointing_candidates(sboard, set_type):
 
                         if second_candidate_cell not in candidates:
                             first_candidate_cell_name = first_candidate_cell.getIdentifier()
-                            first_candidate_units = \
-                                sboard.getCellUnits(first_candidate_cell_name)
+                            first_candidate_units = sboard.getCellUnits(
+                                first_candidate_cell_name)
                             first_candidate_value_set = first_candidate_cell.getValueSet()
                             second_candidate_cell_name = second_candidate_cell.getIdentifier()
-                            second_candidate_units = \
-                                sboard.getCellUnits(second_candidate_cell_name)
+                            second_candidate_units = sboard.getCellUnits(
+                                second_candidate_cell_name)
                             second_candidate_value_set = second_candidate_cell.getValueSet()
 
                             # check if all three cells have at least one value in common
@@ -1057,12 +903,10 @@ def __find_xwings(sboard):
                     candidates = cells_containing_values[i] + \
                         cells_containing_values[j]
                     # print('candidates',candidates)
-                    first_intersection_unit_list = \
-                        list((set(sboard.getCellUnits(candidates[0])) &
-                              set(sboard.getCellUnits(candidates[2]))))
-                    second_intersection_unit_list = \
-                        list((set(sboard.getCellUnits(candidates[1])) &
-                              set(sboard.getCellUnits(candidates[3]))))
+                    first_intersection_unit_list = list((set(sboard.getCellUnits(candidates[0])) &
+                                                         set(sboard.getCellUnits(candidates[2]))))
+                    second_intersection_unit_list = list((set(sboard.getCellUnits(candidates[1])) &
+                                                          set(sboard.getCellUnits(candidates[3]))))
 
                     # If candidates have a second unit in common that's also  of the same type
                     # then we technically have found an x-wing.
@@ -1095,12 +939,8 @@ def __find_xwings(sboard):
                                         cell.exclude(exclusion_value)
 
                         if len(excluded_cells) > 0:
-                            sboard.log.logOperator(
-                                'xwings', sboard.getStateStr(True, False))
-
-                            if(verbosity > 1):
-                                print('X-WING', candidates, 'excludes', str(exclusion_value),
-                                      'from', sorted(excluded_cells))
+                            progress = f'X-WING {candidates} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
+                            sboard.log.logOperator('xwings', sboard, progress)
     return sboard
 
 
@@ -1132,12 +972,9 @@ def __find_ywings(sboard):
     can elminate the value 3 from B5 or any other cell that is associated
     with B2 and A5.
     """
-    found_ywing = False
-
     # iterate through all cells
     # the this cell will be the "hinge"
     for current_cell_name in sboard.getAllCells():
-
         pincer_candidates = []
 
         current_cell = sboard.getCell(current_cell_name)
@@ -1161,10 +998,10 @@ def __find_ywings(sboard):
                     if first_pincer_candidate != second_pincer_candidate:
                         second_pincer_value_set = second_pincer_candidate.getValueSet()
 
-                        first_pincer_associated_cells = \
-                            sboard.getAssociatedCells(first_pincer_candidate)
-                        second_pincer_associated_cells = \
-                            sboard.getAssociatedCells(second_pincer_candidate)
+                        first_pincer_associated_cells = sboard.getAssociatedCells(
+                            first_pincer_candidate)
+                        second_pincer_associated_cells = sboard.getAssociatedCells(
+                            second_pincer_candidate)
 
                         # find the values that the two pincers have in common
                         candidate_intersection_value_set = (first_pincer_value_set &
@@ -1200,20 +1037,16 @@ def __find_ywings(sboard):
 
                                     if (associated_cell.hasValue(exclusion_value) and
                                             associated_cell_name not in y_wing):
-                                        found_ywing = True
+                                        # TODO MAL Count whether exclusions actually occurred!
                                         associated_cell.exclude(
                                             exclusion_value)
                                         excluded_cells.append(
                                             associated_cell_name)
 
-                                if verbosity > 1 and len(excluded_cells) > 0:
-                                    print('Y-WING', y_wing, 'excludes', str(exclusion_value), 'from',
-                                          sorted(excluded_cells))
-
-                                if found_ywing:
+                                if len(excluded_cells) > 0:
+                                    progress = f'Y-WING {y_wing} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
                                     sboard.log.logOperator(
-                                        'ywings', sboard.getStateStr(True, False))
-                                    return sboard
+                                        'ywings', sboard, progress)
 
     return sboard
 
@@ -1227,8 +1060,6 @@ def __find_xyzwings(sboard):
     all three numbers as candidates.  For example, if F9 has the values 1, 2,
     and 4, D9 has 1 and 2, and F1 has 1 and 4, we can eliminate 1 from F7.
     """
-    found_xyz_wing = False
-
     # iterate through all cells. The current cell will be in the hinge.
     for current_cell_name in sboard.getAllCells():
         pincer_candidates = []
@@ -1238,7 +1069,6 @@ def __find_xyzwings(sboard):
 
         # the hinge can only have three values.
         if len(current_value_set) == 3:
-
             # the pincers can only have 2 values each.
             pincer_candidates = __find_candidates(sboard, current_cell_name,
                                                   num_values=2,
@@ -1278,16 +1108,13 @@ def __find_xyzwings(sboard):
                             for cell_name in common_cells:
                                 cell = sboard.getCell(cell_name)
                                 if cell.hasValue(exclusion_value):
-                                    found_xyz_wing = True
                                     excluded_cells.append(cell_name)
                                     cell.exclude(exclusion_value)
-                            if verbosity > 1 and len(excluded_cells) > 0:
-                                print('XYZ-WING', xyz_wing, 'excludes', str(exclusion_value),
-                                      'from', sorted(excluded_cells))
-                            if found_xyz_wing:
+
+                            if len(excluded_cells) > 0:
+                                progress = f'XYZ-WING {xyz_wing} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
                                 sboard.log.logOperator(
-                                    'xyzwings', sboard.getStateStr(True, False))
-                                return sboard
+                                    'xyzwings', sboard, progress)
     return sboard
 
 
@@ -1368,10 +1195,13 @@ def expand_cell(sboard, cell_id):
         b = board.Board(sboard)
         bcell = b.getCell(cell_id)
         bcell.assign(v)
-        if(verbosity > 1):
-            print("Assigning %s=%s" % (str(bcell.getIdentifier()),
-                                       str(bcell.getCertainValue())))
         expansion.append(b)
+
+        progress = f'Assigning {str(bcell.getIdentifier())} = {str(bcell.getCertainValue())}'
+        sboard.log.logOperatorProgress('pivot', sboard, progress)
+
+    progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
+    sboard.log.logOperator('pivot', sboard, progress)
 
     return expansion
 
@@ -1405,27 +1235,30 @@ def expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=F
         return [sboard]
 
     expansion = []
-
     assigned = board.Board(sboard)
-    bcell = assigned.getCell(cell_id)
-    bcell.assign(value)
-    if(verbosity > 1):
-        print("Assigning %s=%s" % (str(bcell.getIdentifier()),
-                                   str(bcell.getCertainValue())))
     expansion.append(assigned)
-
     removed = board.Board(sboard)
-    bcell = removed.getCell(cell_id)
-    bcell.exclude(value)
-    if(verbosity > 1):
-        print("Removing %s from %s, resulting in %s" % (str(bcell.getIdentifier()),
-                                                        str(value),
-                                                        str(bcell.getValueSet())))
     expansion.append(removed)
 
+    action = None
     if make_exclusion_primary:
         assigned.setToBackground()
+        action = 'exclude'
     else:
         removed.setToBackground()
+        action = 'assign'
+
+    bcell = assigned.getCell(cell_id)
+    bcell.assign(value)
+    progress = f'Assigning {str(bcell.getIdentifier())} = {str(bcell.getCertainValue())}'
+    sboard.log.logOperatorProgress(action, sboard, progress)
+
+    bcell = removed.getCell(cell_id)
+    bcell.exclude(value)
+    progress = f'Removing {str(value)} from {str(bcell.getIdentifier())}, resulting in {str(bcell.getValueSet())}'
+    sboard.log.logOperatorProgress(action, sboard, progress)
+
+    progress = f'Performed {action} on {str(bcell.getIdentifier())} with {str(value)} for {len(expansion)} new (unvalidated) boards'
+    sboard.log.logOperator(action, sboard, progress)
 
     return expansion

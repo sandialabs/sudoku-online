@@ -13,15 +13,15 @@ Test code for sudoku package.
 """
 
 import board
-import operators
+import logger
 import solvers
 import argparse
 import puzzles
+import operators
 
 
 def test_sudoku(args):
-    # board.Board.initialize()
-    operators.set_verbosity(args.verbosity)
+    logger.set_verbosity(args.verbosity)
 
     my_ops = []
     if args.opselector == "all_logical_operators_ordered":

@@ -16,6 +16,7 @@ import puzzles
 import random
 import logger
 import operators
+import config_data
 
 
 def get_initial_board(content, simplify=True):
@@ -114,32 +115,32 @@ def parse_and_apply_action(content, simplify=True):
     return jsoned_result
 
 
+def _jsonify_action(name, description_dict):
+    """ Remove all the extra cruft and dispatch fields,
+        and create one dict describing the named action / operator. """
+    short_description = {'internal_name': name}
+    for data in ['requested_arguments', 'cost', 'user_name', 'description']:
+        if data in description_dict:
+            short_description[data] = description_dict[data]
+    return short_description
+
+
 def get_possible_actions():
     """ Return a list of all possible actions for this game.
 
     May eventually want to update to alter possible actions for all possible games. """
-    actions = list()
     # MAL TODO Do we want to take in multiple actions and apply them all?
-    actions.append({'internal_name': 'pivotOnCell',
-                    'user_name': 'Expand All Choices'})
-    actions.append({'internal_name': 'selectValueForCell',
-                    'user_name': 'Make an assignment'})
-    actions.append({'internal_name': 'excludeValueFromCell',
-                    'user_name': 'Remove possible value from a cell'})
-    # actions.append({'internal_name': 'include/exclude',
-    #                'user_name': 'Propagate assignments',
-    #                'cost': logger.COST_INCLUSION})
-    actions.append({'internal_name': 'applyLogicalOperators',
-                    'user_name': 'Apply selected operators',
-                    'operators': [{'operator': 'xwing', 'cost': logger.COST_XWINGS},
-                                  {'operator': 'ywing', 'cost': logger.COST_YWINGS},
-                                  {'operator': 'hidden pairs',
-                                      'cost': logger.COST_HIDDEN_PAIRS},
-                                  {'operator': 'naked pairs',
-                                      'cost': logger.COST_NAKED_PAIRS},
-                                  {'operator': 'naked triples',
-                                      'cost': logger.COST_NAKED_TRIPLES},
-                                  ]})
+    operators = list()
+    for op in ['inclusion', 'xwings', 'ywings', 'nakedpairs', 'hiddenpairs', 'nakedtriples']:
+        operators.append(_jsonify_action(
+            op, config_data.operators_description[op]))
+
+    actions = list()
+    for (action, description) in config_data.actions_description.items():
+        short_desc = _jsonify_action(action, description)
+        if action == 'applyops':
+            short_desc['operators'] = operators
+        actions.append(short_desc)
 
     return actions
 

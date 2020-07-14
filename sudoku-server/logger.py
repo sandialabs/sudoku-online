@@ -13,6 +13,23 @@ import json
 import pprint
 import config_data
 
+verbosity = 1
+
+
+def set_verbosity(v):
+    """
+    Set verbosity level for the logical operators.
+
+    Verbosity levels:
+    0 = Silent
+    1 = Display initial and final board states only
+    2 = Indicate cell assignments and associated rule as they are made
+    3 = Show the board uncertainty state after each rule application
+    """
+    global verbosity
+    verbosity = v
+
+
 # difficulty score constants
 SCORE_BEGINNER = 4500
 SCORE_EASY = 5500
@@ -37,19 +54,30 @@ class SudokuLogger():
         # operators_use_count provides a dict of each operator that was used and
         # the number of times they were applied.
         self.operators_use_count = dict()
-        for action in config_data.operators_description.keys():
+        for action in config_data.board_update_options.keys():
             self.operators_use_count[action] = 0
 
-    def logOperator(self, operator, board_state):
+    def logOperatorProgress(self, operator, board, verbosity1_str=None):
+        """ Log that an operator made progress without logging a new application of the operator
+            or causing the cost of the operator to be incurred. """
+        if(verbosity > 0):
+            print('operator', operator)
+        if(verbosity > 1) and verbosity1_str:
+            print(verbosity1_str)
+        if(verbosity > 2):
+            print(str(board))
 
-        self.board_state_list.append(board_state)
+    def logOperator(self, operator, board, verbosity1_str=None):
+        """ Log that an application of an operator as respects a board state. """
+        self.logOperatorProgress(operator, board, verbosity1_str)
+
+        self.board_state_list.append(board.getStateStr(True, False))
         self.num_operators += 1
-        print('operator', operator)
         self.operators_use_list.append(operator)
 
         operator_count = self.operators_use_count[operator]
         self.operators_use_count[operator] = operator_count + 1
-        self.difficulty_score += config_data.operators_description[operator]['cost']
+        self.difficulty_score += config_data.board_update_options[operator]['cost']
 
     def setPuzzle(self, puzzle):
         self.puzzle = puzzle
