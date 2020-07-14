@@ -11,7 +11,7 @@ Sudoku Board solvers.
 
 import random
 import operators
-# import logger
+import logger
 import board
 
 # -----------------------------------------------------------------------------
@@ -19,22 +19,18 @@ import board
 # -----------------------------------------------------------------------------
 
 
-def calculate_status(sboard, msg, threshold=2):
+def calculate_status(sboard, msg):
     """ Centralized diagnostics for after applying logical operators.
 
     Args:
         sboard  : the board to evaluate
         msg     : the message describing the operator just applied
-        threshold : the value of verbosity above which these diagnostics
-            should be printed
     Returns:
         int     : the number of uncertain values in sboard
     """
     nValues = sboard.countUncertainValues()
-    if(operators.verbosity > threshold):
-        print("Uncertainty state after " + msg)
-        print(sboard.getStateStr(True))
-        print("%d uncertain values remaining" % nValues)
+    progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
+    logger.SudokuLogger.logOperatorProgress(None, progress, sboard)
     return nValues
 
 
@@ -48,11 +44,11 @@ def singles_operators(sboard):
 
         # Apply logical exclusion
         sboard = operators.logical_exclusion(sboard)
-        nValues = calculate_status(sboard, "exclusion propagation", 2)
+        nValues = calculate_status(sboard, "exclusion propagation")
 
         # Apply logical inclusion
         sboard = operators.logical_inclusion(sboard)
-        nValues = calculate_status(sboard, "inclusion assignment", 2)
+        nValues = calculate_status(sboard, "inclusion assignment")
 
     return sboard
 
@@ -81,7 +77,7 @@ def call_operator(sboard, operator_type, set_type):
     if operator_type == 'wing':
         sboard = operators.find_wings(sboard, set_type)
 
-    nValues = calculate_status(sboard, operator_type + ' ' + set_type, 2)
+    nValues = calculate_status(sboard, operator_type + ' ' + set_type)
 
     if nValues < prevValues:
         return sboard, True
@@ -112,8 +108,8 @@ def select_all_logical_operators_ordered():
 def parameterize_logical_operators(ops_list):
     """ Returns a logical operator selector ordered as the pairs given in ops_list. """
     my_ops = []
-    if (operators.verbosity > 1):
-        print(str(ops_list))
+    progress = f'Selected logical operators {str(ops_list)}'
+    logger.SudokuLogger.logOperatorProgress(None, progress, None)
     it = iter(ops_list)
     for op in it:
         # TODO MAL BAD PRACTICE - ask cll for help
@@ -171,8 +167,8 @@ def logical_solve(sboard, logical_ops, restart=True):
 
     # If we found a contradiction (bad guess earlier in search), return None
     if(sboard.invalidCells()):
-        if(operators.verbosity > 1):
-            print("Found logical contradiction.")
+        progress = f'Found logical contradiction.'
+        logger.SudokuLogger.logOperatorProgress(None, progress, sboard)
         return None
     return sboard
 
@@ -376,20 +372,19 @@ def combined_solve(sboard, logical_ops=[], cellselector=None):
 
     # If the puzzle is solved, just return the solution
     if(result and result.isSolved()):
-        if(operators.verbosity > 1):
-            print("Puzzle solved.")
+        logger.SudokuLogger.logOperatorProgress(
+            None, f'Puzzle solved.', result)
         return result
 
     # If we found a contradiction (bad guess earlier in search), return None
     elif(not result or result.invalidCells()):
-        if(operators.verbosity > 1):
-            print("Found contradiction.")
+        logger.SudokuLogger.logOperatorProgress(
+            None, f'Found contradiction.', result)
         return None
 
     # Some action needs to be taken
-    if (operators.verbosity > 2):
-        print("Taking selecting cell using " + str(cellselector)
-              + " and expanding cell using " + str(expand_cell_action))
+    msg = f'Taking action, selecting cell using {str(cellselector)} and expanding cell using {str(expand_cell_action)}'
+    logger.SudokuLogger.logOperatorProgress('take action', msg, result)
     cell = cellselector(result)
     expansion = expand_cell_action(result, cell.getIdentifier())
     for brd in expansion:

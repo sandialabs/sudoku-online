@@ -36,10 +36,8 @@ def test_sudoku(args):
     for name in args.puzzles:
         layout = puzzles.puzzles[name]
         sboard = board.Board(layout)
-        if(operators.verbosity > 0):
-            print("Initial State of %s:" % name)
-            print(sboard.getStateStr())
-            print(sboard.getSimpleJson())
+        msg = f'Initial state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
+        logger.SudokuLogger.logOperatorProgress('initial state', msg, None)
 
         cellselector = getattr(solvers, "select_" + args.cellselector)
         #sboard = solver(sboard, opselector, cellselector)
@@ -48,23 +46,23 @@ def test_sudoku(args):
         elif args.solver == 'combined':
             sboard = solvers.combined_solve(sboard, my_ops, cellselector)
 
-        if(operators.verbosity > 0):
+        if sboard and sboard.isSolved():
+            for key in sboard.log.operators_use_count.keys():
+                # Print this at verbosity level 1
+                msg = f'{key} uses: {sboard.log.operators_use_count[key]}'
+                logger.SudokuLogger.logOperatorProgress(msg, None, None)
+            msg = f'sboard,log,score {str(sboard.log.getDifficultyScore())}: {sboard.log.getDifficultyLevel()}'
+            logger.SudokuLogger.logOperatorProgress(msg, None, None)
 
-            if sboard and sboard.isSolved():
-                for key in sboard.log.operators_use_count.keys():
-                    print(key, 'uses:', sboard.log.operators_use_count[key])
-                print('sboard,log,score', str(sboard.log.getDifficultyScore())+':',
-                      sboard.log.getDifficultyLevel())
+            sboard.log.setSolution(sboard.getStateStr(False, False, ''))
+            sboard.log.printLogJSON()
 
-                sboard.log.setSolution(sboard.getStateStr(False, False, ''))
-                sboard.log.printLogJSON()
-
-            print("Final State of %s:" % name)
-            if sboard is not None:
-                print(sboard.getStateStr())
-                print(sboard.getSimpleJson())
-            else:
-                print("INSOLUBLE")
+        msg = None
+        if sboard is None:
+            msg = f'Final state of {name}: INSOLUBLE'
+        else:
+            msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
+        logger.SudokuLogger.logOperatorProgress('final state', msg, None)
 
 
 if __name__ == '__main__':
@@ -72,7 +70,7 @@ if __name__ == '__main__':
         description='Call sudoku solver, parameterized as desired')
     parser.add_argument('--puzzles', metavar='NAME', type=str, nargs='*',
                         help='puzzles to run through the solver; do not use argument to run all puzzles.')
-    parser.add_argument('--verbosity', '-v', action='count', default=1)
+    parser.add_argument('--verbosity', '-v', action='count', default=0)
     #parser.add_argument('--outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--solver', nargs='?', choices=['logical', 'combined'],
                         default='logical', help='solver to use')

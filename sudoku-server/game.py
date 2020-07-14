@@ -37,11 +37,9 @@ def get_initial_board(content, simplify=True):
         puzzle = puzzles.puzzles[name]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        if(operators.verbosity > 0):
-            print(name)
+        logger.SudokuLogger.logOperatorProgress('select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
-    if(operators.verbosity > 2):
-        print(str(full_board))
+    logger.SudokuLogger.logOperatorProgress('load puzzle', name, full_board)
     if simplify:
         solvers.singles_operators(full_board)
     return full_board.getSimpleJson()

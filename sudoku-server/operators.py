@@ -12,8 +12,6 @@ import board
 # from board import Cell
 import copy
 
-verbosity = 1
-
 # -----------------------------------------------------------------------------
 # LOGICAL METHODS
 # -----------------------------------------------------------------------------
@@ -64,8 +62,10 @@ def logical_exclusion(sboard):
                     # then add it to list of of constraints to propagate
                     if(excluded and c.isCertain()):
                         plist.append(c)
-                        sboard.log.logOperator('exclusion', sboard,
-                                               f'Assigned {c_name} = {c.getCertainValue()}')
+                        sboard.log.logOperator(
+                            'exclusion',
+                            f'Assigned {c_name} = {c.getCertainValue()}',
+                            sboard)
 
         cell.setPropagated()
 
@@ -112,8 +112,10 @@ def logical_inclusion(sboard):
             if(len(cell_list) == 1 and not cell_list[0].isCertain()):
                 assign_cell = cell_list[0]
                 assign_cell.assign(value)
-                sboard.log.logOperator('inclusion', sboard,
-                                       f'Assigned {assign_cell.getIdentifier()} = {assign_cell.getCertainValue()}')
+                sboard.log.logOperator(
+                    'inclusion',
+                    f'Assigned {assign_cell.getIdentifier()} = {assign_cell.getCertainValue()}',
+                    sboard)
 
     return sboard
 
@@ -182,15 +184,15 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
                             if len(exclusion_list) > 0:
                                 num_operated_cells += 1
                                 progress = f'HIDDEN {hidden_type} {cell_name}: {sorted(value_set_before_exclusion)} -> {sorted(value_set)}'
-                                sboard.log.logOperatorProgress('hidden'+hidden_type.lower(),
-                                                               sboard,
-                                                               progress)
+                                sboard.log.logOperatorProgress(
+                                    f'hidden{hidden_type.lower()}',
+                                    progress,
+                                    sboard)
 
     if num_operated_cells > 0:
         progress = f'HIDDEN {hidden_type} of {sorted(hidden_set_names)} excluded values from {num_operated_cells}'
-        sboard.log.logOperator('hidden'+hidden_type.lower(),
-                               sboard,
-                               progress)
+        sboard.log.logOperator(
+            f'hidden{hidden_type.lower()}', progress, sboard)
         return True
     else:
         return False
@@ -448,15 +450,12 @@ def __naked_set_exclusion(sboard, naked_set, exclusion_values):
 
         if len(exclusion_list) > 0:
             progress = f'NAKED {set_type} removes {sorted(exclusion_list)} from {non_pair_cell_name}'
-            sboard.log.logOperatorProgress('naked'+set_type.lower(),
-                                           sboard,
-                                           progress)
+            sboard.log.logOperatorProgress(
+                f'naked{set_type.lower()}', progress, sboard)
 
     if num_operated_cells > 0:
         progress = f'NAKED {set_type} removes {sorted(exclusion_values)} from {num_operated_cells} because of {sorted(naked_set)}'
-        sboard.log.logOperator('naked'+set_type.lower(),
-                               sboard,
-                               progress)
+        sboard.log.logOperator(f'naked{set_type.lower()}', progress, sboard)
         return True
     else:
         return False
@@ -767,14 +766,16 @@ def __is_pointing_set(sboard, candidates):
                                 pointing_type = 'TRIPLE'
                             if len(candidates) == 2:
                                 pointing_type = 'PAIR'
-                            if(verbosity > 1):
-                                print('POINTING '+pointing_type, sorted(candidate_names),
-                                      '-', cell.getIdentifier()+':',
-                                      sorted(values_before_exclusion), '->',
-                                      sorted(cell.getValueSet()))
+
+                            progress = f'POINTING {pointing_type} {cell.getIdentifier()}: {sorted(values_before_exclusion)} -> {sorted(cell.getValueSet())}'
+                            sboard.log.logOperatorProgress(
+                                f'pointing{pointing_type.lower()}s',
+                                progress,
+                                sboard)
     if found_pointing_set:
-        sboard.log.logOperator('pointing'+pointing_type.lower() + 's',
-                               sboard.getStateStr(True, False))
+        progress = f'POINTING {pointing_type} of {sorted(candidate_names)}'
+        sboard.log.logOperator(
+            f'pointing{pointing_type.lower()}s', progress, sboard)
 
     return found_pointing_set
 
@@ -940,7 +941,7 @@ def __find_xwings(sboard):
 
                         if len(excluded_cells) > 0:
                             progress = f'X-WING {candidates} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
-                            sboard.log.logOperator('xwings', sboard, progress)
+                            sboard.log.logOperator('xwings', progress, sboard)
     return sboard
 
 
@@ -1046,7 +1047,7 @@ def __find_ywings(sboard):
                                 if len(excluded_cells) > 0:
                                     progress = f'Y-WING {y_wing} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
                                     sboard.log.logOperator(
-                                        'ywings', sboard, progress)
+                                        'ywings', progress, sboard)
 
     return sboard
 
@@ -1114,7 +1115,7 @@ def __find_xyzwings(sboard):
                             if len(excluded_cells) > 0:
                                 progress = f'XYZ-WING {xyz_wing} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
                                 sboard.log.logOperator(
-                                    'xyzwings', sboard, progress)
+                                    'xyzwings', progress, sboard)
     return sboard
 
 
@@ -1198,10 +1199,10 @@ def expand_cell(sboard, cell_id):
         expansion.append(b)
 
         progress = f'Assigning {str(bcell.getIdentifier())} = {str(bcell.getCertainValue())}'
-        sboard.log.logOperatorProgress('pivot', sboard, progress)
+        sboard.log.logOperatorProgress('pivot', progress, sboard)
 
     progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
-    sboard.log.logOperator('pivot', sboard, progress)
+    sboard.log.logOperator('pivot', progress, sboard)
 
     return expansion
 
@@ -1251,14 +1252,14 @@ def expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=F
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
     progress = f'Assigning {str(bcell.getIdentifier())} = {str(bcell.getCertainValue())}'
-    sboard.log.logOperatorProgress(action, sboard, progress)
+    sboard.log.logOperatorProgress(action, progress, sboard)
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
     progress = f'Removing {str(value)} from {str(bcell.getIdentifier())}, resulting in {str(bcell.getValueSet())}'
-    sboard.log.logOperatorProgress(action, sboard, progress)
+    sboard.log.logOperatorProgress(action, progress, sboard)
 
     progress = f'Performed {action} on {str(bcell.getIdentifier())} with {str(value)} for {len(expansion)} new (unvalidated) boards'
-    sboard.log.logOperator(action, sboard, progress)
+    sboard.log.logOperator(action, progress, sboard)
 
     return expansion
