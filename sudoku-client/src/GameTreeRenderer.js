@@ -10,8 +10,10 @@
  */
 
 import React, {Component} from 'react';
-import { Treebeard, decorators } from 'react-treebeard';
+import { Treebeard, decorators as defaultDecorators } from 'react-treebeard';
 import { clone } from 'ramda';
+import {GameTreeBoard} from './GameTreeBoard';
+import PropTypes from 'prop-types';
 
 /*
  * Okay, here's the deal.
@@ -32,6 +34,8 @@ import { clone } from 'ramda';
  *         selected in the game tree.  Takes one argument -- the serial
  *         number of the board to make active. 
  */
+
+
 
 class GameTreeRenderer extends Component {
     constructor(props){
@@ -60,13 +64,16 @@ class GameTreeRenderer extends Component {
     }
 
     render() {
+        const ourDecorators = clone(defaultDecorators);
+        console.log('ourDecorators: hasOwnProperty(Header) = ' + ourDecorators.hasOwnProperty('Header'));
+        ourDecorators.Header = GameTreeBoardHeader;
         if (this.props.tree) {
             return (
                 <div>
-                    <div>Foo!</div>
                     <Treebeard
                         data={this.state.tree}
                         onToggle={this.onToggle}
+                        decorators={ourDecorators}
                     />
                 </div>
             );
@@ -173,4 +180,53 @@ function newNodes(newTreeNodes, oldTreeNodes) {
         }
     }
 }
+
+const TestTableHeader = ({onSelect, style, customStyles, node}) => {
+    return (
+        <table>
+            <tbody>
+                <tr>
+                    <td>Degree</td>
+                    <td>Serial</td>
+                </tr>
+                <tr>
+                    <td>{node.board.degree}</td>
+                    <td>{node.board.serialNumber}</td>
+                </tr>
+            </tbody>
+        </table>
+        );
+}
+
+TestTableHeader.propTypes = {
+    onSelect: PropTypes.func,
+    style: PropTypes.object,
+    node: PropTypes.object,
+    customStyle: PropTypes.object
+}
+
+TestTableHeader.defaultProps = {
+    customStyles: {}
+}
+
+
+const GameTreeBoardHeader = ({onSelect, style, customStyles, node}) => {
+    return (
+        <GameTreeBoard
+            board={node.board}
+        />
+    );
+}
+
+GameTreeBoardHeader.propTypes = {
+    onSelect: PropTypes.func,
+    style: PropTypes.object,
+    node: PropTypes.object,
+    customStyle: PropTypes.object
+}
+
+GameTreeBoardHeader.defaultProps = {
+    customStyles: {}
+}
+
 export { GameTreeRenderer };
