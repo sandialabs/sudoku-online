@@ -114,6 +114,7 @@ class SudokuGame extends React.Component {
 
         this.state = {
             gameTree: null,
+            activeBoardId: null
         };
         if (this.props.initialBoard !== null) {
             console.log('SudokuGame: Non-null initial board supplied with props for constructor.');
@@ -185,6 +186,12 @@ class SudokuGame extends React.Component {
         }
     }
 
+    changeActiveBoard(boardSerial) {
+        if (boardSerial != this.state.activeBoardId) {         
+            console.log('SudokuGame: Request received to change active board to ' + boardSerial + '.');
+            this.setState({activeBoardId: boardSerial});
+        }    
+    }
 
     render() {
         if (this.state.gameTree === null) {
@@ -205,16 +212,8 @@ class SudokuGame extends React.Component {
             const gameTreeAsString = JSON.stringify(gameTree);
             const board = this.activeBoard();
             console.log('render(): active board serial number: ' + board.serialNumber);
-            console.log('active board:');
-            console.log(board);
-            console.log('gameTree in SudokuGame: ');
-            console.log(gameTree);
             return (
                 <div>
-                    <div>
-                        Here is the example tree.
-                        <ExampleTree />
-                    </div>
                     <table id="gameTable">
                         <tbody>
                             <tr>
@@ -224,12 +223,14 @@ class SudokuGame extends React.Component {
                                         <p>Game tree:</p>
                                         <GameTreeRenderer
                                             tree={gameTree}
+                                            changeActiveBoard={(serial) => {this.changeActiveBoard(serial);}}
                                             />
                                     </div>
                                 </td>
                                 <td id="activeBoardCell">
-                                   This cell will contain just the active board.
+                                   <p>Currently active: Board {board.serialNumber}</p>
                                    <SudokuBoard
+                                        boardSerial={board.serialNumber}
                                         degree={this.props.degree}
                                         board={board}
                                         active={true}

@@ -13,32 +13,6 @@ import React, {Component} from 'react';
 import { Treebeard, decorators } from 'react-treebeard';
 import { clone } from 'ramda';
 
-const static_data = {
-    name: 'root',
-    toggled: true,
-    children: [
-        {
-            name: 'another_parent',
-            children: [
-                { name: 'child1' },
-                { name: 'child2' }
-            ]
-        },
-        {
-            name: 'yet_another_parent',
-            children: [
-                {
-                    name: 'nested parent',
-                    children: [
-                        { name: 'nested child 1' },
-                        { name: 'nested child 2' }
-                    ]
-                }
-            ]
-        }
-    ]
-};
-
 /*
  * Okay, here's the deal.
  *
@@ -52,6 +26,11 @@ const static_data = {
  * That gets called after updating but not on the first render.  We
  * can add any new nodes to the tree in there.
  *
+ * Expected Props:
+ *     tree: JSON object containing tree to display
+ *     changeActiveBoard: Function to call when a different board is
+ *         selected in the game tree.  Takes one argument -- the serial
+ *         number of the board to make active. 
  */
 
 class GameTreeRenderer extends Component {
@@ -75,11 +54,12 @@ class GameTreeRenderer extends Component {
             node.toggled = toggled;
         }
         this.setState({selectedNode: node});
+        if (this.props.changeActiveBoard) {
+            this.props.changeActiveBoard(node.boardSerial);
+        }
     }
 
     render() {
-        console.log('GameTreeRenderer: this.props.tree:');
-        console.log(this.props.tree);
         if (this.props.tree) {
             return (
                 <div>
