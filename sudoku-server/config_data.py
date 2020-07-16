@@ -8,6 +8,8 @@ July 12, 2020
 Scoring and dispatch system configuration data for sudoku game actions.
 """
 
+import logger
+
 actions_description = {
     'assign': {'function': 'expand_cell_with_assignment',
                'requested_arguments': ['cell_id', 'value'],
@@ -155,3 +157,74 @@ operators_description = {
 
 # Merge the two dictionaries above into a single place for doing lookup and costing
 board_update_options = {**actions_description, **operators_description}
+
+
+def debug_operation(op, msg2, board):
+    """ Don't increase our operator cost for this partial operation.
+        Return False (unneeded, but to indicate that the operator should not terminate).
+    """
+    board.log.logOperatorProgress(op, msg2, board)
+    return False
+
+
+def match_set_operation(op, msg2, board):
+    """ Use the logger that adds the cost if we need to increase our cost every matching set.
+        Return True if the operator should terminate after this operation.
+    """
+    if config.cost_per_matching_set:
+        board.log.logOperator(op, msg2, board)
+    else:
+        board.log.logOperatorProgress(op, msg2, board)
+    return config.terminate_on_successful_operation
+
+
+def complete_operation(op, msg2, board):
+    """ Only add the cost at this point if we're not increasing our cost for every matching set.
+    Return True (unneeded, but to indicate that the operator should not terminate).
+    """
+    if config.cost_per_matching_set:
+        board.log.logOperatorProgress(op, msg2, board)
+    else:
+        board.log.logOperator(op, msg2, board)
+    return True
+
+
+def debug_print(msg1, msg2, board):
+    """ Over-use a convenient function to do level 1, 2, 3 verbosity printing.
+    """
+    logger.log.logOperatorProgress(msg1, msg2, board)
+
+
+class ConfigurationData():
+
+    def __init__(self):
+        # Dictionary describing the actions a user can take on a board
+        self.actions_description = actions_description
+        # Dictionary describing logical operators a user can apply with the applyops action
+        self.operators_description = operators_description
+        # Union of the above two dictionaries
+        self.board_update_options = board_update_options
+
+        self.free_actions = ['exclusion']
+
+        # If True, we should terminate on a logical_operator's first successful application,
+        # devolving to cheaper strategies.
+        # If False, we continue to try to find all matching possibilities for an operator.
+        self.terminate_on_successful_operation = False
+        # If True, we increase the cost of the board every time the operator matches a set.
+        # If False (and terminate_on_successful_operation is False), users get multiple matches for free.
+        self.cost_per_matching_set = True
+
+        # TODO MAL move configuration in here
+        # self.verbosity = 0
+        self.verify()
+
+    def verify(self):
+        """ Perform a series of assertions to ensure that the configurations are self-consistent.
+        """
+        if self.terminate_on_successful_operation == True:
+            assert self.cost_per_matching_set == True, \
+                'Cannot terminate on successful operation unless applying cost on every matching set'
+
+
+config = ConfigurationData()

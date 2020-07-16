@@ -14,13 +14,16 @@ Test code for sudoku package.
 
 import board
 import logger
+import config_data
 import solvers
 import argparse
 import puzzles
 import operators
+import math
 
 
 def test_sudoku(args):
+    # TODO MAL move set_verbosity to config_data
     logger.set_verbosity(args.verbosity)
 
     my_ops = []
@@ -35,34 +38,34 @@ def test_sudoku(args):
 
     for name in args.puzzles:
         layout = puzzles.puzzles[name]
-        sboard = board.Board(layout)
+        sboard = board.Board(layout, int(
+            math.sqrt(math.sqrt(len(layout)))), name)
         msg = f'Initial state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
-        logger.SudokuLogger.logOperatorProgress('initial state', msg, None)
+        config_data.debug_print('initial state', msg, None)
 
         cellselector = getattr(solvers, "select_" + args.cellselector)
-        #sboard = solver(sboard, opselector, cellselector)
+        # sboard = solver(sboard, opselector, cellselector)
         if args.solver == 'logical':
             sboard = solvers.logical_solve(sboard, my_ops)
         elif args.solver == 'combined':
             sboard = solvers.combined_solve(sboard, my_ops, cellselector)
 
-        if sboard and sboard.isSolved():
+        msg = None
+        if sboard:
             for key in sboard.log.operators_use_count.keys():
                 # Print this at verbosity level 1
                 msg = f'{key} uses: {sboard.log.operators_use_count[key]}'
-                logger.SudokuLogger.logOperatorProgress(msg, None, None)
-            msg = f'sboard,log,score {str(sboard.log.getDifficultyScore())}: {sboard.log.getDifficultyLevel()}'
-            logger.SudokuLogger.logOperatorProgress(msg, None, None)
+                config_data.debug_print(msg, None, None)
+            msg = f'puzzle,log,score, sboard {sboard._puzzle_name}({sboard.log.getPuzzle()}): {str(sboard.log.getDifficultyScore())}, {sboard.log.getDifficultyLevel()}\n{sboard.getStateStr()}'
+            config_data.debug_print(msg, None, None)
 
-            sboard.log.setSolution(sboard.getStateStr(False, False, ''))
-            sboard.log.printLogJSON()
-
-        msg = None
-        if sboard is None:
-            msg = f'Final state of {name}: INSOLUBLE'
-        else:
+            if sboard.isSolved():
+                sboard.log.setSolution(sboard.getStateStr(False, False, ''))
+                sboard.log.printLogJSON()
             msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
-        logger.SudokuLogger.logOperatorProgress('final state', msg, None)
+        else:
+            msg = f'Final state of {name}: INSOLUBLE'
+        config_data.debug_print('final state', msg, None)
 
 
 if __name__ == '__main__':
@@ -71,7 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('--puzzles', metavar='NAME', type=str, nargs='*',
                         help='puzzles to run through the solver; do not use argument to run all puzzles.')
     parser.add_argument('--verbosity', '-v', action='count', default=0)
-    #parser.add_argument('--outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
+    # parser.add_argument('--outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--solver', nargs='?', choices=['logical', 'combined'],
                         default='logical', help='solver to use')
     parser.add_argument('--cellselector', nargs='?',

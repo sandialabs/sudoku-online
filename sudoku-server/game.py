@@ -14,7 +14,6 @@ import board
 import solvers
 import puzzles
 import random
-import logger
 import operators
 import config_data
 
@@ -37,9 +36,9 @@ def get_initial_board(content, simplify=True):
         puzzle = puzzles.puzzles[name]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        logger.SudokuLogger.logOperatorProgress('select puzzle', name, None)
+        config_data.debug_print('select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
-    logger.SudokuLogger.logOperatorProgress('load puzzle', name, full_board)
+    config_data.debug_print('load puzzle', name, full_board)
     if simplify:
         solvers.singles_operators(full_board)
     return full_board.getSimpleJson()

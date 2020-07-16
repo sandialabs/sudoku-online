@@ -11,7 +11,7 @@ Sudoku Board solvers.
 
 import random
 import operators
-import logger
+import config_data
 import board
 
 # -----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def calculate_status(sboard, msg):
     """
     nValues = sboard.countUncertainValues()
     progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
-    logger.SudokuLogger.logOperatorProgress(None, progress, sboard)
+    config_data.debug_print('status', progress, sboard)
     return nValues
 
 
@@ -109,7 +109,7 @@ def parameterize_logical_operators(ops_list):
     """ Returns a logical operator selector ordered as the pairs given in ops_list. """
     my_ops = []
     progress = f'Selected logical operators {str(ops_list)}'
-    logger.SudokuLogger.logOperatorProgress(None, progress, None)
+    config_data.debug_print('parameterize', progress, None)
     it = iter(ops_list)
     for op in it:
         # TODO MAL BAD PRACTICE - ask cll for help
@@ -168,7 +168,7 @@ def logical_solve(sboard, logical_ops, restart=True):
     # If we found a contradiction (bad guess earlier in search), return None
     if(sboard.invalidCells()):
         progress = f'Found logical contradiction.'
-        logger.SudokuLogger.logOperatorProgress(None, progress, sboard)
+        config_data.debug_print('invalidcells', progress, sboard)
         return None
     return sboard
 
@@ -372,19 +372,17 @@ def combined_solve(sboard, logical_ops=[], cellselector=None):
 
     # If the puzzle is solved, just return the solution
     if(result and result.isSolved()):
-        logger.SudokuLogger.logOperatorProgress(
-            None, f'Puzzle solved.', result)
+        config_data.debug_print('solved', f'Puzzle solved.', result)
         return result
 
     # If we found a contradiction (bad guess earlier in search), return None
     elif(not result or result.invalidCells()):
-        logger.SudokuLogger.logOperatorProgress(
-            None, f'Found contradiction.', result)
+        config_data.debug_print('incorrect', f'Found contradiction.', result)
         return None
 
     # Some action needs to be taken
     msg = f'Taking action, selecting cell using {str(cellselector)} and expanding cell using {str(expand_cell_action)}'
-    logger.SudokuLogger.logOperatorProgress('take action', msg, result)
+    config_data.debug_print('take action', msg, result)
     cell = cellselector(result)
     expansion = expand_cell_action(result, cell.getIdentifier())
     for brd in expansion:

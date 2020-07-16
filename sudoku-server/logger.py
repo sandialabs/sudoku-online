@@ -53,7 +53,7 @@ class SudokuLogger():
         if(verbosity > 2 and board):
             print(board.getStateStr(True, False))
 
-    def __init__(self, puzzle):
+    def __init__(self, puzzle=None):
         self.puzzle = puzzle
         self.solution = ''
         self.board_state_list = []
@@ -77,8 +77,7 @@ class SudokuLogger():
         self.num_operators += 1
         self.operators_use_list.append(operator)
 
-        operator_count = self.operators_use_count[operator]
-        self.operators_use_count[operator] = operator_count + 1
+        self.operators_use_count[operator] += 1
         self.difficulty_score += config_data.board_update_options[operator]['cost']
 
     def setPuzzle(self, puzzle):
@@ -192,3 +191,6 @@ class SudokuLogger():
                 file.write(json_logs)
 
         return False
+
+
+log = SudokuLogger()
