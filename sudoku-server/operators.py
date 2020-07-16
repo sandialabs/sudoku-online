@@ -290,12 +290,12 @@ def find_hidden_triples(sboard):
                 candidates_intersection_value_set = (second_candidate_value_set &
                                                      first_candidate_value_set)
                 # if the first and second candidates are a pair, also,
-                # we check if the value set across the three cells is greater than 4,
+                # we check if the value set across the three cells is greater than 4, # MAL TODO Why 4 vs 3?
                 # otherwise we probably have a naked triple
-                if not (len(candidates_intersection_value_set) > 1
-                        and len(current_value_set
-                                | first_candidate_value_set
-                                | second_candidate_value_set) > 4):
+                if (len(candidates_intersection_value_set) == 0
+                    or len(current_value_set
+                           | first_candidate_value_set
+                           | second_candidate_value_set) <= 4):
                     continue
 
                 second_candidate_units = sboard.getCellUnits(
@@ -371,10 +371,10 @@ def find_hidden_quads(sboard):
                 # we check if the value set across the three cells is greater than 4,
                 # otherwise we probably have a naked quad
                 # print(intersection_value_set)
-                if not(len(intersection_value_set) > 0
-                       and len(current_value_set
-                               | first_candidate_value_set
-                               | second_candidate_value_set) > 4):
+                if (len(intersection_value_set) == 0
+                    or len(current_value_set
+                           | first_candidate_value_set
+                           | second_candidate_value_set) <= 4):
                     continue
 
                 second_candidate_units = sboard.getCellUnits(
@@ -567,7 +567,7 @@ def find_naked_pairs(sboard):
     return sboard
 
 
-def __find_naked_triples(sboard, current_cell, candidate_cells):
+def find_naked_triples(sboard):
     """
     A Naked Triple is any group of three cells in the same unit
     that contain IN TOTAL 3 values. We search for a set of such cells.
@@ -579,67 +579,97 @@ def __find_naked_triples(sboard, current_cell, candidate_cells):
         (12) (23) (13) - {2/2/2}
     """
 
-    found_triple = False
-    current_cell_name = current_cell.getIdentifier()
-    current_value_set = current_cell.getValueSet()
-    for first_candidate_cell in candidate_cells:
-        first_candidate_name = first_candidate_cell.getIdentifier()
-        first_candidate_value_set = first_candidate_cell.getValueSet()
-        first_candidate_unit_set = set(
-            sboard.getCellUnits(first_candidate_name))
-        # We iterate again to find second candidate
-        for second_candidate_cell in candidate_cells:
-            second_candidate_name = second_candidate_cell.getIdentifier()
-            second_candidate_unit_set = set(
-                sboard.getCellUnits(second_candidate_name))
+    num_naked_triples = 0
+    # iterate through every cell in the board
+    for current_cell_name in sboard.getAllCells():
+        current_cell = sboard.getCell(current_cell_name)
+        current_value_set = current_cell.getValueSet()
 
-            # if the second candidate is not the same as the first and
-            # they have a common unit
-            if(second_candidate_cell != first_candidate_cell and
-                    len(first_candidate_unit_set & second_candidate_unit_set) > 0):
+        # looking only for cells with two to three remaining values
+        if len(current_value_set) < 2 or len(current_value_set) > 3:
+            continue
+
+        candidate_cells = __find_naked_candidate_cells(
+            sboard, current_cell)
+
+        for first_candidate_cell in candidate_cells:
+            first_candidate_name = first_candidate_cell.getIdentifier()
+            first_candidate_value_set = first_candidate_cell.getValueSet()
+            first_candidate_unit_set = set(
+                sboard.getCellUnits(first_candidate_name))
+            # We iterate again to find second candidate
+            for second_candidate_cell in candidate_cells:
+                second_candidate_name = second_candidate_cell.getIdentifier()
+                second_candidate_unit_set = set(
+                    sboard.getCellUnits(second_candidate_name))
+
+                if(second_candidate_cell == first_candidate_cell
+                    or len(first_candidate_unit_set
+                           & second_candidate_unit_set) == 0):
+                    continue
+                # if the second candidate is not the same as the first and
+                # they have a common unit
 
                 second_candidate_value_set = second_candidate_cell.getValueSet()
 
                 # naked triple forms if the three cells have 3 values left amongst them
                 union_values = (current_value_set | first_candidate_value_set |
                                 second_candidate_value_set)
-                if len(union_values) == 3:
-                    # we've found a naked triple!
-                    found_triple = __naked_set_exclusion(sboard, [current_cell_name,
-                                                                  first_candidate_name,
-                                                                  second_candidate_name],
-                                                         union_values)
-                    config_data.debug_operation(
-                        'Found nakedtriple', None, sboard)
-                    return found_triple
+                if len(union_values) != 3:
+                    continue
 
-    return found_triple
+                # we've found a naked triple!
+                naked_set = [current_cell_name,
+                             first_candidate_name, second_candidate_name]
+                num_cells_affected = __naked_set_exclusion(
+                    sboard, naked_set, union_values)
+                if num_cells_affected:
+                    num_naked_triples += 1
+                    progress = f'NAKED TRIPLE of {naked_set} excluded values from {num_cells_affected}'
+                    terminate = config_data.match_set_operation(
+                        f'nakedtriples', progress, sboard)
+                    if terminate:
+                        return sboard
+
+    if num_naked_triples > 0:
+        config_data.complete_operation(
+            'nakedtriples', f'Found {num_naked_triples} naked triples that affected board.', sboard)
+    return sboard
 
 
-def __find_naked_quads(sboard, current_cell, candidate_cells):
+def find_naked_quads(sboard):
     """
     A Naked quad is any group of four cells in the same unit
     that contain IN TOTAL 4 values.  Therefore we can exclude
     these four values from all other cells in the unit.
     """
-    found_quad = False
-    current_cell_name = current_cell.getIdentifier()
-    current_value_set = current_cell.getValueSet()
+    num_naked_quads = 0
+    # iterate through every cell in the board
+    for current_cell_name in sboard.getAllCells():
+        current_cell = sboard.getCell(current_cell_name)
+        current_value_set = current_cell.getValueSet()
 
-    for first_candidate_cell in candidate_cells:
-        first_candidate_name = first_candidate_cell.getIdentifier()
-        first_candidate_unit_set = set(
-            sboard.getCellUnits(first_candidate_name))
-        # We iterate again to find second candidate
-        for second_candidate_cell in candidate_cells:
-            second_candidate_name = second_candidate_cell.getIdentifier()
-            second_candidate_unit_set = set(
-                sboard.getCellUnits(second_candidate_name))
+        # looking only for cells with two to four remaining values
+        if len(current_value_set) < 2 or len(current_value_set) > 4:
+            continue
 
-            # if the second candidate is not the same as the first and
-            # they have a common unit
-            if(second_candidate_cell != first_candidate_cell and
-                    len(first_candidate_unit_set & second_candidate_unit_set) > 0):
+        candidate_cells = __find_naked_candidate_cells(sboard, current_cell)
+
+        for first_candidate_cell in candidate_cells:
+            first_candidate_name = first_candidate_cell.getIdentifier()
+            first_candidate_unit_set = set(
+                sboard.getCellUnits(first_candidate_name))
+            # We iterate again to find second candidate
+            for second_candidate_cell in candidate_cells:
+                second_candidate_name = second_candidate_cell.getIdentifier()
+                second_candidate_unit_set = set(
+                    sboard.getCellUnits(second_candidate_name))
+
+                # if the second candidate is not the same as the first and
+                # they have a common unit
+                if(second_candidate_cell == first_candidate_cell
+                   or len(first_candidate_unit_set & second_candidate_unit_set) == 0):
+                    continue
 
                 for third_candidate_cell in candidate_cells:
                     third_candidate_name = third_candidate_cell.getIdentifier()
@@ -648,31 +678,42 @@ def __find_naked_quads(sboard, current_cell, candidate_cells):
 
                     # if the third candidate is not the same as the first and second
                     # and all three have acommon unit
-                    if(third_candidate_cell != first_candidate_cell and
-                        third_candidate_cell != second_candidate_cell and
-                        len(first_candidate_unit_set & second_candidate_unit_set &
-                            third_candidate_unit_set) > 0):
+                    if(third_candidate_cell == first_candidate_cell
+                            or third_candidate_cell == second_candidate_cell
+                            or len(first_candidate_unit_set
+                                   & second_candidate_unit_set
+                                   & third_candidate_unit_set) == 0):
+                        continue
 
-                        first_candidate_value_set = first_candidate_cell.getValueSet()
-                        second_candidate_value_set = second_candidate_cell.getValueSet()
-                        third_candidate_value_set = third_candidate_cell.getValueSet()
+                    first_candidate_value_set = first_candidate_cell.getValueSet()
+                    second_candidate_value_set = second_candidate_cell.getValueSet()
+                    third_candidate_value_set = third_candidate_cell.getValueSet()
 
-                        # naked quad forms if the three cells have
-                        # 4 values left amongst them
-                        union_values = (current_value_set | first_candidate_value_set |
-                                        second_candidate_value_set |
-                                        third_candidate_value_set)
-                        if len(union_values) == 4:
-                            # we've found a naked quad!
-                            found_quad = __naked_set_exclusion(sboard, [current_cell_name,
-                                                                        first_candidate_name,
-                                                                        second_candidate_name,
-                                                                        third_candidate_name],
-                                                               union_values)
-                            config_data.debug_operation(
-                                'Found nakedquad', None, sboard)
-                            return found_quad
-    return found_quad
+                    # naked quad forms if the three cells have
+                    # 4 values left amongst them
+                    union_values = (current_value_set | first_candidate_value_set |
+                                    second_candidate_value_set |
+                                    third_candidate_value_set)
+                    if len(union_values) != 4:
+                        continue
+
+                    # we've found a naked quad!
+                    naked_set = [current_cell_name, first_candidate_name,
+                                 second_candidate_name, third_candidate_name]
+                    num_cells_affected = __naked_set_exclusion(
+                        sboard, naked_set, union_values)
+                    if num_cells_affected:
+                        num_naked_quads += 1
+                        progress = f'NAKED QUAD of {naked_set} excluded values from {num_cells_affected}'
+                        terminate = config_data.match_set_operation(
+                            f'nakedquads', progress, sboard)
+                        if terminate:
+                            return sboard
+
+    if num_naked_quads > 0:
+        config_data.complete_operation(
+            'nakedquads', f'Found {num_naked_quads} naked quads that affected board.', sboard)
+    return sboard
 
 
 def __find_naked_candidate_cells(sboard, current_cell):
@@ -704,6 +745,7 @@ def __find_naked_candidate_cells(sboard, current_cell):
     return candidate_cells
 
 
+# TODO MAL remove
 def find_naked_candidates(sboard, set_type):
     """
     Applies requested naked operator.
@@ -747,10 +789,10 @@ def find_naked_candidates(sboard, set_type):
                 return find_naked_pairs(sboard)
 
             if set_type == 'triples':
-                __find_naked_triples(sboard, current_cell, candidate_cells)
+                return find_naked_triples(sboard)
 
             if set_type == 'quads':
-                __find_naked_quads(sboard, current_cell, candidate_cells)
+                return find_naked_quads(sboard)
 
     return sboard
 
@@ -887,8 +929,8 @@ def find_pointing_candidates(sboard, set_type):
         4. A pair or triple on a column - if they are all in the same box, the
             value can be removed from the rest of the box.
     """
-    # found_pointing_pair = False
-    # found_pointing_triple = False
+    found_pointing_pair = False
+    found_pointing_triple = False
 
     # iterate through all cells on the board
     for current_cell_name in sboard.getAllCells():
@@ -910,7 +952,7 @@ def find_pointing_candidates(sboard, set_type):
 
                 # check to see if the two cells constitute a pointing pair
                 if set_type == 'pairs':
-                    # found_pointing_pair = __is_pointing_set(sboard, candidates)
+                    found_pointing_pair = __is_pointing_set(sboard, candidates)
                     return sboard
 
                 # if requested, look for a pointing triple
@@ -938,7 +980,8 @@ def find_pointing_candidates(sboard, set_type):
                                               second_candidate_cell]
 
                                 # check if the three cells consistitute a pointing triple
-                                # found_pointing_triple = __is_pointing_set(sboard, candidates)
+                                found_pointing_triple = __is_pointing_set(
+                                    sboard, candidates)
                                 return sboard
     return sboard
 
