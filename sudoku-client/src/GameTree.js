@@ -42,31 +42,46 @@ function treeSize(tree) {
 }
 
 function addBoard(tree, parentId, newBoard) {
+    console.log('addBoard: newBoard is ' + newBoard);
     return addChild(
         tree,
         parentId,
-        makeGameTreeNode(newBoard.serialNumber, {board: newBoard})
+        makeGameTreeNode(newBoard)
         );
 }
 
 // We can make this a lot more efficient by adding an 'addChildNodes'
 // function in FunctionalTree.
 // 
-function addBoards(tree, newBoards, parentId) {
+function addBoards(tree, parentId, newBoards) {
     let myTree = tree;
+    console.log('addBoards: parentId is ' + parentId
+        + ', newBoards are ' + newBoards);
+
     for (const board of newBoards) {
+        console.log('inside addBoards: about to add board ' + board);
         myTree = addBoard(myTree, parentId, board);
     }
     return myTree;
 }
+
+const walkTree = FunctionalTree.walkTree;
 
 const GameTreeNamespace = {
     makeGameTreeNode: makeGameTreeNode,
     addBoard: addBoard,
     addBoards: addBoards,
     findNodeById: findNodeById,
-    treeSize: treeSize
+    treeSize: treeSize,
+    walkTree: FunctionalTree.walkTree
 };
 
 export default GameTreeNamespace;
-export { makeGameTreeNode, addChild, findNodeById, treeSize, addBoard };
+export { 
+    makeGameTreeNode, 
+    addChild, 
+    findNodeById, 
+    treeSize, 
+    addBoard, 
+    walkTree
+};

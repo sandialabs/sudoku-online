@@ -13,7 +13,6 @@ import React, {Component} from 'react';
 import { Treebeard, decorators as defaultDecorators } from 'react-treebeard';
 import { clone } from 'ramda';
 import { GameTreeBoard } from './GameTreeBoard';
-import { walkTree } from './SudokuUtilities';
 import PropTypes from 'prop-types';
 import GameTree from './GameTree';
 
@@ -149,7 +148,7 @@ function hasTreeSizeChanged(oldTree, newTree) {
 function prepareTreeForTreebeard(sudokuTree) {
     const ourTree = clone(sudokuTree);
 
-    walkTree(ourTree,
+    GameTree.walkTree(ourTree,
         (node) => {
             node.name = 'Board ' + node.data.board.serialNumber;
             node.active = false;
@@ -168,13 +167,15 @@ function prepareTreeForTreebeard(sudokuTree) {
 function overlayViewState(newTree, oldTree) {
     const ourTree = clone(newTree);
 
-    walkTree(oldTree.root,
+    GameTree.walkTree(oldTree,
         (oldNode) => {
             const serial = oldNode.id;
-            if (ourTree.hasNode(serial)) {
-                Object.assign(ourTree.findNodeById(serial), oldNode);
+            const newNode = GameTree.findNodeById(newTree, serial);
+            if (newNode !== null) {
+                Object.assign(newNode, oldNode);
             }
-        });
+        }
+        );
     return ourTree;
 }
 

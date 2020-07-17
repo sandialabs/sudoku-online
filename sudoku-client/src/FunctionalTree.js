@@ -136,14 +136,23 @@ function treeSize(node) {
 	return 1 + childSizes.reduce((a, b) => a+b, 0);
 }
 
+function walkTree(node, callback) {
+	for (const child of node.children) {
+		walkTree(child, callback);
+	}
+	callback(node);
+}
+
+
 const FunctionalTreeNamespace = {
 	makeTreeNode: makeTreeNode, 
 	addChild: addChild,
 	isLeaf: isLeaf,
 	findNodeById: findNodeById,
-	treeSize: treeSize
+	treeSize: treeSize,
+	walkTree: walkTree
 };
 
 
 export default FunctionalTreeNamespace;
-export { makeTreeNode, addChild, isLeaf, findNodeById, treeSize };
+export { makeTreeNode, addChild, isLeaf, findNodeById, treeSize, walkTree };

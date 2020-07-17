@@ -362,19 +362,6 @@ function makeBoard(degree, assignments, availableMoves) {
 	};
 }
 
-function walkTree(node, callback) {
-	let hasChildren = false;
-	if ('children' in node) {
-		hasChildren = (node.children.length > 0);
-	}
-	if (hasChildren) {
-		for (const child of node.children) {
-			callback(child);
-		}
-	}
-	callback(node);
-}
-
 export { 
 	clearRandomCells,
 	computeMoveLists,
