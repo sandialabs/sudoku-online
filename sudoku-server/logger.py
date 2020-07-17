@@ -74,7 +74,8 @@ class SudokuLogger():
         """ Log that an application of an operator as respects a board state. """
         self.logOperatorProgress(operator, verbosity1_str, board)
 
-        self.board_state_list.append(board.getStateStr(True, False))
+        if board:
+            self.board_state_list.append(board.getStateStr(True, False))
         self.num_operators += 1
         self.operators_use_list.append(operator)
 

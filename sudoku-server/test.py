@@ -58,7 +58,7 @@ def test_sudoku(args):
             msg = f'puzzle,log,score, sboard {sboard._puzzle_name}({sboard.log.getPuzzle()}): {str(sboard.log.getDifficultyScore())}, {sboard.log.getDifficultyLevel()}\n{sboard.getStateStr()}'
             config_data.debug_print(msg, None, None)
 
-            if sboard.isSolved():
+            if config_data.config.log_all_boards or sboard.isSolved():
                 sboard.log.setSolution(sboard.getStateStr(False, False, ''))
                 sboard.log.printLogJSON()
             msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
@@ -87,8 +87,7 @@ if __name__ == '__main__':
                         help='function to select which logical operators to use')
     parser.add_argument('--parameterizeoperators', metavar='LOGICALOPERATOR',
                         nargs='*',
-                        choices=[
-                            solvers.select_all_logical_operators_ordered()],
+                        choices=solvers.select_all_logical_operators_ordered(),
                         help='manually specify logical operators; overrides opselector')
 
     args = parser.parse_args()

@@ -36,7 +36,8 @@ def get_initial_board(content):
         config_data.debug_print('select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
     config_data.debug_print('load puzzle', name, full_board)
-    solvers.apply_free_operators(full_board)
+    if config_data.config.simplify_initial_board:
+        solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()
 
 

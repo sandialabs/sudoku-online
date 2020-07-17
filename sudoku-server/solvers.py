@@ -28,6 +28,12 @@ def calculate_status(sboard, msg):
     Returns:
         int     : the number of uncertain values in sboard
     """
+    # If we found a contradiction (bad guess earlier in search), return 0
+    #    as no more cells can be assigned
+    if(sboard.invalidCells()):
+        progress = f'Found logical contradiction.'
+        config_data.debug_print('invalidcells', progress, sboard)
+        return 0
     nValues = sboard.countUncertainValues()
     progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
     config_data.debug_print('status', progress, sboard)
@@ -92,8 +98,7 @@ def select_all_logical_operators_ordered(ordering=None):
 # -----------------------------------------------------------------------------
 
 
-# TODO MAL come back to the inclusion / exclusion issue
-def logical_solve(sboard, logical_ops, restart=True):
+def logical_solve(sboard, logical_ops):
     """ Solves sboard using only logical operators.
 
     Args:
@@ -129,16 +134,12 @@ def logical_solve(sboard, logical_ops, restart=True):
             if nValues < prevValues:
                 # We progressed the board
                 sboard = apply_free_operators(sboard)
-                if restart:  # TODO MAL move restart to config
+                nValues = sboard.countUncertainValues()
+                if config_data.config.restart_op_search_on_match:
                     # If the operator made a change to board and restart is True,
                     # we will go back to the beginning of logical_ops
                     break
 
-    # If we found a contradiction (bad guess earlier in search), return None
-    if(sboard.invalidCells()):
-        progress = f'Found logical contradiction.'
-        config_data.debug_print('invalidcells', progress, sboard)
-        return None
     return sboard
 
 # -----------------------------------------------------------------------------
@@ -151,11 +152,12 @@ def simplify_expansions(sboard_collection, include_invalid_boards=True):
     ret = []
     for brd in sboard_collection:
         brd = apply_free_operators(brd)
-        # TODO MAL move include_invalid_boards to config
-        if include_invalid_boards or not brd.invalidCells():
-            # Include the board if we're including everything
-            # OR if it's not got a proven contradiction yet
-            ret.append(brd)
+        if (config_data.config.prune_invalid_boards
+                and brd.invalidCells()):
+            continue
+        # Include the board if we're including everything
+        # OR if it's not got a proven contradiction yet
+        ret.append(brd)
     return ret
 
 
