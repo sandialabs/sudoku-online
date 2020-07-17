@@ -90,6 +90,14 @@ class Cell():
         """
         return [cls.display_list[idx] for idx in cls.getPossibleValuesByDegree(degree)]
 
+    @ classmethod
+    def displayValues(cls, values):
+        """ Returns sorted list of all display values for puzzle of degree.
+
+        Note: this could be canonicalized to save memory, but it isn't.
+        """
+        return sorted([cls.display_list[idx] for idx in values])
+
     def __str__(self):
         return 'Cell(ID=' + str(self._id) + \
                ', Propagated=' + str(self._propagated) + \

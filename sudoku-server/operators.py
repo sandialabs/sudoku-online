@@ -819,6 +819,11 @@ def __is_pointing_set(sboard, candidates):
                                  set(sboard.getCellUnits(cell.getIdentifier())))
         intersection_value_set = intersection_value_set & cell.getValueSet()
         candidate_names.append(cell.getIdentifier())
+    if len(intersection_unit_set) < 2:
+        # A pointing set has to share two units
+        return 0
+    # progress = f'POINTING SET {candidate_names}: {sorted(intersection_unit_set)} shares {board.Cell.displayValues(intersection_value_set)}'
+    # config_data.debug_operation(f'pointingset', progress, sboard)
 
     # loop through units common to the candidates
     for unit in intersection_unit_set:
@@ -837,15 +842,13 @@ def __is_pointing_set(sboard, candidates):
             if associated_cell not in candidates:
                 remaining_value_set -= associated_cell.getValueSet()
 
-        # If there's only one value, it is only common
-        # to the candidates. Therefore, we can remove this value
+        # If there're any values left, they are only common
+        # to the candidates. Therefore, we can remove these values
         # from the cells in the other unit common to the candidates.
-        if len(remaining_value_set) != 1:
+        if len(remaining_value_set) == 0:
             continue
 
-        remaining_value = remaining_value_set.pop()
         other_units = intersection_unit_set - set(unit)
-
         for other_unit in other_units:
             other_unit_cells = sboard.getUnitCells(other_unit)
 
@@ -853,19 +856,22 @@ def __is_pointing_set(sboard, candidates):
             # we can exlcude it.
             for cell_name in other_unit_cells:
                 cell = sboard.getCell(cell_name)
-                if cell in candidates or not cell.hasValue(remaining_value):
+                if cell in candidates:
                     continue
 
-                values_before_exclusion = copy.copy(cell.getValueSet())
-                if cell.exclude(remaining_value):  # redundant check
+                excluded_something = False
+                for value in remaining_value_set:
+                    excluded_something |= cell.exclude(value)
+                if excluded_something:
                     num_operated_cells += 1
-                    progress = f'POINTING SET {cell.getIdentifier()}: {sorted(values_before_exclusion)} -> {sorted(cell.getValueSet())}'
+                    progress = f'POINTING SET {candidate_names}: removed values in {board.Cell.displayValues(remaining_value_set)} from {cell.getIdentifier()}'
                     config_data.debug_operation(
                         f'pointingset', progress, sboard)
 
     return num_operated_cells
 
 
+# TODO MAL make two wrapper functions for this
 def find_pointing_candidates(sboard, set_type):
     """
     Applies requested pointing pairs or triples operator.
@@ -917,13 +923,10 @@ def find_pointing_candidates(sboard, set_type):
                         f'pointingpairs', progress, sboard)
                     if terminate:
                         return sboard
-                    else:
-                        # We're doing pairs, so there's no need to continue onwards to triples
-                        continue
+                # We're doing pairs, so there's no need to continue onwards to triples
+                continue
 
-            # if requested, look for a pointing triple
-            else:
-                assert set_type == 'triples', 'Only support pointing pairs and pointing triples'
+            assert set_type == 'triples', f'Only support pointing pairs and pointing triples, not {set_type}'
             for second_candidate_cell in candidate_cells:
                 if second_candidate_cell in candidates:
                     continue
