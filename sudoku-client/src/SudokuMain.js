@@ -18,7 +18,6 @@ class SudokuMain extends React.Component {
 
 		this.state = {
 			initialBoard: null,
-			initialBoardDegree: false,
 			availableHeuristics: null,
 			selectedHeuristic: null
 		};
@@ -136,11 +135,6 @@ class SudokuMain extends React.Component {
 		const requestAsString = JSON.stringify(request);
 		const resultAsString = executeHeuristic(requestAsString);
 
-		console.log('Heuristic request as string:');
-		console.log(requestAsString);
-		console.log('Heuristic result as string:');
-		console.log(resultAsString);
-
 		return Promise.resolve(
 			JSON.parse(
 				executeHeuristic(
@@ -168,15 +162,11 @@ class SudokuMain extends React.Component {
 		console.log('Main panel mounted.  Call out to get the initial game state.');
 		// This will be replaced with a server call once we have a server to call
 
-		const initialBoardAsString = requestInitialBoard(this.props.degree);
+		const boardPromise = Promise.resolve(JSON.parse(requestInitialBoard(3)));
 
-		const initialBoard = JSON.parse(initialBoardAsString);
-		console.log('initialBoard follows:');
-		console.log(initialBoard);
-
-		this.setState({
-			initialBoard: initialBoard
-		});
+		boardPromise.then(
+			(board) => (this.setState({initialBoard: board}))
+			);
 
 		this.requestHeuristicList().then(
 			heuristicList => { this.populateHeuristicList(heuristicList); }
