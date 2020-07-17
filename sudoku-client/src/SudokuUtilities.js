@@ -373,5 +373,4 @@ export {
 	setDifference, 
 	setIntersection, 
 	setUnion,
-	walkTree
 	 };
