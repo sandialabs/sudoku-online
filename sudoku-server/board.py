@@ -443,7 +443,8 @@ class Board():
                             + '. (Must be Board, dict, or str.)')
 
         # TODO MAL move this to test / elsewhere ?
-        self.log = logger.SudokuLogger(self.getStateStr(False, False, ''))
+        self.log = logger.SudokuLogger(
+            self.getStateStr(False, False, ''), self._puzzle_name)
 
     def __str__(self):
         output = "Board " + str(self._id) \

@@ -236,7 +236,7 @@ def find_hidden_pairs(sboard):
                 sboard, hidden_set, intersection_unit_list)
             if num_cells_affected:
                 num_hidden_pairs += 1
-                progress = f'HIDDEN PAIR of {sorted([cell.getIdentifier() for cell in hidden_set])} excluded values from {num_cells_affected}'
+                progress = f'HIDDEN PAIR of {sorted([cell.getIdentifier() for cell in hidden_set])} excluded values from {num_cells_affected} cells'
                 terminate = config_data.match_set_operation(
                     f'hiddenpairs', progress, sboard)
                 if terminate:
@@ -313,7 +313,7 @@ def find_hidden_triples(sboard):
                         sboard, hidden_set, intersection_unit_list)
                     if num_cells_affected:
                         num_hidden_triples += 1
-                        progress = f'HIDDEN TRIPLE of {sorted([cell.getIdentifier() for cell in hidden_set])} excluded values from {num_cells_affected}'
+                        progress = f'HIDDEN TRIPLE of {sorted([cell.getIdentifier() for cell in hidden_set])} excluded values from {num_cells_affected} cells'
                         terminate = config_data.match_set_operation(
                             f'hiddentriples', progress, sboard)
                         if terminate:
@@ -412,7 +412,7 @@ def find_hidden_quads(sboard):
                             sboard, candidates, list(intersection_unit_set))
                         if num_cells_affected:
                             num_hidden_quads += 1
-                            progress = f'HIDDEN QUAD of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected}'
+                            progress = f'HIDDEN QUAD of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected} cells'
                             terminate = config_data.match_set_operation(
                                 f'hiddenquads', progress, sboard)
                             if terminate:
@@ -465,25 +465,14 @@ def find_hidden_candidates(sboard, set_type):
     the hidden set's common unit.  Therefore we can exclude
     all other values from the cells in the set."
     """
+    if set_type == 'pairs':
+        return find_hidden_pairs(sboard)
 
-    # iterate through every cell in the board
-    for current_cell_name in sboard.getAllCells():
+    if set_type == 'triples':
+        return find_hidden_triples(sboard)
 
-        current_cell = sboard.getCell(current_cell_name)
-        current_value_set = current_cell.getValueSet()
-
-        # these operators are useful only for cells with more than two values
-        if len(current_value_set) > 2:
-            # the list of cells associated with the current cell
-
-            if set_type == 'pairs':
-                return find_hidden_pairs(sboard)
-
-            if set_type == 'triples':
-                return find_hidden_triples(sboard)
-
-            if set_type == 'quads':
-                return find_hidden_quads(sboard)
+    if set_type == 'quads':
+        return find_hidden_quads(sboard)
 
     return sboard
 
@@ -555,7 +544,7 @@ def find_naked_pairs(sboard):
                 sboard, naked_set, current_value_set)
             if num_cells_affected:
                 num_naked_pairs += 1
-                progress = f'NAKED PAIR of {naked_set} excluded values from {num_cells_affected}'
+                progress = f'NAKED PAIR of {naked_set} excluded values from {num_cells_affected} cells'
                 terminate = config_data.match_set_operation(
                     f'nakedpairs', progress, sboard)
                 if terminate:
@@ -625,7 +614,7 @@ def find_naked_triples(sboard):
                     sboard, naked_set, union_values)
                 if num_cells_affected:
                     num_naked_triples += 1
-                    progress = f'NAKED TRIPLE of {naked_set} excluded values from {num_cells_affected}'
+                    progress = f'NAKED TRIPLE of {naked_set} excluded values from {num_cells_affected} cells'
                     terminate = config_data.match_set_operation(
                         f'nakedtriples', progress, sboard)
                     if terminate:
@@ -704,7 +693,7 @@ def find_naked_quads(sboard):
                         sboard, naked_set, union_values)
                     if num_cells_affected:
                         num_naked_quads += 1
-                        progress = f'NAKED QUAD of {naked_set} excluded values from {num_cells_affected}'
+                        progress = f'NAKED QUAD of {naked_set} excluded values from {num_cells_affected} cells'
                         terminate = config_data.match_set_operation(
                             f'nakedquads', progress, sboard)
                         if terminate:
@@ -773,26 +762,14 @@ def find_naked_candidates(sboard, set_type):
     these four values from all other cells in the unit.
     """
 
-    # iterate through every cell in the board
-    for current_cell_name in sboard.getAllCells():
+    if set_type == 'pairs':
+        return find_naked_pairs(sboard)
 
-        current_cell = sboard.getCell(current_cell_name)
-        current_value_set = current_cell.getValueSet()
+    if set_type == 'triples':
+        return find_naked_triples(sboard)
 
-        # looking only for cells with two to four remaining values
-        if len(current_value_set) > 1 and len(current_value_set) < 5:
-
-            candidate_cells = __find_naked_candidate_cells(
-                sboard, current_cell)
-
-            if set_type == 'pairs':
-                return find_naked_pairs(sboard)
-
-            if set_type == 'triples':
-                return find_naked_triples(sboard)
-
-            if set_type == 'quads':
-                return find_naked_quads(sboard)
+    if set_type == 'quads':
+        return find_naked_quads(sboard)
 
     return sboard
 
@@ -829,7 +806,7 @@ def __is_pointing_set(sboard, candidates):
     values from the appropriate cells.
     """
     # variable initialization
-    found_pointing_set = False
+    num_operated_cells = 0
     current_units = sboard.getCellUnits(candidates[0].getIdentifier())
     current_value_set = candidates[0].getValueSet()
     intersection_unit_set = set(current_units)
@@ -838,7 +815,6 @@ def __is_pointing_set(sboard, candidates):
 
     # this loop stores the information for all candidates in single data structures
     for cell in candidates:
-
         intersection_unit_set = (intersection_unit_set &
                                  set(sboard.getCellUnits(cell.getIdentifier())))
         intersection_value_set = intersection_value_set & cell.getValueSet()
@@ -846,7 +822,6 @@ def __is_pointing_set(sboard, candidates):
 
     # loop through units common to the candidates
     for unit in intersection_unit_set:
-
         unit_cells = sboard.getUnitCells(unit)
 
         # this variable is used to see if the candidates' common values are also
@@ -865,44 +840,30 @@ def __is_pointing_set(sboard, candidates):
         # If there's only one value, it is only common
         # to the candidates. Therefore, we can remove this value
         # from the cells in the other unit common to the candidates.
-        if len(remaining_value_set) == 1:
+        if len(remaining_value_set) != 1:
+            continue
 
-            remaining_value = remaining_value_set.pop()
-            other_units = intersection_unit_set - set(unit)
+        remaining_value = remaining_value_set.pop()
+        other_units = intersection_unit_set - set(unit)
 
-            for other_unit in other_units:
-                other_unit_cells = sboard.getUnitCells(other_unit)
+        for other_unit in other_units:
+            other_unit_cells = sboard.getUnitCells(other_unit)
 
-                # If any of these cells have the pointing set's value,
-                # we can exlcude it.
-                for cell_name in other_unit_cells:
-                    cell = sboard.getCell(cell_name)
+            # If any of these cells have the pointing set's value,
+            # we can exlcude it.
+            for cell_name in other_unit_cells:
+                cell = sboard.getCell(cell_name)
+                if cell in candidates or not cell.hasValue(remaining_value):
+                    continue
 
-                    if cell not in candidates:
+                values_before_exclusion = copy.copy(cell.getValueSet())
+                if cell.exclude(remaining_value):  # redundant check
+                    num_operated_cells += 1
+                    progress = f'POINTING SET {cell.getIdentifier()}: {sorted(values_before_exclusion)} -> {sorted(cell.getValueSet())}'
+                    config_data.debug_operation(
+                        f'pointingset', progress, sboard)
 
-                        if cell.hasValue(remaining_value):
-                            found_pointing_set = True
-                            values_before_exclusion = copy.copy(
-                                cell.getValueSet())
-                            cell.exclude(remaining_value)
-
-                            pointing_type = ''
-                            if len(candidates) == 3:
-                                pointing_type = 'TRIPLE'
-                            if len(candidates) == 2:
-                                pointing_type = 'PAIR'
-
-                            progress = f'POINTING {pointing_type} {cell.getIdentifier()}: {sorted(values_before_exclusion)} -> {sorted(cell.getValueSet())}'
-                            config_data.match_set_operation(
-                                f'pointing{pointing_type.lower()}s',
-                                progress,
-                                sboard)
-    if found_pointing_set:
-        progress = f'POINTING {pointing_type} of {sorted(candidate_names)}'
-        config_data.complete_operation(
-            f'pointing{pointing_type.lower()}s', progress, sboard)
-
-    return found_pointing_set
+    return num_operated_cells
 
 
 def find_pointing_candidates(sboard, set_type):
@@ -929,60 +890,80 @@ def find_pointing_candidates(sboard, set_type):
         4. A pair or triple on a column - if they are all in the same box, the
             value can be removed from the rest of the box.
     """
-    found_pointing_pair = False
-    found_pointing_triple = False
+    num_pointing_pairs = 0
+    num_pointing_triples = 0
 
     # iterate through all cells on the board
     for current_cell_name in sboard.getAllCells():
         current_cell = sboard.getCell(current_cell_name)
-        current_value_set = current_cell.getValueSet()
-
         # no point in operator if cell is already certain
-        if len(current_value_set) > 1:
-            current_units = sboard.getCellUnits(current_cell_name)
+        if current_cell.isCertain():
+            continue
 
-            # candidate are cells that have at least one
-            # value in common with the current cell
-            candidate_cells = __find_pointing_candidate_cells(
-                sboard, current_cell)
-            candidates = []
-            for first_candidate_cell in candidate_cells:
+        # candidate are cells that have at least one
+        # value in common with the current cell
+        candidate_cells = __find_pointing_candidate_cells(
+            sboard, current_cell)
+        candidates = []
+        for first_candidate_cell in candidate_cells:
+            candidates = [current_cell, first_candidate_cell]
+            # check to see if the two cells constitute a pointing pair
+            if set_type == 'pairs':
+                num_cells_affected = __is_pointing_set(sboard, candidates)
+                if num_cells_affected:
+                    num_pointing_pairs += 1
+                    progress = f'POINTING PAIR of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected} cells'
+                    terminate = config_data.match_set_operation(
+                        f'pointingpairs', progress, sboard)
+                    if terminate:
+                        return sboard
+                    else:
+                        # We're doing pairs, so there's no need to continue onwards to triples
+                        continue
 
-                candidates = [current_cell, first_candidate_cell]
+            # if requested, look for a pointing triple
+            else:
+                assert set_type == 'triples', 'Only support pointing pairs and pointing triples'
+            for second_candidate_cell in candidate_cells:
+                if second_candidate_cell in candidates:
+                    continue
 
-                # check to see if the two cells constitute a pointing pair
-                if set_type == 'pairs':
-                    found_pointing_pair = __is_pointing_set(sboard, candidates)
-                    return sboard
+                current_units = sboard.getCellUnits(current_cell_name)
+                current_value_set = current_cell.getValueSet()
+                first_candidate_units = sboard.getCellUnits(
+                    first_candidate_cell.getIdentifier())
+                first_candidate_value_set = first_candidate_cell.getValueSet()
+                second_candidate_units = sboard.getCellUnits(
+                    second_candidate_cell.getIdentifier())
+                second_candidate_value_set = second_candidate_cell.getValueSet()
 
-                # if requested, look for a pointing triple
-                if set_type == 'triples':
-                    for second_candidate_cell in candidate_cells:
-                        second_candidate_cell_name = second_candidate_cell.getIdentifier()
+                # check if all three cells have at least one value in common
+                # also check if the all three cell have a common unit
+                if(len(current_value_set & first_candidate_value_set &
+                        second_candidate_value_set) == 0 or
+                    len(set(current_units) & set(first_candidate_units) &
+                        set(second_candidate_units)) == 0):
+                    continue
 
-                        if second_candidate_cell not in candidates:
-                            first_candidate_cell_name = first_candidate_cell.getIdentifier()
-                            first_candidate_units = sboard.getCellUnits(
-                                first_candidate_cell_name)
-                            first_candidate_value_set = first_candidate_cell.getValueSet()
-                            second_candidate_cell_name = second_candidate_cell.getIdentifier()
-                            second_candidate_units = sboard.getCellUnits(
-                                second_candidate_cell_name)
-                            second_candidate_value_set = second_candidate_cell.getValueSet()
+                candidates = [current_cell,
+                              first_candidate_cell, second_candidate_cell]
 
-                            # check if all three cells have at least one value in common
-                            # also check if the all three cell have a common unit
-                            if(len(current_value_set & first_candidate_value_set &
-                                    second_candidate_value_set) > 0 and
-                                len(set(current_units) & set(first_candidate_units) &
-                                    set(second_candidate_units)) > 0):
-                                candidates = [current_cell, first_candidate_cell,
-                                              second_candidate_cell]
+                # check if the three cells consistitute a pointing triple
+                num_cells_affected = __is_pointing_set(sboard, candidates)
+                if num_cells_affected:
+                    num_pointing_triples += 1
+                    progress = f'POINTING TRIPLE of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected} cells'
+                    terminate = config_data.match_set_operation(
+                        f'pointingtriples', progress, sboard)
+                    if terminate:
+                        return sboard
 
-                                # check if the three cells consistitute a pointing triple
-                                found_pointing_triple = __is_pointing_set(
-                                    sboard, candidates)
-                                return sboard
+    if num_pointing_pairs:
+        config_data.complete_operation(
+            'pointingpairs', f'Found {num_pointing_pairs} pointing pairs that affected board.', sboard)
+    elif num_pointing_triples:
+        config_data.complete_operation(
+            'pointingtriples', f'Found {num_pointing_triples} pointing triples that affected board.', sboard)
     return sboard
 
 

@@ -53,8 +53,9 @@ class SudokuLogger():
         if(verbosity > 2 and board):
             print(board.getStateStr(True, False))
 
-    def __init__(self, puzzle=None):
+    def __init__(self, puzzle=None, name=None):
         self.puzzle = puzzle
+        self.name = name
         self.solution = ''
         self.board_state_list = []
         self.num_operators = 0
@@ -86,6 +87,12 @@ class SudokuLogger():
     def getPuzzle(self):
         return self.puzzle
 
+    def setName(self, name):
+        self.name = name
+
+    def getName(self):
+        return self.name
+
     def setSolution(self, solution):
         self.solution = solution
 
@@ -115,21 +122,25 @@ class SudokuLogger():
         """ Given a log_dict, see if we came up with the same information as last time.
             Return True if log_dict represents the same information, and False if it differs.
         """
-        assert self.getPuzzle() == log_dict['puzzle'], \
-            'Should only call compare_json_to_self on data from the same puzzle'
-        if (self.getSolution() != log_dict['solution']
-            or self.difficulty_score != log_dict['difficulty_score']
-            # this is redundant with score
-            or self.getDifficultyLevel() != log_dict['difficulty_level']
-            or self.operators_use_list != log_dict['order_of_operators']
-                or self.board_state_list != log_dict['board_states']):
-            return False
-
-        if len(self.operators_use_count.keys()) != len([k for k in filter(lambda key: 'num_' in key, log_dict.keys())]):
-            return False
-        for key in self.operators_use_count.keys():
-            if self.operators_use_count[key] != log_dict[f'num_{key}']:
+        try:
+            assert self.getPuzzle() == log_dict['puzzle'], \
+                'Should only call compare_json_to_self on data from the same puzzle'
+            if (self.getSolution() != log_dict['solution']
+                or self.difficulty_score != log_dict['difficulty_score']
+                # this is redundant with score
+                or self.getDifficultyLevel() != log_dict['difficulty_level']
+                or self.operators_use_list != log_dict['order_of_operators']
+                or self.board_state_list != log_dict['board_states']
+                    or self.name != log_dict['name']):
                 return False
+
+            if len(self.operators_use_count.keys()) != len([k for k in filter(lambda key: 'num_' in key, log_dict.keys())]):
+                return False
+            for key in self.operators_use_count.keys():
+                if self.operators_use_count[key] != log_dict[f'num_{key}']:
+                    return False
+        except KeyError:
+            return False
 
         return True
 
@@ -160,10 +171,12 @@ class SudokuLogger():
                         append_to_file = False
                         log_to_replace = log
                         break
-            logs.remove(log_to_replace)
+            if log_to_replace:
+                logs.remove(log_to_replace)
 
         game = {
             'puzzle': self.getPuzzle(),
+            'name': self.getName(),
             'solution': self.getSolution(),
             'difficulty_score': self.difficulty_score,
             'difficulty_level': self.getDifficultyLevel(),
