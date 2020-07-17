@@ -9,7 +9,7 @@
 // This component manages the game tree, including initial setup.
 
 import React from 'react';
-import SudokuBoard from './SudokuBoard';
+import { ActiveBoardView } from './ActiveBoardView';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
@@ -61,13 +61,14 @@ class SudokuGame extends React.Component {
 
         return this.props.issueBoardRequest(board, action)
                          .then(result => {this.handleNewBoards(board.serialNumber, action, result);})
-                         .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
+ //                        .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
     }
 
     handleNewBoards(parentSerial, action, response) {
         console.log('handleNewBoards: parentSerial is ' + parentSerial);
         console.log('type of response: ' + typeof(response));
         console.log(response);
+        console.log('response length: ' + response.length);
 
         this.setState({
             gameTree: GameTree.addBoards(
@@ -128,9 +129,7 @@ class SudokuGame extends React.Component {
                                 </td>
                                 <td id="activeBoardCell">
                                    <p>Currently active: Board {board.serialNumber}</p>
-                                   <SudokuBoard
-                                        boardSerial={board.serialNumber}
-                                        degree={this.props.degree}
+                                   <ActiveBoardView
                                         board={board}
                                         active={true}
                                         announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
