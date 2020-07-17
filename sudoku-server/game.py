@@ -40,7 +40,7 @@ def get_initial_board(content, simplify=True):
     full_board = board.Board(puzzle, degree, name)
     config_data.debug_print('load puzzle', name, full_board)
     if simplify:
-        solvers.singles_operators(full_board)
+        solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()
 
 
@@ -87,6 +87,7 @@ def parse_and_apply_action(content, simplify=True):
     if "Value" in action_choice:
         assert 'value' in action_dict, "Must specify cell value in *Value* actions"
         value = action_dict['value']
+
     if action_choice == "selectValueForCell":
         result = solvers.assign_cell_action(
             board_object, cell_id, value, simplify)

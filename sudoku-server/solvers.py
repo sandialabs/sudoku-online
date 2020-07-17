@@ -34,102 +34,70 @@ def calculate_status(sboard, msg):
     return nValues
 
 
-def singles_operators(sboard):
-    """ Iterate over exclusion and inclusion until no values change. """
-    # print('in singles operators')
+def apply_free_operators(sboard):
+    """ Iterate over free operators until no values change. """
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
-
-        # Apply logical exclusion
-        sboard = operators.logical_exclusion(sboard)
-        nValues = calculate_status(sboard, "exclusion propagation")
-
-        # Apply logical inclusion
-        sboard = operators.logical_inclusion(sboard)
-        nValues = calculate_status(sboard, "inclusion assignment")
-
+        for op in config_data.config.free_actions:
+            sboard = call_operator(sboard, op)
+            nValues = calculate_status(sboard, op)
+            if nValues < prevValues:
+                # Use the computationally cheapest free operator
+                break
     return sboard
 
 
-def call_operator(sboard, operator_type, set_type):
-    """ Call the given operator with the given type.
+def call_operator(sboard, op_name):
+    """ Call the given operator.
 
     Args:
         sboard  : The board to apply the specified operator to.
-        operator_type   : the operator type ('pointing', 'naked',
-            'hidden', or 'wing')
-        set_type        : the parameter to pass to the operator functions
+        op_name : the operator function name to apply
     Returns:
         Board, boolean   : the updated board passed in, and a boolean
             indicating whether the board was updated (i.e., the number
             of uncertain values in the board changed)
     """
-    prevValues = sboard.countUncertainValues()
+    try:
+        op_func = config_data.operators_description[op_name]['function']
+        function = getattr(operators, op_func)
+    except KeyError:
+        print(f'Can\'t call operator {op_name}')
+        return None
 
-    if operator_type == 'pointing':
-        sboard = operators.find_pointing_candidates(sboard, set_type)
-    if operator_type == 'naked':
-        sboard = operators.find_naked_candidates(sboard, set_type)
-    if operator_type == 'hidden':
-        sboard = operators.find_hidden_candidates(sboard, set_type)
-    if operator_type == 'wing':
-        sboard = operators.find_wings(sboard, set_type)
-
-    nValues = calculate_status(sboard, operator_type + ' ' + set_type)
-
-    if nValues < prevValues:
-        return sboard, True
-    else:
-        return sboard, False
+    return function(sboard)
 
 
 # -----------------------------------------------------------------------------
 # LOGICAL PUZZLE OPERATOR SELECTORS
 # -----------------------------------------------------------------------------
 
-def select_all_logical_operators_ordered():
+def select_all_logical_operators_ordered(ordering=None):
     """ Returns an ordered list of parameterized logical operators. """
-    return [['pointing', 'pairs'],
-            ['naked', 'pairs'],
-            ['hidden', 'pairs'],
-            ['pointing', 'triples'],
-            ['naked', 'triples'],
-            ['hidden', 'triples'],
-            ['wing', 'y'],
-            ['wing', 'xyz'],
-            ['wing', 'x'],
-            ['naked', 'quads'],
-            ['hidden', 'quads']
-            ]
+    if not ordering:
+        def ordering(name):
+            return config_data.operators_description[name]['cost']
+    costly_ops = sorted(config_data.config.costly_actions, key=ordering)
+    config_data.debug_print(str(costly_ops), None, None)
+    return costly_ops
 
-
-def parameterize_logical_operators(ops_list):
-    """ Returns a logical operator selector ordered as the pairs given in ops_list. """
-    my_ops = []
-    progress = f'Selected logical operators {str(ops_list)}'
-    config_data.debug_print('parameterize', progress, None)
-    it = iter(ops_list)
-    for op in it:
-        # TODO MAL BAD PRACTICE - ask cll for help
-        param = next(it)
-        my_ops.append([op, param])
-    return my_ops
 
 # -----------------------------------------------------------------------------
 # LOGICAL PUZZLE SOLVERS
 # -----------------------------------------------------------------------------
 
 
+# TODO MAL come back to the inclusion / exclusion issue
 def logical_solve(sboard, logical_ops, restart=True):
     """ Solves sboard using only logical operators.
 
     Args:
         sboard (Board)  : the board to apply operators to
-        logical_ops ([[operator, parameter], ...])  :
-            a list of [operator, parameter] pairs describing the set of
-            parameterized operators to apply and the order in which
+        logical_ops ([operator, ...])  :
+            a list of logical operator function names describing the set of
+            logical operators to apply and the order in which
             to apply them (applying inclusion and exclusion to a fixed
             point in between each specified logical operator)
         restart (boolean)   : whether to restart at the first
@@ -145,25 +113,23 @@ def logical_solve(sboard, logical_ops, restart=True):
     inclusions until no new constraints are identified.
     """
 
+    sboard = apply_free_operators(sboard)
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1  # Force the first iteration of the loop
     # Iterate until we don't change the board or no uncertain values remain
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
-        sboard = singles_operators(sboard)
 
-        for op, param in logical_ops:
-            sboard, operator_applied = call_operator(sboard, op, param)
-            nValues = sboard.countUncertainValues()
-            if operator_applied:
-                if restart:
+        for op in logical_ops:
+            sboard = call_operator(sboard, op)
+            nValues = calculate_status(sboard, op)
+            if nValues < prevValues:
+                # We progressed the board
+                sboard = apply_free_operators(sboard)
+                if restart:  # TODO MAL move restart to config
                     # If the operator made a change to board and restart is True,
                     # we will go back to the beginning of logical_ops
                     break
-                else:
-                    # Otherwise, we will continue with the next operator,
-                    # so we need to force inclusion / exclusion
-                    sboard = singles_operators(sboard)
 
     # If we found a contradiction (bad guess earlier in search), return None
     if(sboard.invalidCells()):
@@ -178,12 +144,12 @@ def logical_solve(sboard, logical_ops, restart=True):
 
 
 def simplify_expansions(sboard_collection, simplify, include_invalid_boards=True):
-    """ If simplify is true, apply singles_operators to all boards in sboard_collection. """
+    """ If simplify is true, apply apply_free_operators to all boards in sboard_collection. """
     ret = []
     for brd in sboard_collection:
         if simplify:
-            # Apply inclusion and exclusion for free
-            brd = operators.logical_exclusion(brd)
+            brd = apply_free_operators(brd)
+        # TODO MAL move include_invalid_boards to config
         if include_invalid_boards or not brd.invalidCells():
             # Include the board if we're including everything
             # OR if it's not got a proven contradiction yet
@@ -221,8 +187,7 @@ def assign_cell_action(sboard, cell_id, value, simplify=True):
     Inclusion and exclusion have been applied to each possible board.
     The board with all the other options is set to a background board.
     """
-    expansion = operators.expand_cell_with_assignment(
-        sboard, cell_id, value, make_exclusion_primary=False)
+    expansion = operators.expand_cell_with_assignment(sboard, cell_id, value)
     return simplify_expansions(expansion, simplify)
 
 
@@ -239,8 +204,7 @@ def exclude_cell_value_action(sboard, cell_id, value, simplify=True):
     Inclusion and exclusion have been applied to each possible board.
     The board with the assignment is set to a background board.
     """
-    expansion = operators.expand_cell_with_assignment(
-        sboard, cell_id, value, make_exclusion_primary=True)
+    expansion = operators.expand_cell_with_exclusion(sboard, cell_id, value)
     return simplify_expansions(expansion, simplify)
 
 

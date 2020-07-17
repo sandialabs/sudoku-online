@@ -30,8 +30,7 @@ def test_sudoku(args):
     if args.opselector == "all_logical_operators_ordered":
         my_ops = solvers.select_all_logical_operators_ordered()
     if args.parameterizeoperators:
-        my_ops = solvers.parameterize_logical_operators(
-            args.parameterizeoperators)
+        my_ops = args.parameterizeoperators
 
     if not args.puzzles:
         args.puzzles = puzzles.puzzles.keys()
@@ -86,9 +85,11 @@ if __name__ == '__main__':
                         choices=['all_logical_operators_ordered'],
                         default='all_logical_operators_ordered',
                         help='function to select which logical operators to use')
-    parser.add_argument('--parameterizeoperators', metavar="OPTYPE SETTYPE",
+    parser.add_argument('--parameterizeoperators', metavar='LOGICALOPERATOR',
                         nargs='*',
-                        help='manually specify <optype settype> logical operator pairs; overrides opselector')  # TODO add help describing options
+                        choices=[
+                            solvers.select_all_logical_operators_ordered()],
+                        help='manually specify logical operators; overrides opselector')
 
     args = parser.parse_args()
     test_sudoku(args)

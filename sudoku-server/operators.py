@@ -875,8 +875,59 @@ def __is_pointing_set(sboard, candidates):
     return num_operated_cells
 
 
-# TODO MAL make two wrapper functions for this
-def find_pointing_candidates(sboard, set_type):
+def find_pointing_pairs(sboard):
+    """
+    Applies pointing pairs operator.
+
+    Args:
+        sboard  : the board to which the pointing candidates operator will be applied
+    Returns:
+        board   : sboard, updated to remove values identified as pointing sets
+            from related cells
+
+    If any one value is present only two times in just one unit,
+    and that pair is aligned within another unit,
+    then we can remove that number from the intersection of another unit.
+    There are four types of intersections:
+        1. A value in a pair in a box aligned on a row
+            can be removed from the rest of the row.
+        2. A value in a pair in a box aligned on a column
+            can be removed from the rest of the column.
+        3. A value in a pair in a row in the same box as each other
+            can be removed from the rest of the box.
+        4. A value in a pair in a column in the same box as each other
+            can be removed from the rest of the box.
+    """
+    return __find_pointing_candidates(sboard, "pairs")
+
+
+def find_pointing_triples(sboard):
+    """
+    Applies pointing triples operator.
+
+    Args:
+        sboard  : the board to which the pointing candidates operator will be applied
+    Returns:
+        board   : sboard, updated to remove values identified as pointing sets
+            from related cells
+
+    If any one value is present only three times in just one unit,
+    and that triple is aligned within another unit,
+    then we can remove that number from the intersection of another unit.
+    There are four types of intersections:
+        1. A value in a triple in a box aligned on a row
+            can be removed from the rest of the row.
+        2. A value in a triple in a box aligned on a column
+            can be removed from the rest of the column.
+        3. A value in a triple in a row in the same box as each other
+            can be removed from the rest of the box.
+        4. A value in a triple in a column in the same box as each other
+            can be removed from the rest of the box.
+    """
+    return __find_pointing_candidates(sboard, "triples")
+
+
+def __find_pointing_candidates(sboard, set_type):
     """
     Applies requested pointing pairs or triples operator.
 
@@ -1331,7 +1382,45 @@ def expand_cell(sboard, cell_id):
     return expansion
 
 
-def expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=False):
+def expand_cell_with_assignment(sboard, cell_id, value):
+    """
+    Expands the board cell identified by cell_id into a board with that value assigned,
+    and a board with that value excluded (and marked as backup).
+
+    Args:
+        sboard  : the starting board to "expand"
+        cell_id : the identifier of the cell to expand
+        value : a value to assign to cell_id,
+            intersecting those values with valid values
+    Returns:
+        collection of board  : new boards.  Each board is a copy of sboard
+            except that in the first board cell_id is set to value
+            and in the second (backup) board cell_id contains the remaining values.
+    NOTE: propagation of the assigned value is not performed automatically.
+    """
+    return __expand_cell_with_assignment(sboard, cell_id, value, False)
+
+
+def expand_cell_with_exclusion(sboard, cell_id, value):
+    """
+    Expands the board cell identified by cell_id into a board with that value excluded,
+    and a board with that value excluded (and marked as backup).
+
+    Args:
+        sboard  : the starting board to "expand"
+        cell_id : the identifier of the cell to expand
+        value : a value to assign to cell_id,
+            intersecting those values with valid values
+    Returns:
+        collection of board  : new boards.  Each board is a copy of sboard
+            except that in the first board cell_id contains the remaining values
+            and in the second (backup) board cell_id is set to value.
+    NOTE: propagation of the assigned value is not performed automatically.
+    """
+    return __expand_cell_with_assignment(sboard, cell_id, value, True)
+
+
+def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=False):
     """
     Expands the board cell identified by cell_id into partitions specified.
 
@@ -1346,12 +1435,6 @@ def expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=F
             and in the second board cell_id contains the remaining values.
             The collection of boards together cover the possible values of
             cell_id in sboard.
-
-    For each set of values that cell_id can take
-        create a new (duplicate) board and assign one of the candidate partition sets
-            to the identified cell
-    Returns a list of Boards with the cell value assigned
-    If identified cell has only one possible value, simply returns [sboard]
     NOTE: propagation of the assigned value is not performed automatically.
     """
 
