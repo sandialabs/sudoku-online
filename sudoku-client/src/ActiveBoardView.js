@@ -38,10 +38,6 @@ import React from 'react';
 import SudokuChoiceGrid from './SudokuChoiceGrid';
 
 class ActiveBoardView extends React.Component {
-	constructor(props) {
-		super(props);
-	}
-	
 	render() {
 		const moveListArray = this.props.board.availableMoves;
 		const assignmentArray = this.props.board.assignments;

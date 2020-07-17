@@ -89,7 +89,7 @@ class SudokuGame extends React.Component {
     }
 
     changeActiveBoard(boardSerial) {
-        if (boardSerial != this.state.activeBoardId) {         
+        if (boardSerial !== this.state.activeBoardId) {         
             console.log('SudokuGame: Request received to change active board to ' + boardSerial + '.');
             this.setState({activeBoardId: boardSerial});
         }    
