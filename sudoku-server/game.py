@@ -18,7 +18,7 @@ import operators
 import config_data
 
 
-def get_initial_board(content, simplify=True):
+def get_initial_board(content):
     """
     Get an initial board of 'degreey' given a dict request, randomly if 'name' is None, else by name.
 
@@ -39,12 +39,11 @@ def get_initial_board(content, simplify=True):
         config_data.debug_print('select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
     config_data.debug_print('load puzzle', name, full_board)
-    if simplify:
-        solvers.apply_free_operators(full_board)
+    solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()
 
 
-def parse_and_apply_action(content, simplify=True):
+def parse_and_apply_action(content):
     """
     Given a requested action and board, parse and apply the given action to board.
 
@@ -89,14 +88,13 @@ def parse_and_apply_action(content, simplify=True):
         value = action_dict['value']
 
     if action_choice == "selectValueForCell":
-        result = solvers.assign_cell_action(
-            board_object, cell_id, value, simplify)
+        result = solvers.assign_cell_action(board_object, cell_id, value)
     elif action_choice == "excludeValueFromCell":
         result = solvers.exclude_cell_value_action(
-            board_object, cell_id, value, simplify)
+            board_object, cell_id, value)
     elif action_choice == "pivotOnCell":
         # Expand the cell specified by the string parameter
-        result = solvers.expand_cell_action(board_object, cell_id, simplify)
+        result = solvers.expand_cell_action(board_object, cell_id)
     elif action_choice == "applyLogicalOperators":
         # Apply the logical operators specified by the op/param list of pairs
         assert 'operators' in action_dict, \

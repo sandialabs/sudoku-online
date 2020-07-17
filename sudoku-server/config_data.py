@@ -207,6 +207,9 @@ class ConfigurationData():
 
         # TODO MAL move configuration in here
         # self.verbosity = 0
+
+        # Simplify boards using the free operators given any opportunity
+        self.simplify = True
         self.verify()
 
     def verify(self):

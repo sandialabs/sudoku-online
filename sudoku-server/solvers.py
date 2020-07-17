@@ -34,8 +34,11 @@ def calculate_status(sboard, msg):
     return nValues
 
 
-def apply_free_operators(sboard):
+def apply_free_operators(sboard, force=False):
     """ Iterate over free operators until no values change. """
+    # Simplify if we're being forced or our config allows it
+    if (force == False and config_data.config.simplify == False):
+        return sboard
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1
     while(prevValues > nValues and nValues > 0):
@@ -143,12 +146,11 @@ def logical_solve(sboard, logical_ops, restart=True):
 # -----------------------------------------------------------------------------
 
 
-def simplify_expansions(sboard_collection, simplify, include_invalid_boards=True):
-    """ If simplify is true, apply apply_free_operators to all boards in sboard_collection. """
+def simplify_expansions(sboard_collection, include_invalid_boards=True):
+    """ Apply apply_free_operators to all boards in sboard_collection. """
     ret = []
     for brd in sboard_collection:
-        if simplify:
-            brd = apply_free_operators(brd)
+        brd = apply_free_operators(brd)
         # TODO MAL move include_invalid_boards to config
         if include_invalid_boards or not brd.invalidCells():
             # Include the board if we're including everything
@@ -157,8 +159,8 @@ def simplify_expansions(sboard_collection, simplify, include_invalid_boards=True
     return ret
 
 
-def expand_cell_action(sboard, cell_id, simplify=True):
-    """ Expand all possible values of cell and simplify resulting boards.
+def expand_cell_action(sboard, cell_id):
+    """ Expand all possible values of cell.
 
     Args:
         sboard (Board)   : the Board containing the Cell to be expanded.
@@ -171,10 +173,10 @@ def expand_cell_action(sboard, cell_id, simplify=True):
     """
     # TODO MAL we can change this to partition if we want! :)
     expansion = operators.expand_cell(sboard, cell_id)
-    return simplify_expansions(expansion, simplify)
+    return simplify_expansions(expansion)
 
 
-def assign_cell_action(sboard, cell_id, value, simplify=True):
+def assign_cell_action(sboard, cell_id, value):
     """ Assign value to cell_id, returning the assigned board and the one with all other options.
 
     Args:
@@ -188,10 +190,10 @@ def assign_cell_action(sboard, cell_id, value, simplify=True):
     The board with all the other options is set to a background board.
     """
     expansion = operators.expand_cell_with_assignment(sboard, cell_id, value)
-    return simplify_expansions(expansion, simplify)
+    return simplify_expansions(expansion)
 
 
-def exclude_cell_value_action(sboard, cell_id, value, simplify=True):
+def exclude_cell_value_action(sboard, cell_id, value):
     """ Assign value to cell_id, returning the board with value removed and the one with that value assigned.
 
     Args:
@@ -205,7 +207,7 @@ def exclude_cell_value_action(sboard, cell_id, value, simplify=True):
     The board with the assignment is set to a background board.
     """
     expansion = operators.expand_cell_with_exclusion(sboard, cell_id, value)
-    return simplify_expansions(expansion, simplify)
+    return simplify_expansions(expansion)
 
 
 def take_action(sboard, action, parameter):
