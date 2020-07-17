@@ -452,35 +452,6 @@ def __find_hidden_candidate_cells(sboard, current_cell):
     return candidate_cells
 
 
-def find_hidden_candidates(sboard, set_type):
-    """
-    Applies requested hidden candidates operator.
-
-    Args:
-        sboard  : the board to which the hidden candidates operator will be applied
-        set_type   :  Specifies hidden candidates operator type, options are:
-            "pairs", "triples", or "quads"
-    Returns:
-        board   : sboard, updated to remove values that are not hidden
-            candidates from identified cells
-
-    The cells in a hidden set contain values amongst them
-    that have been exlcuded from the rest of the cells in
-    the hidden set's common unit.  Therefore we can exclude
-    all other values from the cells in the set."
-    """
-    if set_type == 'pairs':
-        return find_hidden_pairs(sboard)
-
-    if set_type == 'triples':
-        return find_hidden_triples(sboard)
-
-    if set_type == 'quads':
-        return find_hidden_quads(sboard)
-
-    return sboard
-
-
 def __naked_set_exclusion(sboard, naked_set, exclusion_values):
     """
     After naked set is identified, this function elminates
@@ -736,46 +707,6 @@ def __find_naked_candidate_cells(sboard, current_cell):
             if len(union) <= 4:
                 candidate_cells.append(candidate_cell)
     return candidate_cells
-
-
-# TODO MAL remove
-def find_naked_candidates(sboard, set_type):
-    """
-    Applies requested naked operator.
-
-    Args:
-        sboard  : the board to which the naked candidates operator will be applied
-        set_type   :  Specifies naked candidates operator type, options are:
-            "pairs", "triples", or "quads"
-    Returns:
-        board   : sboard, updated to remove values identified as naked
-            candidates from related cells
-
-    A Naked Pair is two cells in the same unit with the same two values remaining.
-
-    A Naked Triple is any group of three cells in the same unit that contain
-    IN TOTAL 3 values. The combinations of candidates for a Naked Triple will be
-    one of the following:
-        (123) (123) (123) - {3/3/3} in terms of candidates per cell
-        (123) (123) (12) - {3/2/2} or some combination thereof
-        (123) (12) (23) - {3/2/2}
-        (12) (23) (13) - {2/2/2}
-
-    A Naked Quad is any group of four cells in the same unit
-    that contain IN TOTAL 4 values.  Therefore we can exclude
-    these four values from all other cells in the unit.
-    """
-
-    if set_type == 'pairs':
-        return find_naked_pairs(sboard)
-
-    if set_type == 'triples':
-        return find_naked_triples(sboard)
-
-    if set_type == 'quads':
-        return find_naked_quads(sboard)
-
-    return sboard
 
 
 def __find_pointing_candidate_cells(sboard, current_cell):
@@ -1209,8 +1140,9 @@ def find_ywings(sboard):
 
                                 if (associated_cell.hasValue(exclusion_value) and
                                         associated_cell_name not in y_wing):
-                                    # TODO MAL Count whether exclusions actually occurred!
-                                    associated_cell.exclude(exclusion_value)
+                                    excluded_something = associated_cell.exclude(
+                                        exclusion_value)
+                                    assert excluded_something, 'Surprisingly, we didn\'t find a value in ywings that worked.'
                                     excluded_cells.append(associated_cell_name)
 
                             if len(excluded_cells) > 0:
@@ -1291,49 +1223,6 @@ def find_xyzwings(sboard):
                                 progress = f'XYZ-WING {xyz_wing} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
                                 config_data.match_set_operation(
                                     'xyzwings', progress, sboard)
-    return sboard
-
-
-def find_wings(sboard, wing_type):
-    """
-    Applies requested *wing operator.
-
-    Args:
-        sboard  : the board to which the *wing operator will be applied
-        wing_type   :  Specifies *wing operator type, options are:
-            "x", "y", or "xyz"
-    Returns:
-        board   : sboard, updated to remove values identified with the *wing
-            pattern from related cells
-
-    An X-Wing ocurrs when there are only 2 candidates for a value in each of
-    2 different units of the same kind and these candidates also lie on 2 other units
-    of the same kind.  Then we can exclude this value from the latter two units.
-    [TODO: include example]
-
-    In a Y-wing, a "hinge" cell forms a conjugate pair with cells in
-    two different units.  For example if cell 'A1' has the values 2 and 1, cell
-    'B2' has the values 3 and 1, and cell 'A5' has the values 3 and 2, then we
-    can elminate the value 3 from B5 or any other cell that is associated
-    with B2 and A5.
-    [TODO: define associated?]
-
-    An XYZ-wing is an extension of Y-Wing in which three cells
-    contain only 3 different numbers between them, but they fall outside the
-    confines of one row/column/box, with t the hinge being able to see the other
-    two; those other two having only one number in common; and the apex having
-    all three numbers as candidates.  For example, if F9 has the values 1, 2,
-    and 4, D9 has 1 and 2, and F1 has 1 and 4, we can eliminate 1 from F7.
-    [TODO: clean explanation somewhat]
-    """
-
-    if wing_type == 'x':
-        sboard = find_xwings(sboard)
-    if wing_type == 'y':
-        sboard = find_ywings(sboard)
-    if wing_type == 'xyz':
-        sboard = find_xyzwings(sboard)
-
     return sboard
 
 

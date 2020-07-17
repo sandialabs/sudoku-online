@@ -21,9 +21,6 @@ import config_data
 def get_initial_board(content):
     """
     Get an initial board of 'degreey' given a dict request, randomly if 'name' is None, else by name.
-
-    If simplify is True, apply logical inclusion and exclusion operators to board
-    until no more progress can be made.
     """
     puzzle = None
     assert isinstance(content, dict), \

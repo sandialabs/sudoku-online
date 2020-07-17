@@ -210,6 +210,7 @@ def exclude_cell_value_action(sboard, cell_id, value):
     return simplify_expansions(expansion)
 
 
+# TODO MAL remove this function
 def take_action(sboard, action, parameter):
     """ Given a board and a selected action, perform that action.
 
