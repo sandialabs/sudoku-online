@@ -92,11 +92,15 @@ class Cell():
 
     @ classmethod
     def displayValues(cls, values):
-        """ Returns sorted list of all display values for puzzle of degree.
-
-        Note: this could be canonicalized to save memory, but it isn't.
+        """ Returns list of displays of the sorted list of values.
         """
         return sorted([cls.display_list[idx] for idx in values])
+
+    @ classmethod
+    def displayValue(cls, val):
+        """ Returns displays of the value val.
+        """
+        return cls.display_list[val]
 
     def __str__(self):
         return 'Cell(ID=' + str(self._id) + \

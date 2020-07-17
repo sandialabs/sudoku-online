@@ -72,7 +72,9 @@ def logical_exclusion(sboard):
                         # or only when an assignment is made?
                         # Here, we assume the latter.
                         terminate = config_data.match_set_operation(
-                            'exclusion', f'Assigned {c_name} = {c.getCertainValue()}', sboard)
+                            'exclusion',
+                            f'Assigned {c_name} = {board.Cell.displayValue(c.getCertainValue())}',
+                            sboard)
                         if terminate:
                             # Don't update metadata like cell.setPropagated since the operation
                             # may not have been completely executed
@@ -134,7 +136,9 @@ def logical_inclusion(sboard):
                 assign_cell = cell_list[0]
                 assign_cell.assign(value)
                 terminate = config_data.match_set_operation(
-                    'inclusion', f'Assigned {assign_cell.getIdentifier()} = {assign_cell.getCertainValue()}', sboard)
+                    'inclusion',
+                    f'Assigned {assign_cell.getIdentifier()} = {board.Cell.displayValue(assign_cell.getCertainValue())}',
+                    sboard)
                 if terminate:
                     return sboard
 
@@ -201,7 +205,7 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
 
                 if len(exclusion_list) > 0:
                     num_operated_cells += 1
-                    progress = f'HIDDEN SET {cell_name}: {sorted(value_set_before_exclusion)} -> {sorted(value_set)}'
+                    progress = f'HIDDEN SET {cell_name}: {board.Cell.displayValues(value_set_before_exclusion)} -> {board.Cell.displayValues(value_set)}'
                     config_data.debug_operation(
                         f'hiddenset', progress, sboard)
 
@@ -501,7 +505,7 @@ def __naked_set_exclusion(sboard, naked_set, exclusion_values):
 
         if len(exclusion_list) > 0:
             num_operated_cells += 1
-            progress = f'NAKED SET removes {sorted(exclusion_list)} from {non_pair_cell_name}'
+            progress = f'NAKED SET removes {board.Cell.displayValues(exclusion_list)} from {non_pair_cell_name}'
             config_data.debug_operation(f'nakedset', progress, sboard)
 
     return num_operated_cells
@@ -1048,7 +1052,7 @@ def find_xwings(sboard):
 
                     if len(excluded_cells) > 0:
                         num_xwings += 1
-                        progress = f'X-WING {candidates} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
+                        progress = f'X-WING {candidates} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
                         terminate = config_data.match_set_operation(
                             'xwings', progress, sboard)
                         if terminate:
@@ -1160,7 +1164,7 @@ def find_ywings(sboard):
 
                             if len(excluded_cells) > 0:
                                 num_ywings += 1
-                                progress = f'Y-WING {y_wing} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
+                                progress = f'Y-WING {y_wing} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
                                 terminate = config_data.match_set_operation(
                                     'ywings', progress, sboard)
                                 if terminate:
@@ -1233,7 +1237,7 @@ def find_xyzwings(sboard):
                                     cell.exclude(exclusion_value)
 
                             if len(excluded_cells) > 0:
-                                progress = f'XYZ-WING {xyz_wing} excludes {str(exclusion_value)} from {sorted(excluded_cells)}'
+                                progress = f'XYZ-WING {xyz_wing} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
                                 config_data.match_set_operation(
                                     'xyzwings', progress, sboard)
     return sboard
@@ -1318,7 +1322,7 @@ def expand_cell(sboard, cell_id):
         bcell.assign(v)
         expansion.append(b)
 
-        progress = f'Assigning {str(bcell.getIdentifier())} = {str(bcell.getCertainValue())}'
+        progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
         config_data.match_set_operation('pivot', progress, sboard)
 
     progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
@@ -1371,15 +1375,15 @@ def expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=F
 
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
-    progress = f'Assigning {str(bcell.getIdentifier())} = {str(bcell.getCertainValue())}'
+    progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
     config_data.match_set_operation(action, progress, sboard)
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
-    progress = f'Removing {str(value)} from {str(bcell.getIdentifier())}, resulting in {str(bcell.getValueSet())}'
+    progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
     config_data.match_set_operation(action, progress, sboard)
 
-    progress = f'Performed {action} on {str(bcell.getIdentifier())} with {str(value)} for {len(expansion)} new (unvalidated) boards'
+    progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
     config_data.complete_operation(action, progress, sboard)
 
     return expansion
