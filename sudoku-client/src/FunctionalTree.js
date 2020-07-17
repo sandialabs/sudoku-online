@@ -33,8 +33,7 @@ function findPathToNode(node, targetId) {
 		return { found: false, path: null };
 	} else {
 		for (let i = 0; i < node.children.length; ++i) {
-			if (node.children[i].id == targetId) {
-				const path = [i];
+			if (node.children[i].id === targetId) {
 				return {
 					found: true,
 					path: [i]
@@ -83,10 +82,10 @@ function addChild(node, parentId, childNode) {
 		// cost for now.
 		const { found, path } = findPathToNode(node, parentId);
 		if (!found) {
-			throw {
-				error: 'Couldn\'t find node with target ID ' + parentId,
-				tree: node
-			};
+			throw new Error('FunctionalTree.addChild couldn\'t find node wih target ID ' + parentId,
+				{ tree: node }
+				);
+
 		} else {
 			return addChildAlongPath(node, path, childNode);
 		}
