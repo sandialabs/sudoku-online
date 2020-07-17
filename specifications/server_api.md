@@ -27,7 +27,7 @@ Do we need any other parameters for this request?
 {
     'board': <JSON representation of board - see board.md>
     'action': {
-        'action': 'selectValueForCell',
+        'action': 'assign',
         'cell': [0,4],
         'value': 3
     },
