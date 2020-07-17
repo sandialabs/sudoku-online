@@ -1,6 +1,6 @@
 {
     "action": {
-        "action": "excludeValueFromCell",
+        "action": "exclude",
         "cell": [
             1,
             4

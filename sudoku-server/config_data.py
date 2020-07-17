@@ -12,25 +12,25 @@ import logger
 
 actions_description = {
     'assign': {'function': 'expand_cell_with_assignment',
-               'requested_arguments': ['cell_id', 'value'],
+               'arguments': ['cell', 'value'],
                'cost': 10,
                'user_name': 'Assign: assign given value to cell.',
                'description': 'Return one board with the assignment '
                + 'and another (backup) with the exclusion.'},
     'exclude': {'function': 'expand_cell_with_exclusion',
-                'requested_arguments': ['cell_id', 'value'],
+                'arguments': ['cell', 'value'],
                 'cost': 10,
                 'user_name': 'Exclude: remove given value from cell.',
                 'description': 'Return one board with the exclusion '
                 + 'and another (backup) with the assignment done.'},
     'pivot': {'function': 'expand_cell',
-              'requested_arguments': ['cell_id'],
+              'arguments': ['cell'],
               'cost': 50,
               'user_name': 'Pivot: expand all choices for cell.',
               'description': 'Return a separate board for each possible value '
-              + 'in cell_id.'},
-    'applyops': {'function': 'logical_solve',
-                 'requested_arguments': ['operators'],
+              + 'in cell.'},
+    'applyops': {'function': 'logical_solve_action',
+                 'arguments': ['operators'],
                  'cost': None,
                  'user_name': 'Apply given logical operators.',
                  'description': 'Return a single board with the logical operators '

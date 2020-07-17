@@ -61,3 +61,37 @@ res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"
 if res.ok:
     result = res.json()
     print(json.dumps(result))
+
+print("Interacting, testing logical ops")
+
+res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "hard4",
+                                                                               'degree': 3})
+if res.ok:
+    result = res.json()
+    print(json.dumps(result))
+
+new_req = {'board': result, 'action': {
+    'action': 'applyops', 'operators': ['inclusion']}}
+res = requests.post(
+    'http://localhost:5000/sudoku/request/heuristic', json=new_req)
+if res.ok:
+    result2 = res.json()
+    print(json.dumps(result2))
+
+new_req2 = {'board': result2[0], 'action': {
+    'action': 'applyops', 'operators': ['inclusion']}}
+res = requests.post(
+    'http://localhost:5000/sudoku/request/heuristic', json=new_req2)
+if res.ok:
+    result3 = res.json()
+    print(json.dumps(result3))
+
+new_req2 = {'board': result3[0], 'action': {
+    'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
+res = requests.post(
+    'http://localhost:5000/sudoku/request/heuristic', json=new_req2)
+if res.ok:
+    result3 = res.json()
+    print(json.dumps(result3))
+
+# TODO MAL Consider trying to check whether result2 equals result3

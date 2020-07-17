@@ -41,6 +41,68 @@ def get_initial_board(content):
     return full_board.getSimpleJson()
 
 
+def __parse_cell_arg(cell_loc):
+    """ Parse a cell location into a cell_id. """
+    assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
+        "Must specify cell using [x,y] location notation."
+    cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
+    print(f'Found cell argument {cell_id}')
+    return cell_id
+
+
+def __parse_value_arg(value):
+    """ Parse a value. """
+    assert isinstance(value, int) and value >= 0, \
+        "Assuming that all values are represented as non-negative ints."
+    print(f'Found value argument {value}')
+    return value
+
+
+def __parse_operators_arg(ops_list):
+    """ Parse a list of operators. """
+    assert isinstance(ops_list, list), \
+        "Must specify list of operators in applyLogicalOperators action"
+    print(f'Found operators argument {ops_list}')
+    return ops_list
+
+
+def __collect_argument(arg_nm, action_dict):
+    """ Collect the argument specified. """
+    try:
+        # Yes, it's insecure, but at least we're getting the thing we eval from ourselves
+        parser_function = eval(f'__parse_{arg_nm}_arg')
+        raw_val = action_dict[arg_nm]
+        return parser_function(raw_val)
+    except AttributeError:
+        raise Exception(
+            f'Can\'t extract argument {arg_nm} needed')
+    except KeyError:
+        raise Exception(
+            f'Can\'t find value for argument {arg_nm} needed')
+
+
+def __collect_args(action, action_dict):
+    """
+    Given a request action and a dictionary of the content request,
+    return a list of the parsed arguments needed for that action.
+    """
+    assert action in config_data.actions_description, \
+        f'Cannot exercise action {action}'
+    try:
+        arg_names = config_data.actions_description[action]['arguments']
+    except KeyError:
+        raise Exception(f'Cannot find description for action {action}')
+
+    if len(arg_names) == 1:
+        return __collect_argument(arg_names[0], action_dict)
+    elif len(arg_names) == 2:
+        return (__collect_argument(arg_names[0], action_dict),
+                __collect_argument(arg_names[1], action_dict))
+    else:
+        raise Exception(
+            f'Haven\'t implemented parsing for arguments {arg_names}')
+
+
 def parse_and_apply_action(content):
     """
     Given a requested action and board, parse and apply the given action to board.
@@ -72,35 +134,12 @@ def parse_and_apply_action(content):
     assert 'action' in action_dict, "Failed assumption that action request specified the action to take."
     action_choice = action_dict['action']
 
-    result = []
-    cell_loc = None
-    value = None
-    if "Cell" in action_choice:
-        assert 'cell' in action_dict, "Must specify cell in a *Cell action"
-        cell_loc = action_dict['cell']
-        assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
-            "Must specify cell using [x,y] location notation."
-        cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
-    if "Value" in action_choice:
-        assert 'value' in action_dict, "Must specify cell value in *Value* actions"
-        value = action_dict['value']
-
-    if action_choice == "selectValueForCell":
-        result = solvers.assign_cell_action(board_object, cell_id, value)
-    elif action_choice == "excludeValueFromCell":
-        result = solvers.exclude_cell_value_action(
-            board_object, cell_id, value)
-    elif action_choice == "pivotOnCell":
-        # Expand the cell specified by the string parameter
-        result = solvers.expand_cell_action(board_object, cell_id)
-    elif action_choice == "applyLogicalOperators":
-        # Apply the logical operators specified by the op/param list of pairs
-        assert 'operators' in action_dict, \
-            "Must specify list of operators in applyLogicalOperators action"
-        operators = action_dict['operators']
-        result = [solvers.logical_solve(board.Board(board_object), operators)]
-    else:
-        return {'error': ('unknown action ' + str(action_choice))}
+    try:
+        args = __collect_args(action_choice, action_dict)
+        result = solvers.take_action(
+            board.Board(board_object), action_choice, args)
+    except Exception as e:
+        return {'error': f'{e}'}
 
     jsoned_result = []
     for full_board in result:
@@ -342,8 +381,7 @@ class GameTreeNode():
             "Which cell do you want to expand into all possible options? {}".format(names))
         selected = input()
         pivot = self.board.getCell(selected)
-        new_boards = solvers.expand_cell_action(
-            self.board, pivot.getIdentifier())
+        new_boards = operators.expand_cell(self.board, pivot.getIdentifier())
 
         # Make a new board for each possible value for that cell
         children = []
