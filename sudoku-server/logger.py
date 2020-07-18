@@ -94,8 +94,17 @@ class SudokuLogger():
     def getName(self):
         return self.name
 
-    def setSolution(self, solution):
-        self.solution = solution
+    def setSolution(self, sboard):
+        self.solution = {
+            'assignments': sboard.getStateStr(False, False, ''),
+            'invalid_cells': sboard.invalidCells()
+        }
+        if sboard.isSolved():
+            self.solution['solution_state'] = 'solved'
+        elif self.solution['invalid_cells']:
+            self.solution['solution_state'] = 'insoluble'
+        else:
+            self.solution['solution_state'] = 'partial'
 
     def getSolution(self):
         return self.solution
@@ -126,10 +135,8 @@ class SudokuLogger():
         try:
             assert self.getPuzzle() == log_dict['puzzle'], \
                 'Should only call compare_json_to_self on data from the same puzzle'
-            if (self.getSolution() != log_dict['solution']
+            if (self.getSolution()['assignments'] != log_dict['solution']['assignments']
                 or self.difficulty_score != log_dict['difficulty_score']
-                # this is redundant with score
-                or self.getDifficultyLevel() != log_dict['difficulty_level']
                 or self.operators_use_list != log_dict['order_of_operators']
                 or self.board_state_list != log_dict['board_states']
                     or self.name != log_dict['name']):

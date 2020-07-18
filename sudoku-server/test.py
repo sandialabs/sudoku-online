@@ -59,7 +59,7 @@ def test_sudoku(args):
             config_data.debug_print(msg, None, None)
 
             if config_data.config.log_all_boards or sboard.isSolved():
-                sboard.log.setSolution(sboard.getStateStr(False, False, ''))
+                sboard.log.setSolution(sboard)
                 sboard.log.printLogJSON()
             msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
         else:

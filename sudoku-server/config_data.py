@@ -201,6 +201,9 @@ class ConfigurationData():
         # devolving to cheaper strategies.
         # If False, we continue to try to find all matching possibilities for an operator.
         self.terminate_on_successful_operation = False
+        # If True, have a logical operator explore to a fixed point
+        # (i.e., re-explore the entire board for the operator after changes have been made)
+        self.explore_to_fixed_point = True
         # If True, we increase the cost of the board every time the operator matches a set.
         # If False (and terminate_on_successful_operation is False), users get multiple matches for free.
         self.cost_per_matching_set = True
@@ -233,6 +236,9 @@ class ConfigurationData():
         #   the initial board, checks self.simplify before actually executing anything
         if self.simplify_initial_board:
             assert self.simplify, 'Must simplify throughout if you simplify initial boards.'
+        if self.explore_to_fixed_point:
+            assert not self.terminate_on_successful_operation, \
+                'Cannot explore an operator to a fixed point if we stop it after one successful match.'
 
 
 config = ConfigurationData()
