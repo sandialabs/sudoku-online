@@ -419,14 +419,12 @@ class Board():
         self._id = uuid.uuid1().int >> 64
         self._parent_id = None
         self._is_background = False
-        self._puzzle_name = name
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
             self._parent_id = state._id
-            self._puzzle_name = state._puzzle_name
             self.config = state.config.copy()
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
@@ -438,16 +436,15 @@ class Board():
             self._degree = state['degree']
             if 'parentSerialNumber' in state:
                 self._parent_id = state['parentSerialNumber']
-            if 'puzzleName' in state:
-                self._puzzle_name = state['puzzleName']
             # Initialize cell state
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
                 cell_state = assignments[i] if assignments[i] is not None else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
+            puzz_name = state['puzzleName'] if 'puzzleName' in state else None
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), self._puzzle_name)
+                False, False, ''), puzz_name, self._parent_id == None)
         elif isinstance(state, str):
             # State is a str; initialize it
             i = 0
@@ -456,24 +453,10 @@ class Board():
                 i += 1
             self._degree = degree
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), self._puzzle_name)
+                False, False, ''), name, self._parent_id == None)
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
-
-        # TODO move board configuration elsewhere?
-        if '?select_ops_upfront' in self._puzzle_name:
-            if self._parent_id == None:
-                # This is the first board and can only offer logical ops
-                self._available_actions = ['applyops']
-            else:
-                # This is subsequent boards, so user can't select logical ops
-                self._available_actions = [
-                    k for k in board_update_descriptions.actions_description.keys()]
-                self._available_actions.remove('applyops')
-        else:
-            self._available_actions = [
-                k for k in board_update_descriptions.actions_description.keys()]
 
     def __str__(self):
         output = "Board " + str(self._id) \
@@ -613,10 +596,9 @@ class Board():
             brd['conflictingCells'] = invalid_locs
         if self._is_background:
             brd['backtrackingBoard'] = True
-        if self._puzzle_name:
-            brd['puzzleName'] = self._puzzle_name
-        if self._available_actions:
-            brd['availableActions'] = self._available_actions
+        brd['puzzleName'] = self.config.log.getName()
+        if self.config.actions:
+            brd['availableActions'] = self.config.actions
         return brd
         # return json.dumps(brd)
 

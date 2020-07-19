@@ -17,8 +17,12 @@ class ConfigurationData():
     """ Collect all the configuration data for a board and its logger and the solver.
     """
 
-    def __init__(self, puzzle=None, name=None):
+    def __init__(self, puzzle=None, name=None, is_first_board=False):
+        if name:
+            name = name.strip()
         self.log = logger.SudokuLogger(puzzle, name)
+        # This is a placeholder to carry information through from the board so that we can know when to apply certain configurations (below)
+        self.is_first_board = is_first_board
 
         self.actions = [
             k for k in board_update_descriptions.actions_description.keys()]
@@ -53,6 +57,58 @@ class ConfigurationData():
         # If True, log all boards, otherwise, log only solved boards
         self.log_all_boards = True
 
+        self.apply_config_from_name()
+        self.verify()
+
+    def apply_config_from_name(self):
+        """ Parsing the puzzle name from the logger, apply required configuration. """
+        if not self.log or not self.log.getName():
+            return
+        name = self.log.getName()
+        config_strs = name.split('?')
+        del config_strs[0]
+        for conf in config_strs:
+            if 'select_ops_upfront' in conf:
+                if self.is_first_board:
+                    # This is the first board and can only offer logical ops
+                    self.actions = ['applyops']
+                elif 'applyops' in self.actions:
+                    # TODO MAL may want to refactor to allow for checking whether a board should have an op
+                    # This is subsequent boards, so user can't select logical ops
+                    self.actions.remove('applyops')
+            if 'freeops' in conf:
+                ops_str = conf.split('=')[1]
+                ops = ops_str.split('&')
+                self.free_operations = []
+                for op in ops:
+                    if op:  # Hack because I'm sometimes getting '' from split
+                        self.free_operations.append(op)
+                        if op in self.costly_operations:
+                            self.costly_operations.remove(op)
+            if 'costlyops' in conf:
+                ops_str = conf.split('=')[1]
+                ops = ops_str.split('&')
+                self.costly_operations = []
+                for op in ops:
+                    if op:  # Hack because I'm sometimes getting '' from split
+                        self.costly_operations.append(op)
+        self.verify()
+
+    def check_free_ops(self, logical_ops):
+        """ Check to see if the chosen logical ops should be applied as free operations hence-forward. """
+        if not self.log or not self.log.getName():
+            return
+        name = self.log.getName()
+        if '?select_ops_upfront' in name:
+            for op in logical_ops:
+                # Not using .extend so that we can ensure that we're not adding an operation that's already there
+                if op not in self.free_operations:
+                    self.free_operations.append(op)
+            self.costly_operations = []
+            if 'applyops' in self.actions:
+                self.actions.remove('applyops')
+            self.log.setName(
+                f'{name}?freeops={"&".join(self.free_operations)}?costlyops=')
         self.verify()
 
     def copy(self):
@@ -79,6 +135,15 @@ class ConfigurationData():
             self.costly_operations)
         assert 0 == len(
             shared_actions), f'Cannot have {shared_actions} as both free and costed'
+        for act in self.free_operations:
+            assert act in board_update_descriptions.operators_description.keys(), \
+                f'Cannot have non-existant free operation {act}'
+        for act in self.costly_operations:
+            assert act in board_update_descriptions.operators_description.keys(), \
+                f'Cannot have non-existant costly operation {act}'
+        for act in self.actions:
+            assert act in board_update_descriptions.actions_description.keys(), \
+                f'Cannot have non-existant action {act}'
 
     def debug_operation(self, op, msg2, board):
         """ Don't increase our operator cost for this partial operation.

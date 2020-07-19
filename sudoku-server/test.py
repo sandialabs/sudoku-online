@@ -55,7 +55,7 @@ def test_sudoku(args):
                 # Print this at verbosity level 1
                 msg = f'{key} uses: {sboard.config.log.operators_use_count[key]}'
                 sboard.config.debug_print(msg, None, None)
-            msg = f'puzzle,log,score, sboard {sboard._puzzle_name}({sboard.config.log.getPuzzle()}): {str(sboard.config.log.getDifficultyScore())}, {sboard.config.log.getDifficultyLevel()}\n{sboard.getStateStr()}'
+            msg = f'puzzle,log,score, sboard {sboard.config.log.getName()}({sboard.config.log.getPuzzle()}): {str(sboard.config.log.getDifficultyScore())}, {sboard.config.log.getDifficultyLevel()}\n{sboard.getStateStr()}'
             sboard.config.debug_print(msg, None, None)
 
             if sboard.config.log_all_boards or sboard.isSolved():

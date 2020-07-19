@@ -141,14 +141,14 @@ if res.ok:
     print(json.dumps(result2))
 
 log_req = {'board': result1[0], 'action': {
-    'action': 'assign', 'cell': [0, 0], 'value': 3}}
+    'action': 'pivot', 'cell': [0, 0]}}
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=log_req)
 if res.ok:
     result2 = res.json()
     print(json.dumps(result2))
 
-log_req = {'board': result2[0], 'action': {
+log_req = {'board': result2[1], 'action': {
     'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=log_req)
