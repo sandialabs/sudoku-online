@@ -222,6 +222,7 @@ class ConfigurationData():
 
         # If True, log all boards, otherwise, log only solved boards
         self.log_all_boards = True
+
         self.verify()
 
     def verify(self):

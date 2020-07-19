@@ -11,6 +11,7 @@ Sudoku Board and Cell data structures.
 import logger
 # import json
 import uuid
+import config_data
 
 
 class Cell():
@@ -457,6 +458,18 @@ class Board():
         # TODO MAL move this to test / elsewhere ?
         self.log = logger.SudokuLogger(
             self.getStateStr(False, False, ''), self._puzzle_name)
+        if '?select_ops_upfront' in self._puzzle_name:
+            if self._parent_id == None:
+                # This is the first board and can only offer logical ops
+                self._available_actions = ['applyops']
+            else:
+                # This is subsequent boards, so user can't select logical ops
+                self._available_actions = [
+                    k for k in config_data.actions_description.keys()]
+                self._available_actions.remove('applyops')
+        else:
+            self._available_actions = [
+                k for k in config_data.actions_description.keys()]
 
     def __str__(self):
         output = "Board " + str(self._id) \
@@ -598,6 +611,8 @@ class Board():
             brd['backtrackingBoard'] = True
         if self._puzzle_name:
             brd['puzzleName'] = self._puzzle_name
+        if self._available_actions:
+            brd['availableActions'] = self._available_actions
         return brd
         # return json.dumps(brd)
 

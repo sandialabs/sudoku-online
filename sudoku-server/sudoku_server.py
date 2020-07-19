@@ -13,21 +13,15 @@ import game
 import board
 
 from flask import Flask, request, jsonify
+from markupsafe import escape
 app = Flask(__name__)
-
-
-# @app.route('/sudoku/request/initialize', methods=['GET'])
-# def do_initialize_board_class():
-#    board.Board.initialize()
-#    print(board.Board.unit_map)
-#    return jsonify("Welcome")
 
 
 @app.route('/sudoku/request/initialBoard', methods=['GET', 'POST'])
 def get_initial_board():
     """ Return an inital board.
 
-    Defaults are set to select a random puzzle from puzzles.puzzles and to simplify with inclusion/exclusion.
+    Defaults are set to select a random puzzle from puzzles.puzzles.
     """
     content = request.json
     if content is None:
@@ -37,11 +31,23 @@ def get_initial_board():
 
     # TODO MAL add goalCell
     # TODO MAL add accessibleCells
-    # TODO MAL add parent
+
+
+@app.route('/sudoku/request/boardsForGame/<gamename>')
+def get_boards_for_game(gamename):
+    """ Return a list of boards associated with a game.
+
+    Defaults are set to select a random puzzle from puzzles.puzzles and to simplify with inclusion/exclusion.
+    """
+    name = escape(gamename)
+    # MAL TODO is there a way to let the app.route say if you ask for something without a gamename then we can make it None?
+    if name is 'get_me_something_random':
+        name = None
+    board_names = game.get_boards_for_game(name)
+    return jsonify(board_names)
+
 
 # MAL TODO talk to Andy about changing this to a different name
-
-
 @app.route('/sudoku/request/heuristic', methods=['POST'])
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.

@@ -97,3 +97,14 @@ puzzles = {
     'insoluble_by_initial_state_conflict': '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.6..',
 
 }
+
+games = {
+    'test_game1_6': {
+        'puzzles': ['test2-i24e40', 'easy1', 'xwing_test', 'hard4', 'underconstrained1', 'test7-i26e36hp10'],
+        'config_alterations': ['select_ops_upfront']
+    },
+    'test_game1_4': {
+        'puzzles': ['test2-i24e40', 'xwing_test', 'hard4', 'underconstrained1'],
+        'config_alterations': ['select_ops_upfront']
+    }
+}

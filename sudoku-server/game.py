@@ -20,7 +20,7 @@ import config_data
 
 def get_initial_board(content):
     """
-    Get an initial board of 'degreey' given a dict request, randomly if 'name' is None, else by name.
+    Get an initial board of 'degree' given a dict request, randomly if 'name' is None, else by name.
     """
     puzzle = None
     assert isinstance(content, dict), \
@@ -28,9 +28,12 @@ def get_initial_board(content):
     name = content['name'] if 'name' in content else None
     degree = content['degree'] if 'degree' in content else 3
 
-    if name and name in puzzles.puzzles:
-        print("Loading requested puzzle " + str(name))
-        puzzle = puzzles.puzzles[name]
+    basename = None
+    if name:
+        basename = name[0:name.index('?')] if '?' in name else name
+    if basename and basename in puzzles.puzzles:
+        print("Loading requested puzzle " + str(basename))
+        puzzle = puzzles.puzzles[basename]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
         config_data.debug_print('select puzzle', name, None)
@@ -41,12 +44,49 @@ def get_initial_board(content):
     return full_board.getSimpleJson()
 
 
+def __configure_games(name_list, alternatives_list):
+    """
+    Given a list of games, do whatever configuration needs to be done to configure them.
+    """
+
+    if not alternatives_list:
+        return name_list
+
+    alt = alternatives_list.pop()
+    # MAL TODO randomly reorder the name_list
+
+    for i in range(int(len(name_list)/2)):
+        name_list[i] += f'?{alt}'
+
+    return __configure_games(name_list, alternatives_list)
+
+
+def get_boards_for_game(name):
+    """
+    Return a list of boards associated with a game, randomly if 'name' is None, else by name.
+
+    Associates appropriate configuration with each puzzle as indicated by the request.
+    """
+    game = {}
+    if name and name in puzzles.games:
+        print("Loading requested game " + str(name))
+        game = puzzles.games[name]
+    else:
+        (name, game) = random.choice(list(puzzles.games.items()))
+        config_data.debug_print('select game', name, None)
+
+    game_names = __configure_games(
+        list.copy(game['puzzles']), list.copy(game['config_alterations']))
+    config_data.debug_print('load game', name, f'{game_names}')
+    return game_names
+
+
 def __parse_cell_arg(cell_loc):
     """ Parse a cell location into a cell_id. """
     assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
         "Must specify cell using [x,y] location notation."
     cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
-    print(f'Found cell argument {cell_id}')
+    #print(f'Found cell argument {cell_id}')
     return cell_id
 
 
@@ -54,7 +94,7 @@ def __parse_value_arg(value):
     """ Parse a value. """
     assert isinstance(value, int) and value >= 0, \
         "Assuming that all values are represented as non-negative ints."
-    print(f'Found value argument {value}')
+    #print(f'Found value argument {value}')
     return value
 
 
@@ -62,7 +102,7 @@ def __parse_operators_arg(ops_list):
     """ Parse a list of operators. """
     assert isinstance(ops_list, list), \
         "Must specify list of operators in applyLogicalOperators action"
-    print(f'Found operators argument {ops_list}')
+    #print(f'Found operators argument {ops_list}')
     return ops_list
 
 
