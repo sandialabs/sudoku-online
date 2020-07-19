@@ -12,6 +12,7 @@ Sudoku Board solvers.
 import random
 import operators
 import config_data
+import board_update_descriptions
 import board
 
 # -----------------------------------------------------------------------------
@@ -32,11 +33,11 @@ def calculate_status(sboard, msg):
     #    as no more cells can be assigned
     if(sboard.invalidCells()):
         progress = f'Found logical contradiction.'
-        config_data.debug_print('invalidcells', progress, sboard)
+        sboard.config.debug_print('invalidcells', progress, sboard)
         return 0
     nValues = sboard.countUncertainValues()
     progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
-    config_data.debug_print('status', progress, sboard)
+    sboard.config.debug_print('status', progress, sboard)
     return nValues
 
 
@@ -50,7 +51,7 @@ def get_operator(op_name):
             of boards if that's what the operator returns
     """
     try:
-        op_func = config_data.board_update_options[op_name]['function']
+        op_func = board_update_descriptions.operators_description[op_name]['function']
         function = getattr(operators, op_func)
     except KeyError:
         raise Exception(f'Can\'t find operator {op_name}')
@@ -71,7 +72,7 @@ def get_action(action_name):
     """
     try:
         # Yes, it's insecure, but at least we're getting the thing we eval from ourselves
-        action_func = config_data.board_update_options[action_name]['function']
+        action_func = board_update_descriptions.actions_description[action_name]['function']
         function = eval(action_func)
     except KeyError:
         raise(f'Can\'t find action {action_name}')
@@ -84,13 +85,13 @@ def get_action(action_name):
 def apply_free_operators(sboard, force=False):
     """ Iterate over free operators until no values change. """
     # Simplify if we're being forced or our config allows it
-    if (force == False and config_data.config.simplify == False):
+    if (force == False and sboard.config.simplify == False):
         return sboard
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
-        for op in config_data.config.free_actions:
+        for op in sboard.config.free_operations:
             sboard = get_operator(op)(sboard)
             nValues = calculate_status(sboard, op)
             if nValues < prevValues:
@@ -107,9 +108,9 @@ def select_all_logical_operators_ordered(ordering=None):
     """ Returns an ordered list of parameterized logical operators. """
     if not ordering:
         def ordering(name):
-            return config_data.operators_description[name]['cost']
-    costly_ops = sorted(config_data.config.costly_actions, key=ordering)
-    config_data.debug_print(str(costly_ops), None, None)
+            return board_update_descriptions.operators_description[name]['cost']
+    costly_ops = sorted(config_data.config.costly_operations, key=ordering)
+    config_data.config.debug_print(str(costly_ops), None, None)
     return costly_ops
 
 
@@ -156,7 +157,7 @@ def logical_solve(sboard, logical_ops):
                 # We progressed the board
                 sboard = apply_free_operators(sboard)
                 nValues = sboard.countUncertainValues()
-                if config_data.config.restart_op_search_on_match:
+                if sboard.config.restart_op_search_on_match:
                     # If the operator made a change to board and restart is True,
                     # we will go back to the beginning of logical_ops
                     break
@@ -207,10 +208,10 @@ def expand_cell(sboard, cell_id):
         expansion.append(b)
 
         progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
-        config_data.match_set_operation('pivot', progress, sboard)
+        b.config.complete_operation('pivot', progress, b)
 
     progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
-    config_data.complete_operation('pivot', progress, sboard)
+    sboard.config.complete_operation('pivot', progress, sboard)
 
     return expansion
 
@@ -296,15 +297,15 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
     progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
-    config_data.match_set_operation(action, progress, sboard)
+    assigned.config.complete_operation(action, progress, assigned)
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
     progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
-    config_data.match_set_operation(action, progress, sboard)
+    removed.config.complete_operation(action, progress, removed)
 
     progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
-    config_data.complete_operation(action, progress, sboard)
+    sboard.config.complete_operation(action, progress, sboard)
 
     return expansion
 
@@ -321,7 +322,7 @@ def take_action(sboard, expansion_op, args):
     ret = []
     for brd in sboard_expansion:
         brd = apply_free_operators(brd)
-        if (config_data.config.prune_invalid_boards
+        if (sboard.config.prune_invalid_boards
                 and brd.invalidCells()):
             continue
         # Include the board if we're including everything
@@ -433,17 +434,17 @@ def combined_solve(sboard, logical_ops=[], cellselector=None):
 
     # If the puzzle is solved, just return the solution
     if(result and result.isSolved()):
-        config_data.debug_print('solved', f'Puzzle solved.', result)
+        result.config.debug_print('solved', f'Puzzle solved.', result)
         return result
 
     # If we found a contradiction (bad guess earlier in search), return None
     elif(not result or result.invalidCells()):
-        config_data.debug_print('incorrect', f'Found contradiction.', result)
+        sboard.config.debug_print('incorrect', f'Found contradiction.', result)
         return None
 
     # Some action needs to be taken
     msg = f'Taking action, selecting cell using {str(cellselector)} and expanding cell using {str(expand_cell_action)}'
-    config_data.debug_print('take action', msg, result)
+    result.config.debug_print('take action', msg, result)
     cell = cellselector(result)
     expansion = expand_cell_action(result, cell.getIdentifier())
     for brd in expansion:

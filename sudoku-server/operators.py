@@ -10,7 +10,6 @@ Sudoku Board operators.
 
 import board
 # from board import Cell
-import config_data
 import copy
 
 # -----------------------------------------------------------------------------
@@ -71,7 +70,7 @@ def logical_exclusion(sboard):
                         # TODO MAL Does exclusion trigger when values are removed as possibilities,
                         # or only when an assignment is made?
                         # Here, we assume the latter.
-                        terminate = config_data.match_set_operation(
+                        terminate = sboard.config.match_set_operation(
                             'exclusion',
                             f'Assigned {c_name} = {board.Cell.displayValue(c.getCertainValue())}',
                             sboard)
@@ -81,13 +80,13 @@ def logical_exclusion(sboard):
                             # Don't need to complete the operation since it's assumed that
                             # we're counting every matched set
                             return sboard
-                        if config_data.config.explore_to_fixed_point:
+                        if sboard.config.explore_to_fixed_point:
                             plist.append(c)
 
         cell.setPropagated()
 
     if num_exclusions > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'exclusion', f'Removed {num_exclusions} possible values', sboard)
 
     return sboard
@@ -140,18 +139,18 @@ def logical_inclusion(sboard):
                     num_inclusions += 1
                     assign_cell = cell_list[0]
                     assign_cell.assign(value)
-                    terminate = config_data.match_set_operation(
+                    terminate = sboard.config.match_set_operation(
                         'inclusion',
                         f'Assigned {assign_cell.getIdentifier()} = {board.Cell.displayValue(assign_cell.getCertainValue())}',
                         sboard)
                     if terminate:
                         return sboard
-                    if config_data.config.explore_to_fixed_point:
+                    if sboard.config.explore_to_fixed_point:
                         units_to_check.extend(
                             board.Board.getCellUnits(assign_cell))
 
     if num_inclusions > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'inclusion', f'Assigned {num_inclusions} cells', sboard)
 
     return sboard
@@ -214,7 +213,7 @@ def __hidden_set_exclusion(sboard, hidden_set, intersection_unit_list):
                 if len(exclusion_list) > 0:
                     num_operated_cells += 1
                     progress = f'HIDDEN SET {cell_name}: {board.Cell.displayValues(value_set_before_exclusion)} -> {board.Cell.displayValues(value_set)}'
-                    config_data.debug_operation(
+                    sboard.config.debug_operation(
                         f'hiddenset', progress, sboard)
 
     return num_operated_cells
@@ -255,15 +254,15 @@ def find_hidden_pairs(sboard):
                 if num_cells_affected:
                     num_hidden_pairs += 1
                     progress = f'HIDDEN PAIR of {sorted([cell.getIdentifier() for cell in hidden_set])} excluded values from {num_cells_affected} cells'
-                    terminate = config_data.match_set_operation(
+                    terminate = sboard.config.match_set_operation(
                         f'hiddenpairs', progress, sboard)
                     if terminate:
                         return sboard
-                    if config_data.config.explore_to_fixed_point:
+                    if sboard.config.explore_to_fixed_point:
                         num_new_hidden_pairs += 1
 
     if num_hidden_pairs > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'hiddenpairs', f'Found {num_hidden_pairs} hidden pairs that affected board.', sboard)
     return sboard
 
@@ -340,15 +339,15 @@ def find_hidden_triples(sboard):
                         if num_cells_affected:
                             num_hidden_triples += 1
                             progress = f'HIDDEN TRIPLE of {sorted([cell.getIdentifier() for cell in hidden_set])} excluded values from {num_cells_affected} cells'
-                            terminate = config_data.match_set_operation(
+                            terminate = sboard.config.match_set_operation(
                                 f'hiddentriples', progress, sboard)
                             if terminate:
                                 return sboard
-                            if config_data.config.explore_to_fixed_point:
+                            if sboard.config.explore_to_fixed_point:
                                 num_new_hidden_triples += 1
 
     if num_hidden_triples > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'hiddentriples', f'Found {num_hidden_triples} hidden triples that affected board.', sboard)
     return sboard
 
@@ -447,15 +446,15 @@ def find_hidden_quads(sboard):
                             if num_cells_affected:
                                 num_hidden_quads += 1
                                 progress = f'HIDDEN QUAD of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected} cells'
-                                terminate = config_data.match_set_operation(
+                                terminate = sboard.config.match_set_operation(
                                     f'hiddenquads', progress, sboard)
                                 if terminate:
                                     return sboard
-                                if config_data.config.explore_to_fixed_point:
+                                if sboard.config.explore_to_fixed_point:
                                     num_new_hidden_quads += 1
 
     if num_hidden_quads > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'hiddenquads', f'Found {num_hidden_quads} hidden quads that affected board.', sboard)
     return sboard
 
@@ -509,7 +508,7 @@ def __naked_set_exclusion(sboard, naked_set, exclusion_values):
         if len(exclusion_list) > 0:
             num_operated_cells += 1
             progress = f'NAKED SET removes {board.Cell.displayValues(exclusion_list)} from {non_pair_cell_name}'
-            config_data.debug_operation(f'nakedset', progress, sboard)
+            sboard.config.debug_operation(f'nakedset', progress, sboard)
 
     return num_operated_cells
 
@@ -558,15 +557,15 @@ def find_naked_pairs(sboard):
                 if num_cells_affected:
                     num_naked_pairs += 1
                     progress = f'NAKED PAIR of {naked_set} excluded values from {num_cells_affected} cells'
-                    terminate = config_data.match_set_operation(
+                    terminate = sboard.config.match_set_operation(
                         f'nakedpairs', progress, sboard)
                     if terminate:
                         return sboard
-                    if config_data.config.explore_to_fixed_point:
+                    if sboard.config.explore_to_fixed_point:
                         num_new_naked_pairs += 1
 
     if num_naked_pairs > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'nakedpairs', f'Found {num_naked_pairs} naked pairs that affected board.', sboard)
     return sboard
 
@@ -635,15 +634,15 @@ def find_naked_triples(sboard):
                     if num_cells_affected:
                         num_naked_triples += 1
                         progress = f'NAKED TRIPLE of {naked_set} excluded values from {num_cells_affected} cells'
-                        terminate = config_data.match_set_operation(
+                        terminate = sboard.config.match_set_operation(
                             f'nakedtriples', progress, sboard)
                         if terminate:
                             return sboard
-                        if config_data.config.explore_to_fixed_point:
+                        if sboard.config.explore_to_fixed_point:
                             num_new_naked_triples += 1
 
     if num_naked_triples > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'nakedtriples', f'Found {num_naked_triples} naked triples that affected board.', sboard)
     return sboard
 
@@ -722,15 +721,15 @@ def find_naked_quads(sboard):
                         if num_cells_affected:
                             num_naked_quads += 1
                             progress = f'NAKED QUAD of {naked_set} excluded values from {num_cells_affected} cells'
-                            terminate = config_data.match_set_operation(
+                            terminate = sboard.config.match_set_operation(
                                 f'nakedquads', progress, sboard)
                             if terminate:
                                 return sboard
-                            if config_data.config.explore_to_fixed_point:
+                            if sboard.config.explore_to_fixed_point:
                                 num_new_naked_quads += 1
 
     if num_naked_quads > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'nakedquads', f'Found {num_naked_quads} naked quads that affected board.', sboard)
     return sboard
 
@@ -813,7 +812,7 @@ def __is_pointing_set(sboard, candidates):
         # A pointing set has to share two units
         return 0
     # progress = f'POINTING SET {candidate_names}: {sorted(intersection_unit_set)} shares {board.Cell.displayValues(intersection_value_set)}'
-    # config_data.debug_operation(f'pointingset', progress, sboard)
+    # sboard.config.debug_operation(f'pointingset', progress, sboard)
 
     # loop through units common to the candidates
     for unit in intersection_unit_set:
@@ -855,7 +854,7 @@ def __is_pointing_set(sboard, candidates):
                 if excluded_something:
                     num_operated_cells += 1
                     progress = f'POINTING SET {candidate_names}: removed values in {board.Cell.displayValues(remaining_value_set)} from {cell.getIdentifier()}'
-                    config_data.debug_operation(
+                    sboard.config.debug_operation(
                         f'pointingset', progress, sboard)
 
     return num_operated_cells
@@ -965,11 +964,11 @@ def __find_pointing_candidates(sboard, set_type):
                     if num_cells_affected:
                         num_pointing_pairs += 1
                         progress = f'POINTING PAIR of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected} cells'
-                        terminate = config_data.match_set_operation(
+                        terminate = sboard.config.match_set_operation(
                             f'pointingpairs', progress, sboard)
                         if terminate:
                             return sboard
-                        if config_data.config.explore_to_fixed_point:
+                        if sboard.config.explore_to_fixed_point:
                             num_new_pointing_sets += 1
                     # We're doing pairs, so there's no need to continue onwards to triples
                     continue
@@ -1004,18 +1003,18 @@ def __find_pointing_candidates(sboard, set_type):
                     if num_cells_affected:
                         num_pointing_triples += 1
                         progress = f'POINTING TRIPLE of {sorted([cell.getIdentifier() for cell in candidates])} excluded values from {num_cells_affected} cells'
-                        terminate = config_data.match_set_operation(
+                        terminate = sboard.config.match_set_operation(
                             f'pointingtriples', progress, sboard)
                         if terminate:
                             return sboard
-                        if config_data.config.explore_to_fixed_point:
+                        if sboard.config.explore_to_fixed_point:
                             num_new_pointing_sets += 1
 
     if num_pointing_pairs:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'pointingpairs', f'Found {num_pointing_pairs} pointing pairs that affected board.', sboard)
     elif num_pointing_triples:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'pointingtriples', f'Found {num_pointing_triples} pointing triples that affected board.', sboard)
     return sboard
 
@@ -1104,15 +1103,15 @@ def find_xwings(sboard):
                         if len(excluded_cells) > 0:
                             num_xwings += 1
                             progress = f'X-WING {candidates} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
-                            terminate = config_data.match_set_operation(
+                            terminate = sboard.config.match_set_operation(
                                 'xwings', progress, sboard)
                             if terminate:
                                 return sboard
-                            if config_data.config.explore_to_fixed_point:
+                            if sboard.config.explore_to_fixed_point:
                                 num_new_xwings += 1
 
     if num_xwings > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'xwings', f'Discovered {num_xwings} that affected the board', sboard)
     return sboard
 
@@ -1226,15 +1225,15 @@ def find_ywings(sboard):
                                 if len(excluded_cells) > 0:
                                     num_ywings += 1
                                     progress = f'Y-WING {y_wing} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
-                                    terminate = config_data.match_set_operation(
+                                    terminate = sboard.config.match_set_operation(
                                         'ywings', progress, sboard)
                                     if terminate:
                                         return sboard
-                                    if config_data.config.explore_to_fixed_point:
+                                    if sboard.config.explore_to_fixed_point:
                                         num_new_ywings += 1
 
     if num_ywings > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'ywings', f'Discovered {num_ywings} that affected the board', sboard)
     return sboard
 
@@ -1309,14 +1308,14 @@ def find_xyzwings(sboard):
                                 if len(excluded_cells) > 0:
                                     num_xyzwings += 1
                                     progress = f'XYZ-WING {xyz_wing} excludes {board.Cell.displayValue(exclusion_value)} from {sorted(excluded_cells)}'
-                                    terminate = config_data.match_set_operation(
+                                    terminate = sboard.config.match_set_operation(
                                         'xyzwings', progress, sboard)
                                     if terminate:
                                         return sboard
-                                    if config_data.config.explore_to_fixed_point:
+                                    if sboard.config.explore_to_fixed_point:
                                         num_new_xyzwings += 1
 
     if num_xyzwings > 0:
-        config_data.complete_operation(
+        sboard.config.complete_operation(
             'xyzwings', f'Discovered {num_xyzwings} that affected the board', sboard)
     return sboard

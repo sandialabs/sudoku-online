@@ -118,7 +118,7 @@ for b in boards:
         print(json.dumps(result))
 
 print(f'Testing logical ops upfront selection')
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": 'test27-i32e31yw3?select_ops_upfront',
+res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": 'pointing_pair_test?select_ops_upfront',
                                                                                "degree": 3})
 if res.ok:
     result_log = res.json()
@@ -141,7 +141,15 @@ if res.ok:
     print(json.dumps(result2))
 
 log_req = {'board': result1[0], 'action': {
-    'action': 'assign', 'cell': [0, 3], 'value': 0}}
+    'action': 'assign', 'cell': [0, 0], 'value': 3}}
+res = requests.post(
+    'http://localhost:5000/sudoku/request/heuristic', json=log_req)
+if res.ok:
+    result2 = res.json()
+    print(json.dumps(result2))
+
+log_req = {'board': result2[0], 'action': {
+    'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=log_req)
 if res.ok:

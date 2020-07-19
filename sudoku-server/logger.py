@@ -11,7 +11,7 @@ import os.path
 import csv
 import json
 import pprint
-import config_data
+import board_update_descriptions
 
 verbosity = 0
 
@@ -67,7 +67,7 @@ class SudokuLogger():
         # operators_use_count provides a dict of each operator that was used and
         # the number of times they were applied.
         self.operators_use_count = dict()
-        for action in config_data.board_update_options.keys():
+        for action in board_update_descriptions.board_update_options.keys():
             self.operators_use_count[action] = 0
 
     def logOperator(self, operator, verbosity1_str=None, board=None):
@@ -80,7 +80,7 @@ class SudokuLogger():
         self.operators_use_list.append(operator)
 
         self.operators_use_count[operator] += 1
-        self.difficulty_score += config_data.board_update_options[operator]['cost']
+        self.difficulty_score += board_update_descriptions.board_update_options[operator]['cost']
 
     def setPuzzle(self, puzzle):
         self.puzzle = puzzle

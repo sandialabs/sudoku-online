@@ -12,6 +12,7 @@ import logger
 # import json
 import uuid
 import config_data
+import board_update_descriptions
 
 
 class Cell():
@@ -426,6 +427,7 @@ class Board():
             self._degree = state.getDegree()
             self._parent_id = state._id
             self._puzzle_name = state._puzzle_name
+            self.config = state.config.copy()
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
@@ -444,6 +446,8 @@ class Board():
                 cell_state = assignments[i] if assignments[i] is not None else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
+            self.config = config_data.ConfigurationData(self.getStateStr(
+                False, False, ''), self._puzzle_name)
         elif isinstance(state, str):
             # State is a str; initialize it
             i = 0
@@ -451,13 +455,13 @@ class Board():
                 self._state[identifier] = Cell(identifier, state[i])
                 i += 1
             self._degree = degree
+            self.config = config_data.ConfigurationData(self.getStateStr(
+                False, False, ''), self._puzzle_name)
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
 
-        # TODO MAL move this to test / elsewhere ?
-        self.log = logger.SudokuLogger(
-            self.getStateStr(False, False, ''), self._puzzle_name)
+        # TODO move board configuration elsewhere?
         if '?select_ops_upfront' in self._puzzle_name:
             if self._parent_id == None:
                 # This is the first board and can only offer logical ops
@@ -465,11 +469,11 @@ class Board():
             else:
                 # This is subsequent boards, so user can't select logical ops
                 self._available_actions = [
-                    k for k in config_data.actions_description.keys()]
+                    k for k in board_update_descriptions.actions_description.keys()]
                 self._available_actions.remove('applyops')
         else:
             self._available_actions = [
-                k for k in config_data.actions_description.keys()]
+                k for k in board_update_descriptions.actions_description.keys()]
 
     def __str__(self):
         output = "Board " + str(self._id) \

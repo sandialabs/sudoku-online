@@ -16,6 +16,7 @@ import puzzles
 import random
 import operators
 import config_data
+import board_update_descriptions
 
 
 def get_initial_board(content):
@@ -36,10 +37,11 @@ def get_initial_board(content):
         puzzle = puzzles.puzzles[basename]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        config_data.debug_print('select puzzle', name, None)
+        config_data.config.debug_print(
+            'select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
-    config_data.debug_print('load puzzle', name, full_board)
-    if config_data.config.simplify_initial_board:
+    config_data.config.debug_print('load puzzle', name, full_board)
+    if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()
 
@@ -73,11 +75,11 @@ def get_boards_for_game(name):
         game = puzzles.games[name]
     else:
         (name, game) = random.choice(list(puzzles.games.items()))
-        config_data.debug_print('select game', name, None)
+        config_data.config.debug_print('select game', name, None)
 
     game_names = __configure_games(
         list.copy(game['puzzles']), list.copy(game['config_alterations']))
-    config_data.debug_print('load game', name, f'{game_names}')
+    config_data.config.debug_print('load game', name, f'{game_names}')
     return game_names
 
 
@@ -126,10 +128,10 @@ def __collect_args(action, action_dict):
     Given a request action and a dictionary of the content request,
     return a list of the parsed arguments needed for that action.
     """
-    assert action in config_data.actions_description, \
+    assert action in board_update_descriptions.actions_description, \
         f'Cannot exercise action {action}'
     try:
-        arg_names = config_data.actions_description[action]['arguments']
+        arg_names = board_update_descriptions.actions_description[action]['arguments']
     except KeyError:
         raise Exception(f'Cannot find description for action {action}')
 
@@ -151,9 +153,6 @@ def parse_and_apply_action(content):
     applyLogicalOperators ([list of operators])
         board (Board)  : the Board on which the action should be performed.
         action  : the action to take, and appropriate operators as specified in server_api.md
-            "selectValueForCell <cell_id> <value>" or
-            "pivotOnCell <cell_id>" or
-            "applyLogicalOperators [[op, param], ...]"
     Returns:
         [Boards] : a collection of boards resulting from the selection action.
     """
@@ -176,8 +175,17 @@ def parse_and_apply_action(content):
 
     try:
         args = __collect_args(action_choice, action_dict)
-        result = solvers.take_action(
+        collected = solvers.take_action(
             board.Board(board_object), action_choice, args)
+        result = []
+        if 'heuristics' in content:
+            logicalops = content['heuristics']
+            assert isinstance(logicalops, list), \
+                "Failed assumption that the parsed action argument heuristics ia  list."
+            for brd in result:
+                result.extend(solvers.take_action(brd, 'applyops', logicalops))
+        else:
+            result = collected
     except Exception as e:
         return {'error': f'{e}'}
 
@@ -204,14 +212,15 @@ def get_possible_actions():
     May eventually want to update to alter possible actions for all possible games. """
     # MAL TODO Do we want to take in multiple actions and apply them all?
     operators = list()
-    for op in ['inclusion', 'xwings', 'ywings', 'nakedpairs', 'hiddenpairs', 'nakedtriples']:
+    for op in config_data.config.costly_operations:
         operators.append(_jsonify_action(
-            op, config_data.operators_description[op]))
+            op, board_update_descriptions.operators_description[op]))
 
     actions = list()
-    for (action, description) in config_data.actions_description.items():
-        short_desc = _jsonify_action(action, description)
-        if action == 'applyops':
+    for act in config_data.config.actions:
+        short_desc = _jsonify_action(
+            act, board_update_descriptions.actions_description[act])
+        if act == 'applyops':
             short_desc['operators'] = operators
         actions.append(short_desc)
 

@@ -40,7 +40,7 @@ def test_sudoku(args):
         sboard = board.Board(layout, int(
             math.sqrt(math.sqrt(len(layout)))), name)
         msg = f'Initial state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
-        config_data.debug_print('initial state', msg, None)
+        sboard.config.debug_print('initial state', msg, None)
 
         cellselector = getattr(solvers, "select_" + args.cellselector)
         # sboard = solver(sboard, opselector, cellselector)
@@ -51,20 +51,21 @@ def test_sudoku(args):
 
         msg = None
         if sboard:
-            for key in sboard.log.operators_use_count.keys():
+            for key in sboard.config.log.operators_use_count.keys():
                 # Print this at verbosity level 1
-                msg = f'{key} uses: {sboard.log.operators_use_count[key]}'
-                config_data.debug_print(msg, None, None)
-            msg = f'puzzle,log,score, sboard {sboard._puzzle_name}({sboard.log.getPuzzle()}): {str(sboard.log.getDifficultyScore())}, {sboard.log.getDifficultyLevel()}\n{sboard.getStateStr()}'
-            config_data.debug_print(msg, None, None)
+                msg = f'{key} uses: {sboard.config.log.operators_use_count[key]}'
+                sboard.config.debug_print(msg, None, None)
+            msg = f'puzzle,log,score, sboard {sboard._puzzle_name}({sboard.config.log.getPuzzle()}): {str(sboard.config.log.getDifficultyScore())}, {sboard.config.log.getDifficultyLevel()}\n{sboard.getStateStr()}'
+            sboard.config.debug_print(msg, None, None)
 
-            if config_data.config.log_all_boards or sboard.isSolved():
-                sboard.log.setSolution(sboard)
-                sboard.log.printLogJSON()
+            if sboard.config.log_all_boards or sboard.isSolved():
+                sboard.config.log.setSolution(sboard)
+                sboard.config.log.printLogJSON()
             msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
+            sboard.config.debug_print('final state', msg, None)
         else:
             msg = f'Final state of {name}: INSOLUBLE'
-        config_data.debug_print('final state', msg, None)
+            config_data.config.debug_print('final state', msg, None)
 
 
 if __name__ == '__main__':
