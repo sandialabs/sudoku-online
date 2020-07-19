@@ -113,4 +113,4 @@ class ConfigurationData():
         self.log.logOperatorProgress(msg1, msg2, board)
 
 
-config = ConfigurationData()
+defaultConfig = ConfigurationData()

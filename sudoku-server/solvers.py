@@ -109,8 +109,9 @@ def select_all_logical_operators_ordered(ordering=None):
     if not ordering:
         def ordering(name):
             return board_update_descriptions.operators_description[name]['cost']
-    costly_ops = sorted(config_data.config.costly_operations, key=ordering)
-    config_data.config.debug_print(str(costly_ops), None, None)
+    costly_ops = sorted(
+        config_data.defaultConfig.costly_operations, key=ordering)
+    config_data.defaultConfig.debug_print(str(costly_ops), None, None)
     return costly_ops
 
 

@@ -37,10 +37,10 @@ def get_initial_board(content):
         puzzle = puzzles.puzzles[basename]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        config_data.config.debug_print(
+        config_data.defaultConfig.debug_print(
             'select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
-    config_data.config.debug_print('load puzzle', name, full_board)
+    config_data.defaultConfig.debug_print('load puzzle', name, full_board)
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()
@@ -75,11 +75,11 @@ def get_boards_for_game(name):
         game = puzzles.games[name]
     else:
         (name, game) = random.choice(list(puzzles.games.items()))
-        config_data.config.debug_print('select game', name, None)
+        config_data.defaultConfig.debug_print('select game', name, None)
 
     game_names = __configure_games(
         list.copy(game['puzzles']), list.copy(game['config_alterations']))
-    config_data.config.debug_print('load game', name, f'{game_names}')
+    config_data.defaultConfig.debug_print('load game', name, f'{game_names}')
     return game_names
 
 
@@ -212,12 +212,12 @@ def get_possible_actions():
     May eventually want to update to alter possible actions for all possible games. """
     # MAL TODO Do we want to take in multiple actions and apply them all?
     operators = list()
-    for op in config_data.config.costly_operations:
+    for op in config_data.defaultConfig.costly_operations:
         operators.append(_jsonify_action(
             op, board_update_descriptions.operators_description[op]))
 
     actions = list()
-    for act in config_data.config.actions:
+    for act in config_data.defaultConfig.actions:
         short_desc = _jsonify_action(
             act, board_update_descriptions.actions_description[act])
         if act == 'applyops':

@@ -65,7 +65,7 @@ def test_sudoku(args):
             sboard.config.debug_print('final state', msg, None)
         else:
             msg = f'Final state of {name}: INSOLUBLE'
-            config_data.config.debug_print('final state', msg, None)
+            config_data.defaultConfig.debug_print('final state', msg, None)
 
 
 if __name__ == '__main__':
