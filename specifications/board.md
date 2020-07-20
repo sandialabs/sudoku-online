@@ -77,5 +77,6 @@ The example move lists are probably incorrect.  They're intended as examples of 
     accessibleCells: [ [3, 0], [3, 3] ],
     solved: True
 
+    availableActions: ["applyops", "pivot", "assign", "exclude"]
 }
 ```

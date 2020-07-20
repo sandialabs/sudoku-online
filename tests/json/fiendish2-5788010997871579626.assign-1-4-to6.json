@@ -1,6 +1,6 @@
 {
     "action": {
-        "action": "selectValueForCell",
+        "action": "assign",
         "cell": [
             1,
             4

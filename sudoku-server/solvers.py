@@ -11,7 +11,8 @@ Sudoku Board solvers.
 
 import random
 import operators
-# import logger
+import config_data
+import board_update_descriptions
 import board
 
 # -----------------------------------------------------------------------------
@@ -19,121 +20,114 @@ import board
 # -----------------------------------------------------------------------------
 
 
-def calculate_status(sboard, msg, threshold=2):
+def calculate_status(sboard, msg):
     """ Centralized diagnostics for after applying logical operators.
 
     Args:
         sboard  : the board to evaluate
         msg     : the message describing the operator just applied
-        threshold : the value of verbosity above which these diagnostics
-            should be printed
     Returns:
         int     : the number of uncertain values in sboard
     """
+    # If we found a contradiction (bad guess earlier in search), return 0
+    #    as no more cells can be assigned
+    if(sboard.invalidCells()):
+        progress = f'Found logical contradiction.'
+        sboard.config.debug_print('invalidcells', progress, sboard)
+        return 0
     nValues = sboard.countUncertainValues()
-    if(operators.verbosity > threshold):
-        print("Uncertainty state after " + msg)
-        print(sboard.getStateStr(True))
-        print("%d uncertain values remaining" % nValues)
+    progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
+    sboard.config.debug_print('status', progress, sboard)
     return nValues
 
 
-def singles_operators(sboard):
-    """ Iterate over exclusion and inclusion until no values change. """
-    # print('in singles operators')
+def get_operator(op_name):
+    """ Call the given operator.
+
+    Args:
+        op_name : the operator function name to apply
+    Returns:
+        Board(s): the updated board passed in, or a collection
+            of boards if that's what the operator returns
+    """
+    try:
+        op_func = board_update_descriptions.operators_description[op_name]['function']
+        function = getattr(operators, op_func)
+    except KeyError:
+        raise Exception(f'Can\'t find operator {op_name}')
+    except AttributeError:
+        raise Exception(f'Can\'t find function {op_func}')
+
+    return function
+
+
+def get_action(action_name):
+    """ Call the given action.
+
+    Args:
+        action_name : the operator function name to apply
+    Returns:
+        Board(s): the updated board passed in, or a collection
+            of boards if that's what the operator returns
+    """
+    try:
+        # Yes, it's insecure, but at least we're getting the thing we eval from ourselves
+        action_func = board_update_descriptions.actions_description[action_name]['function']
+        function = eval(action_func)
+    except KeyError:
+        raise(f'Can\'t find action {action_name}')
+    except AttributeError:
+        raise(f'Can\'t find function {action_func}')
+
+    return function
+
+
+def apply_free_operators(sboard, force=False):
+    """ Iterate over free operators until no values change. """
+    # Simplify if we're being forced or our config allows it
+    if (force == False and sboard.config.simplify == False):
+        return sboard
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
-
-        # Apply logical exclusion
-        sboard = operators.logical_exclusion(sboard)
-        nValues = calculate_status(sboard, "exclusion propagation", 2)
-
-        # Apply logical inclusion
-        sboard = operators.logical_inclusion(sboard)
-        nValues = calculate_status(sboard, "inclusion assignment", 2)
-
+        for op in sboard.config.free_operations:
+            sboard = get_operator(op)(sboard)
+            nValues = calculate_status(sboard, op)
+            if nValues < prevValues:
+                # Use the computationally cheapest free operator
+                break
     return sboard
-
-
-def call_operator(sboard, operator_type, set_type):
-    """ Call the given operator with the given type.
-
-    Args:
-        sboard  : The board to apply the specified operator to.
-        operator_type   : the operator type ('pointing', 'naked',
-            'hidden', or 'wing')
-        set_type        : the parameter to pass to the operator functions
-    Returns:
-        Board, boolean   : the updated board passed in, and a boolean
-            indicating whether the board was updated (i.e., the number
-            of uncertain values in the board changed)
-    """
-    prevValues = sboard.countUncertainValues()
-
-    if operator_type == 'pointing':
-        sboard = operators.find_pointing_candidates(sboard, set_type)
-    if operator_type == 'naked':
-        sboard = operators.find_naked_candidates(sboard, set_type)
-    if operator_type == 'hidden':
-        sboard = operators.find_hidden_candidates(sboard, set_type)
-    if operator_type == 'wing':
-        sboard = operators.find_wings(sboard, set_type)
-
-    nValues = calculate_status(sboard, operator_type + ' ' + set_type, 2)
-
-    if nValues < prevValues:
-        return sboard, True
-    else:
-        return sboard, False
 
 
 # -----------------------------------------------------------------------------
 # LOGICAL PUZZLE OPERATOR SELECTORS
 # -----------------------------------------------------------------------------
 
-def select_all_logical_operators_ordered():
+def select_all_logical_operators_ordered(ordering=None):
     """ Returns an ordered list of parameterized logical operators. """
-    return [['pointing', 'pairs'],
-            ['naked', 'pairs'],
-            ['hidden', 'pairs'],
-            ['pointing', 'triples'],
-            ['naked', 'triples'],
-            ['hidden', 'triples'],
-            ['wing', 'y'],
-            ['wing', 'xyz'],
-            ['wing', 'x'],
-            ['naked', 'quads'],
-            ['hidden', 'quads']
-            ]
+    if not ordering:
+        def ordering(name):
+            return board_update_descriptions.operators_description[name]['cost']
+    costly_ops = sorted(
+        config_data.defaultConfig.costly_operations, key=ordering)
+    config_data.defaultConfig.debug_print(str(costly_ops), None, None)
+    return costly_ops
 
-
-def parameterize_logical_operators(ops_list):
-    """ Returns a logical operator selector ordered as the pairs given in ops_list. """
-    my_ops = []
-    if (operators.verbosity > 1):
-        print(str(ops_list))
-    it = iter(ops_list)
-    for op in it:
-        # TODO MAL BAD PRACTICE - ask cll for help
-        param = next(it)
-        my_ops.append([op, param])
-    return my_ops
 
 # -----------------------------------------------------------------------------
 # LOGICAL PUZZLE SOLVERS
 # -----------------------------------------------------------------------------
 
 
-def logical_solve(sboard, logical_ops, restart=True):
+def logical_solve(sboard, logical_ops):
     """ Solves sboard using only logical operators.
 
     Args:
         sboard (Board)  : the board to apply operators to
-        logical_ops ([[operator, parameter], ...])  :
-            a list of [operator, parameter] pairs describing the set of
-            parameterized operators to apply and the order in which
+        logical_ops ([operator, ...])  :
+            a list of logical operator function names describing the set of
+            logical operators to apply and the order in which
             to apply them (applying inclusion and exclusion to a fixed
             point in between each specified logical operator)
         restart (boolean)   : whether to restart at the first
@@ -141,6 +135,7 @@ def logical_solve(sboard, logical_ops, restart=True):
             affects the board (True) or to continue from the next
             operator in the list (False)
     Returns:
+        list of one item,
         sboard (Board) modified by the logical operators until no
             operator in logical_ops can make any more changes,
         OR None if sboard reaches a contradiction.
@@ -149,128 +144,192 @@ def logical_solve(sboard, logical_ops, restart=True):
     inclusions until no new constraints are identified.
     """
 
+    sboard = apply_free_operators(sboard)
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1  # Force the first iteration of the loop
     # Iterate until we don't change the board or no uncertain values remain
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
-        sboard = singles_operators(sboard)
 
-        for op, param in logical_ops:
-            sboard, operator_applied = call_operator(sboard, op, param)
-            nValues = sboard.countUncertainValues()
-            if operator_applied:
-                if restart:
+        for op in logical_ops:
+            sboard = get_operator(op)(sboard)
+            nValues = calculate_status(sboard, op)
+            if nValues < prevValues:
+                # We progressed the board
+                sboard = apply_free_operators(sboard)
+                nValues = sboard.countUncertainValues()
+                if sboard.config.restart_op_search_on_match:
                     # If the operator made a change to board and restart is True,
                     # we will go back to the beginning of logical_ops
                     break
-                else:
-                    # Otherwise, we will continue with the next operator,
-                    # so we need to force inclusion / exclusion
-                    sboard = singles_operators(sboard)
 
-    # If we found a contradiction (bad guess earlier in search), return None
-    if(sboard.invalidCells()):
-        if(operators.verbosity > 1):
-            print("Found logical contradiction.")
-        return None
     return sboard
+
+
+def logical_solve_action(sboard, logical_ops):
+    sboard.config.check_free_ops(logical_ops)
+    child_board = logical_solve(sboard, logical_ops)
+    return [child_board]
+
+# -----------------------------------------------------------------------------
+# SEARCH METHODS
+# -----------------------------------------------------------------------------
+
+
+def expand_cell(sboard, cell_id):
+    """
+    Expands the board cell identified by cell_id.
+
+    Args:
+        sboard  : the starting board to "expand"
+        cell_id : the identifier of the cell to expand
+    Returns:
+        collection of board  : new boards.  Each board is a copy of sboard
+            except that cell_id is set to a unique possible value.
+            The collection of boards together cover the possible values of
+            cell_id in sboard.
+
+    For each value that cell_id can take
+        create a new (duplicate) board and assign one of the candidate partition sets
+            to the identified cell
+    Returns a list of Boards with the cell value assigned
+    If identified cell has only one possible value, simply returns [sboard]
+    NOTE: propagation of the assigned value is not performed automatically.
+    """
+
+    cell = sboard.getCell(cell_id)
+    if(cell.isCertain()):
+        return [sboard]
+
+    expansion = []
+    for v in cell.getValueSet():
+        b = board.Board(sboard)
+        bcell = b.getCell(cell_id)
+        bcell.assign(v)
+        expansion.append(b)
+
+        progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
+        b.config.complete_operation('pivot', progress, b)
+
+    progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
+    sboard.config.complete_operation('pivot', progress, sboard)
+
+    return expansion
+
+
+def expand_cell_with_assignment(sboard, cell_and_val):
+    """
+    Expands the board cell identified by cell_id into a board with that value assigned,
+    and a board with that value excluded (and marked as backup).
+
+    Args:
+        sboard  : the starting board to "expand"
+        cell_and_val : a tuple:
+            cell_id : the identifier of the cell to expand
+            value : a value to assign to cell_id,
+                intersecting those values with valid values
+    Returns:
+        collection of board  : new boards.  Each board is a copy of sboard
+            except that in the first board cell_id is set to value
+            and in the second (backup) board cell_id contains the remaining values.
+    NOTE: propagation of the assigned value is not performed automatically.
+    """
+    (cell_id, value) = cell_and_val
+    return __expand_cell_with_assignment(sboard, cell_id, value, False)
+
+
+def expand_cell_with_exclusion(sboard, cell_and_val):
+    """
+    Expands the board cell identified by cell_id into a board with that value excluded,
+    and a board with that value excluded (and marked as backup).
+
+    Args:
+        sboard  : the starting board to "expand"
+        cell_and_val : a tuple:
+            cell_id : the identifier of the cell to expand
+            value : a value to assign to cell_id,
+                intersecting those values with valid values
+    Returns:
+        collection of board  : new boards.  Each board is a copy of sboard
+            except that in the first board cell_id contains the remaining values
+            and in the second (backup) board cell_id is set to value.
+    NOTE: propagation of the assigned value is not performed automatically.
+    """
+    (cell_id, value) = cell_and_val
+    return __expand_cell_with_assignment(sboard, cell_id, value, True)
+
+
+def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary=False):
+    """
+    Expands the board cell identified by cell_id into partitions specified.
+
+    Args:
+        sboard  : the starting board to "expand"
+        cell_id : the identifier of the cell to expand
+        value : a value to assign to cell_id,
+            intersecting those values with valid values
+    Returns:
+        collection of board  : new boards.  Each board is a copy of sboard
+            except that in the first board cell_id is set to value
+            and in the second board cell_id contains the remaining values.
+            The collection of boards together cover the possible values of
+            cell_id in sboard.
+    NOTE: propagation of the assigned value is not performed automatically.
+    """
+
+    cell = sboard.getCell(cell_id)
+    if(cell.isCertain()):
+        return [sboard]
+
+    expansion = []
+    assigned = board.Board(sboard)
+    expansion.append(assigned)
+    removed = board.Board(sboard)
+    expansion.append(removed)
+
+    action = None
+    if make_exclusion_primary:
+        assigned.setToBackground()
+        action = 'exclude'
+    else:
+        removed.setToBackground()
+        action = 'assign'
+
+    bcell = assigned.getCell(cell_id)
+    bcell.assign(value)
+    progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
+    assigned.config.complete_operation(action, progress, assigned)
+
+    bcell = removed.getCell(cell_id)
+    bcell.exclude(value)
+    progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
+    removed.config.complete_operation(action, progress, removed)
+
+    progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
+    sboard.config.complete_operation(action, progress, sboard)
+
+    return expansion
+
 
 # -----------------------------------------------------------------------------
 # BEYOND-LOGICAL PUZZLE SOLVER SUPPORT METHODS
 # -----------------------------------------------------------------------------
 
 
-def simplify_expansions(sboard_collection, simplify, include_invalid_boards=True):
-    """ If simplify is true, apply singles_operators to all boards in sboard_collection. """
+def take_action(sboard, expansion_op, args):
+    """ Apply apply_free_operators to all boards in sboard_collection. """
+    sboard_expansion = get_action(expansion_op)(sboard, args)
+
     ret = []
-    for brd in sboard_collection:
-        if simplify:
-            # Apply inclusion and exclusion for free
-            brd = operators.logical_exclusion(brd)
-        if include_invalid_boards or not brd.invalidCells():
-            # Include the board if we're including everything
-            # OR if it's not got a proven contradiction yet
-            ret.append(brd)
+    for brd in sboard_expansion:
+        brd = apply_free_operators(brd)
+        if (sboard.config.prune_invalid_boards
+                and brd.invalidCells()):
+            continue
+        # Include the board if we're including everything
+        # OR if it's not got a proven contradiction yet
+        ret.append(brd)
     return ret
-
-
-def expand_cell_action(sboard, cell_id, simplify=True):
-    """ Expand all possible values of cell and simplify resulting boards.
-
-    Args:
-        sboard (Board)   : the Board containing the Cell to be expanded.
-        cell_id (String) : the name of the Cell to pivot on
-    Returns:
-        [Boards] : the set of boards that result from assigning the selected
-            cell to each possible value.
-
-    Inclusion and exclusion have been applied to each possible board.
-    """
-    # TODO MAL we can change this to partition if we want! :)
-    expansion = operators.expand_cell(sboard, cell_id)
-    return simplify_expansions(expansion, simplify)
-
-
-def assign_cell_action(sboard, cell_id, value, simplify=True):
-    """ Assign value to cell_id, returning the assigned board and the one with all other options.
-
-    Args:
-        sboard (Board)   : the Board containing the Cell to be expanded.
-        cell_id (String) : the name of the Cell to assign value to
-    Returns:
-        [Boards] : the board that result from assigning the selected
-            cell to the value, and the board from removing that value from the options.
-
-    Inclusion and exclusion have been applied to each possible board.
-    The board with all the other options is set to a background board.
-    """
-    expansion = operators.expand_cell_with_assignment(
-        sboard, cell_id, value, make_exclusion_primary=False)
-    return simplify_expansions(expansion, simplify)
-
-
-def exclude_cell_value_action(sboard, cell_id, value, simplify=True):
-    """ Assign value to cell_id, returning the board with value removed and the one with that value assigned.
-
-    Args:
-        sboard (Board)   : the Board containing the Cell to be expanded.
-        cell_id (String) : the name of the Cell to remove value from
-    Returns:
-        [Boards] : the board that result from assigning the selected
-            cell to the value, and the board from removing that value from the options.
-
-    Inclusion and exclusion have been applied to each possible board.
-    The board with the assignment is set to a background board.
-    """
-    expansion = operators.expand_cell_with_assignment(
-        sboard, cell_id, value, make_exclusion_primary=True)
-    return simplify_expansions(expansion, simplify)
-
-
-def take_action(sboard, action, parameter):
-    """ Given a board and a selected action, perform that action.
-
-    Args:
-        sboard (Board)  : the Board on which the action should be performed.
-        action  : the action to take. May be
-            "expand_cell <cell_id>" or
-            "select_logical_ops [[op, param], ...]"
-        parameter
-    Returns:
-        [Boards] : a collection of boards resulting from the selection action.
-    """
-    if action == "selectValueForCell":
-        # Assign the value to the given cell
-        (cell_id, value) = parameter
-        return assign_cell_action(sboard, cell_id, value)
-    elif action == "pivotOnCell":
-        # Expand the cell specified by the string parameter
-        cell_id = parameter
-        return expand_cell_action(sboard, cell_id)
-    elif action == "applyLogicalOperators":
-        # Apply the logical operators specified by the op/param list of pairs
-        return [logical_solve(board.Board(sboard), parameter)]
 
 
 # -----------------------------------------------------------------------------
@@ -376,20 +435,17 @@ def combined_solve(sboard, logical_ops=[], cellselector=None):
 
     # If the puzzle is solved, just return the solution
     if(result and result.isSolved()):
-        if(operators.verbosity > 1):
-            print("Puzzle solved.")
+        result.config.debug_print('solved', f'Puzzle solved.', result)
         return result
 
     # If we found a contradiction (bad guess earlier in search), return None
     elif(not result or result.invalidCells()):
-        if(operators.verbosity > 1):
-            print("Found contradiction.")
+        sboard.config.debug_print('incorrect', f'Found contradiction.', result)
         return None
 
     # Some action needs to be taken
-    if (operators.verbosity > 2):
-        print("Taking selecting cell using " + str(cellselector)
-              + " and expanding cell using " + str(expand_cell_action))
+    msg = f'Taking action, selecting cell using {str(cellselector)} and expanding cell using {str(expand_cell_action)}'
+    result.config.debug_print('take action', msg, result)
     cell = cellselector(result)
     expansion = expand_cell_action(result, cell.getIdentifier())
     for brd in expansion:

@@ -1,6 +1,6 @@
 {
     "action": {
-        "action": "pivotOnCell",
+        "action": "pivot",
         "cell": [
             1,
             4

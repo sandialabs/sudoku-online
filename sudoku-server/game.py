@@ -14,16 +14,14 @@ import board
 import solvers
 import puzzles
 import random
-import logger
 import operators
+import config_data
+import board_update_descriptions
 
 
-def get_initial_board(content, simplify=True):
+def get_initial_board(content):
     """
-    Get an initial board of 'degreey' given a dict request, randomly if 'name' is None, else by name.
-
-    If simplify is True, apply logical inclusion and exclusion operators to board
-    until no more progress can be made.
+    Get an initial board of 'degree' given a dict request, randomly if 'name' is None, else by name.
     """
     puzzle = None
     assert isinstance(content, dict), \
@@ -31,22 +29,123 @@ def get_initial_board(content, simplify=True):
     name = content['name'] if 'name' in content else None
     degree = content['degree'] if 'degree' in content else 3
 
-    if name and name in puzzles.puzzles:
-        print("Loading requested puzzle " + str(name))
-        puzzle = puzzles.puzzles[name]
+    basename = None
+    if name:
+        basename = name[0:name.index('?')] if '?' in name else name
+    if basename and basename in puzzles.puzzles:
+        print("Loading requested puzzle " + str(basename))
+        puzzle = puzzles.puzzles[basename]
     else:
         (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        if(operators.verbosity > 0):
-            print(name)
+        config_data.defaultConfig.debug_print(
+            'select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
-    if(operators.verbosity > 2):
-        print(str(full_board))
-    if simplify:
-        solvers.singles_operators(full_board)
+    config_data.defaultConfig.debug_print('load puzzle', name, full_board)
+    if full_board.config.simplify_initial_board:
+        solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()
 
 
-def parse_and_apply_action(content, simplify=True):
+def __configure_games(name_list, alternatives_list):
+    """
+    Given a list of games, do whatever configuration needs to be done to configure them.
+    """
+
+    if not alternatives_list:
+        return name_list
+
+    alt = alternatives_list.pop()
+    # MAL TODO randomly reorder the name_list
+
+    for i in range(int(len(name_list)/2)):
+        name_list[i] += f'?{alt}'
+
+    return __configure_games(name_list, alternatives_list)
+
+
+def get_boards_for_game(name):
+    """
+    Return a list of boards associated with a game, randomly if 'name' is None, else by name.
+
+    Associates appropriate configuration with each puzzle as indicated by the request.
+    """
+    game = {}
+    if name and name in puzzles.games:
+        print("Loading requested game " + str(name))
+        game = puzzles.games[name]
+    else:
+        (name, game) = random.choice(list(puzzles.games.items()))
+        config_data.defaultConfig.debug_print('select game', name, None)
+
+    game_names = __configure_games(
+        list.copy(game['puzzles']), list.copy(game['config_alterations']))
+    config_data.defaultConfig.debug_print('load game', name, f'{game_names}')
+    return game_names
+
+
+def __parse_cell_arg(cell_loc):
+    """ Parse a cell location into a cell_id. """
+    assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
+        "Must specify cell using [x,y] location notation."
+    cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
+    #print(f'Found cell argument {cell_id}')
+    return cell_id
+
+
+def __parse_value_arg(value):
+    """ Parse a value. """
+    assert isinstance(value, int) and value >= 0, \
+        "Assuming that all values are represented as non-negative ints."
+    #print(f'Found value argument {value}')
+    return value
+
+
+def __parse_operators_arg(ops_list):
+    """ Parse a list of operators. """
+    assert isinstance(ops_list, list), \
+        "Must specify list of operators in applyLogicalOperators action"
+    #print(f'Found operators argument {ops_list}')
+    return ops_list
+
+
+def __collect_argument(arg_nm, action_dict):
+    """ Collect the argument specified. """
+    try:
+        # Yes, it's insecure, but at least we're getting the thing we eval from ourselves
+        parser_function = eval(f'__parse_{arg_nm}_arg')
+        raw_val = action_dict[arg_nm]
+        return parser_function(raw_val)
+    except AttributeError:
+        raise Exception(
+            f'Can\'t extract argument {arg_nm} needed')
+    except KeyError:
+        raise Exception(
+            f'Can\'t find value for argument {arg_nm} needed')
+
+
+def __collect_args(action, action_dict):
+    """
+    Given a request action and a dictionary of the content request,
+    return a list of the parsed arguments needed for that action.
+    """
+    assert action in board_update_descriptions.actions_description, \
+        f'Cannot exercise action {action}'
+    try:
+        arg_names = board_update_descriptions.actions_description[action]['arguments']
+    except KeyError:
+        raise Exception(f'Cannot find description for action {action}')
+
+    if len(arg_names) == 1:
+        return __collect_argument(arg_names[0], action_dict)
+    elif len(arg_names) == 2:
+        return (__collect_argument(arg_names[0], action_dict),
+                __collect_argument(arg_names[1], action_dict))
+    else:
+        raise Exception(
+            f'Haven\'t implemented parsing for arguments {arg_names}')
+
+
+def parse_and_apply_action(content):
     """
     Given a requested action and board, parse and apply the given action to board.
 
@@ -54,9 +153,6 @@ def parse_and_apply_action(content, simplify=True):
     applyLogicalOperators ([list of operators])
         board (Board)  : the Board on which the action should be performed.
         action  : the action to take, and appropriate operators as specified in server_api.md
-            "selectValueForCell <cell_id> <value>" or
-            "pivotOnCell <cell_id>" or
-            "applyLogicalOperators [[op, param], ...]"
     Returns:
         [Boards] : a collection of boards resulting from the selection action.
     """
@@ -77,35 +173,21 @@ def parse_and_apply_action(content, simplify=True):
     assert 'action' in action_dict, "Failed assumption that action request specified the action to take."
     action_choice = action_dict['action']
 
-    result = []
-    cell_loc = None
-    value = None
-    if "Cell" in action_choice:
-        assert 'cell' in action_dict, "Must specify cell in a *Cell action"
-        cell_loc = action_dict['cell']
-        assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
-            "Must specify cell using [x,y] location notation."
-        cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
-    if "Value" in action_choice:
-        assert 'value' in action_dict, "Must specify cell value in *Value* actions"
-        value = action_dict['value']
-    if action_choice == "selectValueForCell":
-        result = solvers.assign_cell_action(
-            board_object, cell_id, value, simplify)
-    elif action_choice == "excludeValueFromCell":
-        result = solvers.exclude_cell_value_action(
-            board_object, cell_id, value, simplify)
-    elif action_choice == "pivotOnCell":
-        # Expand the cell specified by the string parameter
-        result = solvers.expand_cell_action(board_object, cell_id, simplify)
-    elif action_choice == "applyLogicalOperators":
-        # Apply the logical operators specified by the op/param list of pairs
-        assert 'operators' in action_dict, \
-            "Must specify list of operators in applyLogicalOperators action"
-        operators = action_dict['operators']
-        result = [solvers.logical_solve(board.Board(board_object), operators)]
-    else:
-        return {'error': ('unknown action ' + str(action_choice))}
+    try:
+        args = __collect_args(action_choice, action_dict)
+        collected = solvers.take_action(
+            board.Board(board_object), action_choice, args)
+        result = []
+        if 'heuristics' in content:
+            logicalops = content['heuristics']
+            assert isinstance(logicalops, list), \
+                "Failed assumption that the parsed action argument heuristics ia  list."
+            for brd in result:
+                result.extend(solvers.take_action(brd, 'applyops', logicalops))
+        else:
+            result = collected
+    except Exception as e:
+        return {'error': f'{e}'}
 
     jsoned_result = []
     for full_board in result:
@@ -114,32 +196,33 @@ def parse_and_apply_action(content, simplify=True):
     return jsoned_result
 
 
+def _jsonify_action(name, description_dict):
+    """ Remove all the extra cruft and dispatch fields,
+        and create one dict describing the named action / operator. """
+    short_description = {'internal_name': name}
+    for data in ['requested_arguments', 'cost', 'user_name', 'description']:
+        if data in description_dict:
+            short_description[data] = description_dict[data]
+    return short_description
+
+
 def get_possible_actions():
     """ Return a list of all possible actions for this game.
 
     May eventually want to update to alter possible actions for all possible games. """
-    actions = list()
     # MAL TODO Do we want to take in multiple actions and apply them all?
-    actions.append({'internal_name': 'pivotOnCell',
-                    'user_name': 'Expand All Choices'})
-    actions.append({'internal_name': 'selectValueForCell',
-                    'user_name': 'Make an assignment'})
-    actions.append({'internal_name': 'excludeValueFromCell',
-                    'user_name': 'Remove possible value from a cell'})
-    # actions.append({'internal_name': 'include/exclude',
-    #                'user_name': 'Propagate assignments',
-    #                'cost': logger.COST_INCLUSION})
-    actions.append({'internal_name': 'applyLogicalOperators',
-                    'user_name': 'Apply selected operators',
-                    'operators': [{'operator': 'xwing', 'cost': logger.COST_XWINGS},
-                                  {'operator': 'ywing', 'cost': logger.COST_YWINGS},
-                                  {'operator': 'hidden pairs',
-                                      'cost': logger.COST_HIDDEN_PAIRS},
-                                  {'operator': 'naked pairs',
-                                      'cost': logger.COST_NAKED_PAIRS},
-                                  {'operator': 'naked triples',
-                                      'cost': logger.COST_NAKED_TRIPLES},
-                                  ]})
+    operators = list()
+    for op in config_data.defaultConfig.costly_operations:
+        operators.append(_jsonify_action(
+            op, board_update_descriptions.operators_description[op]))
+
+    actions = list()
+    for act in config_data.defaultConfig.actions:
+        short_desc = _jsonify_action(
+            act, board_update_descriptions.actions_description[act])
+        if act == 'applyops':
+            short_desc['operators'] = operators
+        actions.append(short_desc)
 
     return actions
 
@@ -347,8 +430,7 @@ class GameTreeNode():
             "Which cell do you want to expand into all possible options? {}".format(names))
         selected = input()
         pivot = self.board.getCell(selected)
-        new_boards = solvers.expand_cell_action(
-            self.board, pivot.getIdentifier())
+        new_boards = operators.expand_cell(self.board, pivot.getIdentifier())
 
         # Make a new board for each possible value for that cell
         children = []

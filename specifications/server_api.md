@@ -27,17 +27,19 @@ Do we need any other parameters for this request?
 {
     'board': <JSON representation of board - see board.md>
     'action': {
-        'action': 'selectValueForCell',
+        'action': 'assign',
         'cell': [0,4],
         'value': 3
     },
-    'heuristic': 'include/exclude'
+    'heuristics': ['inclusion', 'pointingpairs', 'ywings']
 }
 ```
 
 *Response*: List of new boards to add to the tree
 
 The caller is responsible for keeping track of where in the game tree the new boards should be added.
+
+For now, the caller is also responsible for keeping track of the heuristics selected up front and listing them in 'heuristics'.  This may need to change, in which case the solver will track the heuristics in the puzzle name.  *TODO* discuss between Shelley and Andy.
 
 ### List Heuristics
 
@@ -51,8 +53,8 @@ Example response:
 
 ```json
 [
-    { 'internal_name': 'include/exclude', 'user_name': 'Include/Exclude' },
-    { 'internal_name': 'pivot', 'user_name': 'Expand All Choices' }
+    { 'internal_name': 'inclusion', 'user_name': 'Include/Exclude', 'cost': 100},
+    { 'internal_name': 'pivot', 'user_name': 'Expand All Choices', 'cost': 200 }
 ]
 ```
 

@@ -11,6 +11,8 @@ Sudoku Board and Cell data structures.
 import logger
 # import json
 import uuid
+import config_data
+import board_update_descriptions
 
 
 class Cell():
@@ -89,6 +91,18 @@ class Cell():
         Note: this could be canonicalized to save memory, but it isn't.
         """
         return [cls.display_list[idx] for idx in cls.getPossibleValuesByDegree(degree)]
+
+    @ classmethod
+    def displayValues(cls, values):
+        """ Returns list of displays of the sorted list of values.
+        """
+        return sorted([cls.display_list[idx] for idx in values])
+
+    @ classmethod
+    def displayValue(cls, val):
+        """ Returns displays of the value val.
+        """
+        return cls.display_list[val]
 
     def __str__(self):
         return 'Cell(ID=' + str(self._id) + \
@@ -405,14 +419,13 @@ class Board():
         self._id = uuid.uuid1().int >> 64
         self._parent_id = None
         self._is_background = False
-        self._puzzle_name = name
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
             self._parent_id = state._id
-            self._puzzle_name = state._puzzle_name
+            self.config = state.config.copy()
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
@@ -423,14 +436,15 @@ class Board():
             self._degree = state['degree']
             if 'parentSerialNumber' in state:
                 self._parent_id = state['parentSerialNumber']
-            if 'puzzleName' in state:
-                self._puzzle_name = state['puzzleName']
             # Initialize cell state
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
                 cell_state = assignments[i] if assignments[i] is not None else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
+            puzz_name = state['puzzleName'] if 'puzzleName' in state else None
+            self.config = config_data.ConfigurationData(self.getStateStr(
+                False, False, ''), puzz_name, self._parent_id == None)
         elif isinstance(state, str):
             # State is a str; initialize it
             i = 0
@@ -438,12 +452,11 @@ class Board():
                 self._state[identifier] = Cell(identifier, state[i])
                 i += 1
             self._degree = degree
+            self.config = config_data.ConfigurationData(self.getStateStr(
+                False, False, ''), name, self._parent_id == None)
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
-
-        # TODO MAL move this to test / elsewhere ?
-        Board.log = logger.SudokuLogger(self.getStateStr(False, False, ''))
 
     def __str__(self):
         output = "Board " + str(self._id) \
@@ -583,8 +596,9 @@ class Board():
             brd['conflictingCells'] = invalid_locs
         if self._is_background:
             brd['backtrackingBoard'] = True
-        if self._puzzle_name:
-            brd['puzzleName'] = self._puzzle_name
+        brd['puzzleName'] = self.config.log.getName()
+        if self.config.actions:
+            brd['availableActions'] = self.config.actions
         return brd
         # return json.dumps(brd)
 

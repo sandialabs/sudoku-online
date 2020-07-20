@@ -11,7 +11,24 @@ import os.path
 import csv
 import json
 import pprint
-import config_data
+import board_update_descriptions
+
+verbosity = 0
+
+
+def set_verbosity(v):
+    """
+    Set verbosity level for the logical operators.
+
+    Verbosity levels:
+    0 = Silent
+    1 = Display initial and final board states only
+    2 = Indicate cell assignments and associated rule as they are made
+    3 = Show the board uncertainty state after each rule application
+    """
+    global verbosity
+    verbosity = v
+
 
 # difficulty score constants
 SCORE_BEGINNER = 4500
@@ -24,8 +41,21 @@ SCORE_DIABOLICAL = 25000
 
 class SudokuLogger():
 
-    def __init__(self, puzzle):
+    @ classmethod
+    def logOperatorProgress(cls, operator, verbosity1_str=None, board=None):
+        """ Log that an operator made progress without logging a new application of the operator
+            or causing the cost of the operator to be incurred.
+            Each argument is printed at increasing verbosity levels."""
+        if(verbosity > 0 and operator):
+            print('operator', operator)
+        if(verbosity > 1 and verbosity1_str):
+            print(verbosity1_str)
+        if(verbosity > 2 and board):
+            print(board.getStateStr(True, False))
+
+    def __init__(self, puzzle=None, name=None):
         self.puzzle = puzzle
+        self.name = name
         self.solution = ''
         self.board_state_list = []
         self.num_operators = 0
@@ -37,19 +67,20 @@ class SudokuLogger():
         # operators_use_count provides a dict of each operator that was used and
         # the number of times they were applied.
         self.operators_use_count = dict()
-        for action in config_data.operators_description.keys():
+        for action in board_update_descriptions.board_update_options.keys():
             self.operators_use_count[action] = 0
 
-    def logOperator(self, operator, board_state):
+    def logOperator(self, operator, verbosity1_str=None, board=None):
+        """ Log that an application of an operator as respects a board state. """
+        self.logOperatorProgress(operator, verbosity1_str, board)
 
-        self.board_state_list.append(board_state)
+        if board:
+            self.board_state_list.append(board.getStateStr(True, False))
         self.num_operators += 1
-        print('operator', operator)
         self.operators_use_list.append(operator)
 
-        operator_count = self.operators_use_count[operator]
-        self.operators_use_count[operator] = operator_count + 1
-        self.difficulty_score += config_data.operators_description[operator]['cost']
+        self.operators_use_count[operator] += 1
+        self.difficulty_score += board_update_descriptions.board_update_options[operator]['cost']
 
     def setPuzzle(self, puzzle):
         self.puzzle = puzzle
@@ -57,8 +88,23 @@ class SudokuLogger():
     def getPuzzle(self):
         return self.puzzle
 
-    def setSolution(self, solution):
-        self.solution = solution
+    def setName(self, name):
+        self.name = name
+
+    def getName(self):
+        return self.name
+
+    def setSolution(self, sboard):
+        self.solution = {
+            'assignments': sboard.getStateStr(False, False, ''),
+            'invalid_cells': sboard.invalidCells()
+        }
+        if sboard.isSolved():
+            self.solution['solution_state'] = 'solved'
+        elif self.solution['invalid_cells']:
+            self.solution['solution_state'] = 'insoluble'
+        else:
+            self.solution['solution_state'] = 'partial'
 
     def getSolution(self):
         return self.solution
@@ -67,7 +113,6 @@ class SudokuLogger():
         return self.difficulty_score
 
     def getDifficultyLevel(self):
-
         score = self.difficulty_score
 
         if score <= SCORE_BEGINNER:
@@ -83,48 +128,76 @@ class SudokuLogger():
         if score <= SCORE_DIABOLICAL:
             return 'diabolical'
 
+    def compare_json_to_self(self, log_dict):
+        """ Given a log_dict, see if we came up with the same information as last time.
+            Return True if log_dict represents the same information, and False if it differs.
+        """
+        try:
+            assert self.getPuzzle() == log_dict['puzzle'], \
+                'Should only call compare_json_to_self on data from the same puzzle'
+            if (self.getSolution()['assignments'] != log_dict['solution']['assignments']
+                or self.difficulty_score != log_dict['difficulty_score']
+                or self.operators_use_list != log_dict['order_of_operators']
+                or self.board_state_list != log_dict['board_states']
+                    or self.name != log_dict['name']):
+                return False
+
+            if len(self.operators_use_count.keys()) != len([k for k in filter(lambda key: 'num_' in key, log_dict.keys())]):
+                return False
+            for key in self.operators_use_count.keys():
+                if self.operators_use_count[key] != log_dict[f'num_{key}']:
+                    return False
+        except KeyError:
+            return False
+
+        return True
+
     def printLogJSON(self):
-        puzzle_already_logged = False
-        file_exists = False
+        """ Print the json log."""
+        append_to_file = False
         file_name = 'game_logs.json'
+        logs = []
 
         if os.path.isfile(file_name):
-            print('is file')
-            file_exists = True
-            file = open(file_name)
-            logs = json.load(file)
+            append_to_file = True
+            with open(file_name) as file:
+                logs = json.load(file)
 
+            log_to_replace = None
             for log in logs:
                 if log['puzzle'] == self.getPuzzle():
-                    print(log['puzzle'])
-                    puzzle_already_logged = True
-
-        if puzzle_already_logged:
-            print('puzzle already logged')
-            return True
-
-        operators_use_count = self.operators_use_count
-        operators_string = ''
-        for operator in self.operators_use_list:
-            operators_string += operator + ';'
-        state_string = ''
-        for state in self.board_state_list:
-            state_string += state + ':'
+                    if self.compare_json_to_self(log):
+                        # No need to try to log again.
+                        if (verbosity > 1):
+                            print(
+                                f'puzzle {self.getPuzzle()} already logged. Returning.')
+                        return True
+                    else:
+                        print(
+                            f'puzzle {self.getPuzzle()} has differing statistics from the log file. Replacing in log file.')
+                        # We want to rewrite the entire log file
+                        append_to_file = False
+                        log_to_replace = log
+                        break
+            if log_to_replace:
+                logs.remove(log_to_replace)
 
         game = {
             'puzzle': self.getPuzzle(),
+            'name': self.getName(),
             'solution': self.getSolution(),
             'difficulty_score': self.difficulty_score,
             'difficulty_level': self.getDifficultyLevel(),
+            'order_of_operators': self.operators_use_list,
+            'board_states': self.board_state_list
         }
 
-        for key in operators_use_count.keys():
-            game['num_' + key] = operators_use_count[key]
+        for key in self.operators_use_count.keys():
+            game[f'num_{key}'] = self.operators_use_count[key]
 
-        game['order_of_operators'] = self.operators_use_list
-        game['board_states'] = self.board_state_list
+        logs.append(game)
 
-        if file_exists:
+        if append_to_file:
             with open(file_name, "r+") as file:
                 logs = json.load(file)
 
@@ -135,7 +208,10 @@ class SudokuLogger():
                 file.write(json_logs)
         else:
             with open(file_name, "w") as file:
-                json_logs = json.dumps([game], indent=4)
+                json_logs = json.dumps(logs, indent=4)
                 file.write(json_logs)
 
         return False
+
+
+log = SudokuLogger()
