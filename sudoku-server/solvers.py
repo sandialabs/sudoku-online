@@ -167,7 +167,6 @@ def logical_solve(sboard, logical_ops):
 
 
 def logical_solve_action(sboard, logical_ops):
-    sboard.config.check_free_ops(logical_ops)
     child_board = logical_solve(sboard, logical_ops)
     return [child_board]
 

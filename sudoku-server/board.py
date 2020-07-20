@@ -444,7 +444,7 @@ class Board():
                 i += 1
             puzz_name = state['puzzleName'] if 'puzzleName' in state else None
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), puzz_name, self._parent_id == None)
+                False, False, ''), puzz_name)
         elif isinstance(state, str):
             # State is a str; initialize it
             i = 0
@@ -453,7 +453,7 @@ class Board():
                 i += 1
             self._degree = degree
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), name, self._parent_id == None)
+                False, False, ''), name)
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')

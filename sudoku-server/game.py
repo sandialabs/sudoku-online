@@ -41,6 +41,8 @@ def get_initial_board(content):
             'select puzzle', name, None)
     full_board = board.Board(puzzle, degree, name)
     config_data.defaultConfig.debug_print('load puzzle', name, full_board)
+    if '?select_ops_upfront' in name:
+        full_board.config.actions = ['selectops']
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()

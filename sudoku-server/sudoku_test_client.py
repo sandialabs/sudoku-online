@@ -129,7 +129,7 @@ if res.ok:
     print(json.dumps(result_log))
 
 log_req = {'board': result_log, 'action': {
-    'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
+    'action': 'selectops', 'operators': ['inclusion', 'pointingpairs']}}
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=log_req)
 if res.ok:
@@ -137,25 +137,19 @@ if res.ok:
     print(json.dumps(result1))
 
 log_req = {'board': result_log, 'action': {
-    'action': 'applyops', 'operators': ['inclusion', 'pointingpairs', 'ywings']}}
+    'action': 'selectops', 'operators': ['inclusion', 'pointingpairs', 'ywings']}}
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=log_req)
 if res.ok:
     result2 = res.json()
     print(json.dumps(result2))
 
+# MAL TODO Not working yet.
 log_req = {'board': result1[0], 'action': {
-    'action': 'pivot', 'cell': [0, 0]}}
+    'action': 'pivot', 'cell': [0, 0]},
+    'heuristics': ['inclusion', 'pointingpairs']}
 res = requests.post(
     'http://localhost:5000/sudoku/request/heuristic', json=log_req)
 if res.ok:
-    result2 = res.json()
-    print(json.dumps(result2))
-
-log_req = {'board': result2[1], 'action': {
-    'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=log_req)
-if res.ok:
-    result2 = res.json()
-    print(json.dumps(result2))
+    result3 = res.json()
+    print(json.dumps(result3))
