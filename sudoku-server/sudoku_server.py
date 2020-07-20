@@ -63,6 +63,15 @@ def take_given_action():
 
 
 @app.route('/sudoku/request/list_heuristics', methods=['GET'])
+def list_possible_operators():
+    """ Returns the possible logical operators that could be applied.
+
+    Possible actions include selectValueForCell (cell_id, value) and pivotOnCell (cell_id)
+    """
+    return jsonify(game.get_possible_operators())
+
+
+@app.route('/sudoku/request/list_actions', methods=['GET'])
 def list_possible_actions():
     """ Returns the possible actions that could be applied.
 

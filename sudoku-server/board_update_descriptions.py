@@ -11,19 +11,19 @@ Scoring and dispatch description data.
 actions_description = {
     'assign': {'function': 'expand_cell_with_assignment',
                'arguments': ['cell', 'value'],
-               'cost': 10,
+               'cost': 100,
                'user_name': 'Assign: assign given value to cell.',
                'description': 'Return one board with the assignment '
                + 'and another (backup) with the exclusion.'},
     'exclude': {'function': 'expand_cell_with_exclusion',
                 'arguments': ['cell', 'value'],
-                'cost': 10,
+                'cost': 100,
                 'user_name': 'Exclude: remove given value from cell.',
                 'description': 'Return one board with the exclusion '
                 + 'and another (backup) with the assignment done.'},
     'pivot': {'function': 'expand_cell',
               'arguments': ['cell'],
-              'cost': 50,
+              'cost': 500,
               'user_name': 'Pivot: expand all choices for cell.',
               'description': 'Return a separate board for each possible value '
               + 'in cell.'},
@@ -32,7 +32,13 @@ actions_description = {
                  'cost': None,
                  'user_name': 'Apply given logical operators.',
                  'description': 'Return a single board with the logical operators '
-                 + 'and free operators applied.'}
+                 + 'and free operators applied.'},
+    'selectops': {'function': 'logical_solve_action',
+                  'arguments': ['operators'],
+                  'cost': None,
+                  'user_name': 'Select and apply given logical operators.',
+                  'description': 'Return a single board with the logical operators '
+                  + 'selected and applied.'}
 }
 operators_description = {
     'exclusion': {'function': 'logical_exclusion',

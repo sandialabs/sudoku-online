@@ -206,15 +206,20 @@ def _jsonify_action(name, description_dict):
     return short_description
 
 
-def get_possible_actions():
-    """ Return a list of all possible actions for this game.
-
-    May eventually want to update to alter possible actions for all possible games. """
-    # MAL TODO Do we want to take in multiple actions and apply them all?
+def get_possible_operators():
+    """ Return a list of all possible operators for this game. """
     operators = list()
     for op in config_data.defaultConfig.costly_operations:
         operators.append(_jsonify_action(
             op, board_update_descriptions.operators_description[op]))
+    return operators
+
+
+def get_possible_actions():
+    """ Return a list of all possible actions for this game.
+
+    May eventually want to update to alter possible actions for all possible games. """
+    operators = get_possible_operators()
 
     actions = list()
     for act in config_data.defaultConfig.actions:
