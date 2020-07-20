@@ -127,12 +127,17 @@ class GameTreeView extends Component {
             }
                     
             let ourNewTree = prepareTreeForTreebeard(this.props.tree);
-            if (this.state.renderableTree) {
-                ourNewTree = overlayViewState(ourNewTree, this.state.renderableTree);
-            }
+            // if (this.state.renderableTree) {
+            //     ourNewTree = overlayViewState(ourNewTree, this.state.renderableTree);
+            // }
 
             console.log('GameTreeView: componentDidUpdate: ourNewTree is ' + ourNewTree);
+            let newSelectedNode = null;
+            if (this.state.selectedNode !== null) {
+                newSelectedNode = GameTree.findNodeById(ourNewTree, this.state.selectedNode.id);
+            }
             this.setState({
+                selectedNode: newSelectedNode,
                 renderableTree: ourNewTree
             });
         }
@@ -156,7 +161,7 @@ function prepareTreeForTreebeard(sudokuTree) {
         (node) => {
             node.name = 'Board ' + node.data.board.serialNumber;
             node.active = false;
-            node.toggled = (node.children.length > 0);
+            node.toggled = true;
         });
     return ourTree;
 }
@@ -168,15 +173,18 @@ function prepareTreeForTreebeard(sudokuTree) {
 //
 // NOTE: this would be a lot faster if we made a couple of 
 // node-finder structures.  As it is, this is O(n^2).
+
 function overlayViewState(newTree, oldTree) {
     const ourTree = clone(newTree);
-
+    const viewStateProperties = ['active'];
     GameTree.walkTree(oldTree,
         (oldNode) => {
             const serial = oldNode.id;
             const newNode = GameTree.findNodeById(newTree, serial);
             if (newNode !== null) {
-                Object.assign(newNode, oldNode);
+                for (const propName of viewStateProperties) {
+                    newNode[propName] = oldNode[propName];
+                }
             }
         }
         );
