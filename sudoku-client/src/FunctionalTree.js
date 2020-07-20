@@ -15,8 +15,9 @@ function findNodeById(node, targetId) {
 		return node;
 	} else {
 		for (const child of node.children) {
-			if (findNodeById(child, targetId)) {
-				return child;
+			const maybeNode = findNodeById(child, targetId);
+			if (maybeNode) { 
+				return maybeNode;
 			}
 		}
 		return null;
