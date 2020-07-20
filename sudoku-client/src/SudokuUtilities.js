@@ -358,7 +358,8 @@ function makeBoard(degree, assignments, availableMoves) {
 	return {
 		'degree': degree,
 		'assignments': clone(assignments),
-		'availableMoves': clone(availableMoves)
+		'availableMoves': clone(availableMoves),
+		'serialNumber': newSerialNumber('board')
 	};
 }
 

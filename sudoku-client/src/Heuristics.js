@@ -68,7 +68,7 @@ function assignValue(board, cell, value) {
             error: 'Cell ' + cell + ' is already assigned!'
         });
 
-    const newBoard = clone(board);
+    const newBoard = makeBoard(board.degree, board.assignments, board.availableMoves);
     newBoard.assignments[cell[0]][cell[1]] = value;
     return newBoard;
 }
