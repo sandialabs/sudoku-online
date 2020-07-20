@@ -52,18 +52,22 @@ class GameTreeView extends Component {
         this.decorators.Header = GameTreeBoardHeader;
     }
     
+    // The game tree will always be fully expanded.  Clicking on a node only
+    // changes the active view.
     onToggle(node, toggled) {
         const selectedNode = this.state.selectedNode;
         if (selectedNode) {
             selectedNode.active = false;
         }
         node.active = true;
-        if (node.children) {
-            node.toggled = toggled;
-        }
+        // if (node.children) {
+        //     node.toggled = toggled;
+        // }
         this.setState({selectedNode: node});
         if (this.props.changeActiveBoard) {
-            this.props.changeActiveBoard(node.boardSerial);
+            console.log('onToggle: selected node is...');
+            console.log(node);
+            this.props.changeActiveBoard(node.data.board.serialNumber);
         }
     }
 
