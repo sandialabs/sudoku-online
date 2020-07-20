@@ -42,7 +42,7 @@ function treeSize(tree) {
 }
 
 function addBoard(tree, parentId, newBoard) {
-    console.log('addBoard: newBoard is ' + newBoard);
+    console.log('addBoard: newBoard is ' + newBoard + ', serial ' + newBoard.serialNumber);
     return addChild(
         tree,
         parentId,

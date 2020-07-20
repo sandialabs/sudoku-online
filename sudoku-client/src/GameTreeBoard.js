@@ -21,7 +21,6 @@ class GameTreeBoard extends React.Component {
 		);	
 	}
 
-
 	/// Make the board as an array of blocks.
 	//
 	// In order to draw thick borders around the D x D blocks of
