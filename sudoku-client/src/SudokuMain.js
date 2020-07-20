@@ -10,7 +10,8 @@
 // 
 import React from 'react';
 import SudokuGame from './SudokuGame';
-import { requestInitialBoard, executeHeuristic } from './SudokuMockup';
+import { executeHeuristic } from './SudokuMockup';
+import { request } from './SudokuUtilities';
 
 class SudokuMain extends React.Component {
 	constructor(props) {
@@ -166,16 +167,31 @@ class SudokuMain extends React.Component {
 		console.log('Main panel mounted.  Call out to get the initial game state.');
 		// This will be replaced with a server call once we have a server to call
 
-		const boardPromise = Promise.resolve(JSON.parse(requestInitialBoard(3)));
-
-		boardPromise.then(
-			(board) => (this.setState({initialBoard: board}))
+		this.requestInitialBoard().then(
+			(successResponse) => {this.receiveInitialBoard(successResponse);},
+			(failureResponse) => {console.log('ERROR requesting initial board: ' + failureResponse);}
 			);
 
 		this.requestHeuristicList().then(
 			heuristicList => { this.populateHeuristicList(heuristicList); }
 			);
 		
+	}
+
+	requestInitialBoard(serverAddress) {
+		if (serverAddress === undefined) {
+			serverAddress = 'http://localhost:5000';
+		}
+		return request({
+			'method': 'GET',
+			'url': serverAddress + '/sudoku/request/initialBoard'
+		});
+	}
+
+	receiveInitialBoard(response) {
+		const board = JSON.parse(response);
+		console.log('Initial board: name ' + board.name + ', serial number ' + board.serialNumber);
+		this.setState({initialBoard: board});
 	}
 }
 
