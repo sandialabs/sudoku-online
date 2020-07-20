@@ -39,10 +39,6 @@ import React from 'react';
 // in each cell.
   
 class SudokuChoiceGrid extends React.Component {
-	constructor(props) {
-		super(props);
-	}
-
 	render() {
 		let gridRows = this.makeChoiceGridContents();
 		return (
