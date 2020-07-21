@@ -71,7 +71,9 @@ class ConfigurationData():
             # Note that the apply_ops action is redundant with 'heuristics' in the request, but that's OK.
             # We could leave this as an assumption, but let's make it explicit
             self.rules['canChangeLogicalOperators'] = True
-            self.actions.append('applyops')
+            if self.log.puzzle:
+                # We have a puzzle with no name, so we still need to add 'applyops' to the list of actions
+                self.actions.append('applyops')
         self.verify()
 
     def copy(self):

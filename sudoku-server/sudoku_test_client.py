@@ -120,7 +120,7 @@ def do_tests():
                    lambda: requests.get(
                        f'http://localhost:5000/sudoku/request/boardsForGame/{gamename}'))
 
-    boards = do_single_test(f'getting randome game',
+    boards = do_single_test(f'getting random game',
                             lambda d_list: (len(d_list) > 0),
                             lambda: requests.get(
                                 'http://localhost:5000/sudoku/request/boardsForGame/get_me_something_random'))
@@ -182,13 +182,13 @@ def do_tests():
         'heuristics': ['inclusion', 'pointingpairs']}
     result = do_single_test(
         f'pivot on cell, applying selected ops inclusion, pointing pairs to board for logical ops upfront test after first inclusion, pointing_pairs test',
-        lambda d_boards: ((len(d_boards) == 1)
-                          and ('puzzleName' in d_boards[0])
-                          and (d_boards[0]['puzzleName'] == boardname)
+        lambda d_boards: ((len(d_boards) == 4)
+                          and ('puzzleName' in d_boards[1])
+                          and (d_boards[1]['puzzleName'] == boardname)
                           and ('availableActions' in d_boards[0])
-                          and (set(d_boards[0]['availableActions']) == set(board_update_descriptions.basic_actions_description.keys()))
-                          and ('assignments' in d_boards[0])
-                          and (d_boards[0]['assignments'] == [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
+                          and (set(d_boards[1]['availableActions']) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and ('assignments' in d_boards[1])
+                          and (d_boards[1]['assignments'] == [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
         lambda: requests.post(
             'http://localhost:5000/sudoku/request/heuristic',
             json=log_req))

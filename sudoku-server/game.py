@@ -85,7 +85,8 @@ def get_boards_for_game(name):
 
     game_names = __configure_games(
         list.copy(game['puzzles']), list.copy(game['config_alterations']))
-    config_data.defaultConfig.debug_print('load game', name, f'{game_names}')
+    config_data.defaultConfig.debug_print(
+        'load game', f'name: {game_names}', None)
     return game_names
 
 
@@ -188,7 +189,7 @@ def parse_and_apply_action(content):
             logicalops = content['heuristics']
             assert isinstance(logicalops, list), \
                 "Failed assumption that the parsed action argument heuristics ia  list."
-            for brd in result:
+            for brd in collected:
                 result.extend(solvers.take_action(brd, 'applyops', logicalops))
         else:
             result = collected
@@ -221,7 +222,7 @@ def get_possible_operators():
     return operators
 
 
-def get_possible_actions():
+def get_cell_actions():
     """ Return a list of all possible actions for this game.
 
     May eventually want to update to alter possible actions for all possible games. """

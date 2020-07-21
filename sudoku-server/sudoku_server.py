@@ -78,7 +78,7 @@ def list_possible_actions():
     Possible actions include selectValueForCell (cell_id, value), pivotOnCell (cell_id),
     and applyLogicalOperators (list of logical operators to apply)
     """
-    return jsonify(game.get_possible_actions())
+    return jsonify(game.get_cell_actions())
 
 
 if __name__ == '__main__':
