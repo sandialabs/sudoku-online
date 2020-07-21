@@ -596,9 +596,7 @@ class Board():
             brd['conflictingCells'] = invalid_locs
         if self._is_background:
             brd['backtrackingBoard'] = True
-        brd['puzzleName'] = self.config.log.getName()
-        if self.config.actions:
-            brd['availableActions'] = self.config.actions
+        brd = self.config.add_config_mappings_to_dict(brd)
         return brd
         # return json.dumps(brd)
 

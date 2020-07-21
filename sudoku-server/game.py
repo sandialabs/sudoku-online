@@ -42,7 +42,11 @@ def get_initial_board(content):
     full_board = board.Board(puzzle, degree, name)
     config_data.defaultConfig.debug_print('load puzzle', name, full_board)
     if '?select_ops_upfront' in name:
+        # For the initial board only, the only possible action is selectOps
+        #   and the canChangeLogicalOperators is True
+        #   so let's just overwrite them here.
         full_board.config.actions = ['selectops']
+        full_board.config.rules['canChangeLogicalOperators'] = True
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     return full_board.getSimpleJson()

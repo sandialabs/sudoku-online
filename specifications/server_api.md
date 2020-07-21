@@ -78,11 +78,11 @@ Example response:
 
 ### List Actions
 
-*URL*: `/sudoku/request/list_actions`
+*URL*: `/sudoku/request/list_cell_actions`
 
 *Body*: No body required.
 
-*Response*: List of actions with both internal name and user-visible name and cost.
+*Response*: List of actions that the user can take on a cell with both internal name and user-visible name and cost.
 
 Example response:
 

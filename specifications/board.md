@@ -30,6 +30,7 @@ We may want to highlight certain cells in the board, or pass around additional m
 - *solved*: optional boolean indicating whether this board represents an acceptable and complete solution
 - *backtrackingBoard*: optional boolean indicating whether this board is only available to allow the user to backtrack and handle incorrect assignments or exclusions
 - *puzzleName*: optional string name of the puzzle
+- *rules*: a dictionary relating the rules under which a board shall be interpreted
 
 ### Current Assignments
 
@@ -45,6 +46,9 @@ Each cell in this array will contain a list.  If the corresponding cell in the C
 
 Open question: do we propagate the exclusion constraint ("this value is not available because it's already taken") automatically or do we make the user ask for it?
 
+### Rules
+
+- *canChangeLogicalOperators*: If True, the logical operators may be selected by the user for this board.  Default (if not present) is True.
 
 ## Example
 
@@ -75,8 +79,9 @@ The example move lists are probably incorrect.  They're intended as examples of 
 
     goalCell: [0, 2],
     accessibleCells: [ [3, 0], [3, 3] ],
-    solved: True
+    solved: True,
 
-    availableActions: ["applyops", "pivot", "assign", "exclude"]
+    availableActions: ["applyops", "pivot", "assign", "exclude"],
+    rules : {'canChangeLogicalOperators': True}
 }
 ```

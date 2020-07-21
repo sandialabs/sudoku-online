@@ -12,144 +12,186 @@ import game
 import requests
 import json
 from flask import jsonify
+import board_update_descriptions
 
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "underconstrained1",
-                                                                               'degree': 3})
-if res.ok:
+
+def do_single_test(dbg_message, success_func, req_func):
+    """ Ensure that results are as expected per success_func, which takes in the json results expected. """
+    print(f'Testing {dbg_message}.')
+    res = req_func()
+    if not res.ok:
+        print(f'Failed to get result {dbg_message}.')
+        return
     result = res.json()
+    if success_func(result):
+        print(f'PASSED TEST {dbg_message}.')
+    else:
+        print(f'Failed succes check for {dbg_message}.')
     print(json.dumps(result))
+    return result
 
-res = requests.get('http://localhost:5000/sudoku/request/initialBoard')
-if res.ok:
-    result = res.json()
-    print(json.dumps(result))
 
-# MAL TODO use appropriate paths for these tests
-with open('../tests/json/fiendish2-5788010997871579626.pivot-1-4.json') as f:
-    action = json.load(f)
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=action)
-if res.ok:
-    print(json.dumps(res.json()))
+def do_tests():
+    boardname = "underconstrained1"
+    msg = f'getting specific {boardname}'
+    do_single_test(msg,
+                   lambda d_board: 'puzzleName' in d_board and d_board['puzzleName'] == boardname,
+                   lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                                         json={"name": boardname,
+                                               'degree': 3}))
 
-with open('../tests/json/fiendish2-5788010997871579626.assign-1-4-to6.json') as f:
-    action = json.load(f)
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=action)
-if res.ok:
-    print(json.dumps(res.json()))
+    do_single_test(f'getting a random board',
+                   lambda d_board: ('puzzleName' in d_board),
+                   lambda: requests.get('http://localhost:5000/sudoku/request/initialBoard'))
 
-with open('../tests/json/fiendish2-5788010997871579626.exclude-1-4-rm6.json') as f:
-    action = json.load(f)
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=action)
-if res.ok:
-    print(json.dumps(res.json()))
+    # MAL TODO use appropriate paths for these tests
+    with open('../tests/json/fiendish2-5788010997871579626.pivot-1-4.json') as f:
+        action = json.load(f)
+    do_single_test(f'pivot action',
+                   lambda d_array: (len(d_array) == 3),
+                   lambda: requests.post(
+                       'http://localhost:5000/sudoku/request/heuristic', json=action))
 
-print("Trying to list heuristics")
-res = requests.get('http://localhost:5000/sudoku/request/list_heuristics')
-if res.ok:
-    print(json.dumps(res.json()))
+    with open('../tests/json/fiendish2-5788010997871579626.assign-1-4-to6.json') as f:
+        action = json.load(f)
+    do_single_test(f'assign action',
+                   lambda d_array: (len(d_array) == 2),
+                   lambda: requests.post(
+                       'http://localhost:5000/sudoku/request/heuristic', json=action))
 
-res = requests.get('http://localhost:5000/sudoku/request/list_actions')
-if res.ok:
-    print(json.dumps(res.json()))
+    with open('../tests/json/fiendish2-5788010997871579626.exclude-1-4-rm6.json') as f:
+        action = json.load(f)
+    do_single_test(f'exclude action',
+                   lambda d_array: (len(d_array) == 2),
+                   lambda: requests.post(
+                       'http://localhost:5000/sudoku/request/heuristic', json=action))
 
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "test2-i24e40",
-                                                                               'degree': 3})
-if res.ok:
-    result = res.json()
-    print(json.dumps(result))
+    do_single_test(f'list logical operators / heuristics',
+                   lambda d_list: (len(d_list) == len(
+                       board_update_descriptions.operators_description.keys()) - 1),
+                   lambda: requests.get('http://localhost:5000/sudoku/request/list_heuristics'))
 
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "test36-i30e33np2hp2yw1",
-                                                                               'degree': 3})
-if res.ok:
-    result = res.json()
-    print(json.dumps(result))
+    do_single_test(f'list cell actions',
+                   lambda d_list: (len(d_list) == len(
+                       board_update_descriptions.basic_actions_description.keys())),
+                   lambda: requests.get('http://localhost:5000/sudoku/request/list_cell_actions'))
 
-print("Interacting, testing logical ops")
+    hard4_board = do_single_test(f'getting hard4 board for future tests',
+                                 lambda d_board: (('puzzleName' in d_board)
+                                                  and (d_board['puzzleName'] == 'hard4')),
+                                 lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                                                       json={"name": "hard4", "degree": 3}))
 
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": "hard4",
-                                                                               'degree': 3})
-if res.ok:
-    result = res.json()
-    print(json.dumps(result))
+    # MAL TODO consider better success functions from here on out.
+    new_req = {'board': hard4_board, 'action': {
+        'action': 'applyops', 'operators': ['inclusion']}}
+    just_inclusion = do_single_test(f'applying inclusion to hard4',
+                                    lambda d_list: ((len(d_list) == 1)
+                                                    and ('assignments' in d_list[0])
+                                                    and (d_list[0]['assignments'][0] == [2, None, None, 5, None, 8, None, 0, 1])),
+                                    lambda: requests.post(
+                                        'http://localhost:5000/sudoku/request/heuristic',
+                                        json=new_req))
 
-new_req = {'board': result, 'action': {
-    'action': 'applyops', 'operators': ['inclusion']}}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=new_req)
-if res.ok:
-    result2 = res.json()
-    print(json.dumps(result2))
+    new_req2 = {'board': just_inclusion[0], 'action': {
+        'action': 'applyops', 'operators': ['inclusion']}}
+    inclusion_squared = do_single_test(f'applying inclusion to hard4 a second time',
+                                       lambda d_list: ((len(d_list) == 1)
+                                                       and ('assignments' in d_list[0])
+                                                       and (d_list[0]['assignments'] == just_inclusion[0]['assignments'])),
+                                       lambda: requests.post(
+                                           'http://localhost:5000/sudoku/request/heuristic',
+                                           json=new_req2))
 
-new_req2 = {'board': result2[0], 'action': {
-    'action': 'applyops', 'operators': ['inclusion']}}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=new_req2)
-if res.ok:
-    result3 = res.json()
-    print(json.dumps(result3))
+    new_req3 = {'board': inclusion_squared[0], 'action': {
+        'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
+    logical_ops = do_single_test(f'applying inclusion and pointing pairs to hard4 (after inclusion 2x)',
+                                 lambda d_list: ((len(d_list) == 1)
+                                                 and ('assignments' in d_list[0])
+                                                 and (d_list[0]['assignments'] == [[2, 3, 4, 5, 7, 8, 6, 0, 1], [8, 0, 6, 1, 2, 4, 3, 7, 5], [7, 1, 5, 3, 6, 0, 8, 2, 4], [5, 4, 8, 6, 3, 7, 0, 1, 2], [3, 2, 1, 8, 0, 5, 4, 6, 7], [0, 6, 7, 4, 1, 2, 5, 3, 8], [6, 5, 2, 7, 4, 3, 1, 8, 0], [4, 7, 3, 0, 8, 1, 2, 5, 6], [1, 8, 0, 2, 5, 6, 7, 4, 3]])),
+                                 lambda: requests.post(
+                                     'http://localhost:5000/sudoku/request/heuristic',
+                                     json=new_req3))
 
-new_req2 = {'board': result3[0], 'action': {
-    'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=new_req2)
-if res.ok:
-    result3 = res.json()
-    print(json.dumps(result3))
+    gamename = 'test_game1_4'
+    do_single_test(f'getting game {gamename}',
+                   lambda d_list: ((len(d_list) == 4)
+                                   and ('hard4' in d_list)),
+                   lambda: requests.get(
+                       f'http://localhost:5000/sudoku/request/boardsForGame/{gamename}'))
 
-# TODO MAL Consider trying to check whether result2 equals result3
+    boards = do_single_test(f'getting randome game',
+                            lambda d_list: (len(d_list) > 0),
+                            lambda: requests.get(
+                                'http://localhost:5000/sudoku/request/boardsForGame/get_me_something_random'))
 
-res = requests.get(
-    'http://localhost:5000/sudoku/request/boardsForGame/test_game1_6')
-if res.ok:
-    print(res.json())
+    # print(f'Getting boards one at a time from {boards}')
 
-res = requests.get(
-    'http://localhost:5000/sudoku/request/boardsForGame/get_me_something_random')
-if res.ok:
-    boards = res.json()
-    print(boards)
+    for b in boards:
+        msg = f'getting board {b} from game one at a time'
+        do_single_test(msg,
+                       lambda d_board: (('puzzleName' in d_board)
+                                        and (d_board['puzzleName'] == b)),
+                       lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                                             json={"name": b,
+                                                   'degree': 3}))
 
-print(f'Getting boards one at a time from {boards}')
+    boardname = 'pointing_pair_test?select_ops_upfront'
+    result_logical_ops_upfront = do_single_test(
+        f'get board for logical ops upfront selection',
+        lambda d_board: (('puzzleName' in d_board)
+                         and (d_board['puzzleName'] == boardname)
+                         and ('availableActions' in d_board and d_board['availableActions'] == ['selectops'])),
+        lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                              json={"name": 'pointing_pair_test?select_ops_upfront',
+                                    "degree": 3}))
 
-for b in boards:
-    res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": b,
-                                                                                   "degree": 3})
-    if res.ok:
-        result = res.json()
-        print(json.dumps(result))
+    log_req = {'board': result_logical_ops_upfront, 'action': {
+        'action': 'selectops', 'operators': ['inclusion', 'pointingpairs']}}
+    result_applying_ops_upfront_noywings = do_single_test(
+        f'apply inclusion, pointing pairs to board for logical ops upfront test',
+        lambda d_boards: ((len(d_boards) == 1)
+                          and ('puzzleName' in d_boards[0])
+                          and (d_boards[0]['puzzleName'] == boardname)
+                          and ('availableActions' in d_boards[0])
+                          and (set(d_boards[0]['availableActions']) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and ('assignments' in d_boards[0])
+                          and (d_boards[0]['assignments'] != [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
+        lambda: requests.post(
+            'http://localhost:5000/sudoku/request/heuristic',
+            json=log_req))
 
-print(f'Testing logical ops upfront selection')
-res = requests.post('http://localhost:5000/sudoku/request/initialBoard', json={"name": 'pointing_pair_test?select_ops_upfront',
-                                                                               "degree": 3})
-if res.ok:
-    result_log = res.json()
-    print(json.dumps(result_log))
+    log_req = {'board': result_logical_ops_upfront, 'action': {
+        'action': 'selectops', 'operators': ['inclusion', 'pointingpairs', 'ywings']}}
+    result_applying_ops_upfront_with_ywings = do_single_test(
+        f'apply inclusion, pointing pairs, ywings to board for logical ops upfront test',
+        lambda d_boards: ((len(d_boards) == 1)
+                          and ('puzzleName' in d_boards[0])
+                          and (d_boards[0]['puzzleName'] == boardname)
+                          and ('availableActions' in d_boards[0])
+                          and (set(d_boards[0]['availableActions']) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and ('assignments' in d_boards[0])
+                          and (d_boards[0]['assignments'] == [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
+        lambda: requests.post(
+            'http://localhost:5000/sudoku/request/heuristic',
+            json=log_req))
 
-log_req = {'board': result_log, 'action': {
-    'action': 'selectops', 'operators': ['inclusion', 'pointingpairs']}}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=log_req)
-if res.ok:
-    result1 = res.json()
-    print(json.dumps(result1))
+    # MAL TODO Not working yet.
+    log_req = {'board': result_applying_ops_upfront_noywings[0], 'action': {
+        'action': 'pivot', 'cell': [0, 0]},
+        'heuristics': ['inclusion', 'pointingpairs']}
+    result = do_single_test(
+        f'pivot on cell, applying selected ops inclusion, pointing pairs to board for logical ops upfront test after first inclusion, pointing_pairs test',
+        lambda d_boards: ((len(d_boards) == 1)
+                          and ('puzzleName' in d_boards[0])
+                          and (d_boards[0]['puzzleName'] == boardname)
+                          and ('availableActions' in d_boards[0])
+                          and (set(d_boards[0]['availableActions']) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and ('assignments' in d_boards[0])
+                          and (d_boards[0]['assignments'] == [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
+        lambda: requests.post(
+            'http://localhost:5000/sudoku/request/heuristic',
+            json=log_req))
 
-log_req = {'board': result_log, 'action': {
-    'action': 'selectops', 'operators': ['inclusion', 'pointingpairs', 'ywings']}}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=log_req)
-if res.ok:
-    result2 = res.json()
-    print(json.dumps(result2))
 
-# MAL TODO Not working yet.
-log_req = {'board': result1[0], 'action': {
-    'action': 'pivot', 'cell': [0, 0]},
-    'heuristics': ['inclusion', 'pointingpairs']}
-res = requests.post(
-    'http://localhost:5000/sudoku/request/heuristic', json=log_req)
-if res.ok:
-    result3 = res.json()
-    print(json.dumps(result3))
+do_tests()

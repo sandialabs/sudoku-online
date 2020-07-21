@@ -21,6 +21,7 @@ class ConfigurationData():
         if name:
             name = name.strip()
         self.log = logger.SudokuLogger(puzzle, name)
+        self.rules = {}
 
         self.actions = [
             k for k in board_update_descriptions.basic_actions_description.keys()]
@@ -60,9 +61,16 @@ class ConfigurationData():
 
     def apply_config_from_name(self):
         """ Parsing the puzzle name from the logger, apply required configuration. """
-        if not self.log or not self.log.getName():
+        if not self.log:
             return
-        if '?select_ops_upfront' not in self.log.getName():
+        if self.log.getName() and '?select_ops_upfront' in self.log.getName():
+            # If we are selecting logical operators up front, they can't be changed later in the game
+            self.rules['canChangeLogicalOperators'] = False
+        else:
+            # Otherwise they can be changed, and we have an additional action (applyops) to support that
+            # Note that the apply_ops action is redundant with 'heuristics' in the request, but that's OK.
+            # We could leave this as an assumption, but let's make it explicit
+            self.rules['canChangeLogicalOperators'] = True
             self.actions.append('applyops')
         self.verify()
 
@@ -70,6 +78,23 @@ class ConfigurationData():
         """ Return a deepcopy of myself. """
         return copy.deepcopy(self)
         # MAL TODO See if the logger is being deepcopied properly too and not getting all wound up
+
+    def add_config_mappings_to_dict(self, json_dict):
+        """ Add the config mappings that ought to be shared with the client to the board dictionary
+            that will be sent via json. """
+        json_dict['puzzleName'] = self.log.getName()
+        if self.actions:
+            json_dict['availableActions'] = self.actions
+        if self.rules:
+            json_dict['rules'] = self.rules
+        return json_dict
+
+    def update_config_from_dict_mappings(self, json_dict):
+        """ Add the configuration specified in the board json dictionary. """
+        if 'availableActions' in json_dict:
+            self.actions = json_dict['availableActions']
+        if 'rules' in json_dict:
+            self.rules = json_dict['rules']
 
     def verify(self):
         """ Perform a series of assertions to ensure that the configurations are self-consistent.

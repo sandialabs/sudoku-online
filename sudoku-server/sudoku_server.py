@@ -71,7 +71,7 @@ def list_possible_operators():
     return jsonify(game.get_possible_operators())
 
 
-@app.route('/sudoku/request/list_actions', methods=['GET'])
+@app.route('/sudoku/request/list_cell_actions', methods=['GET'])
 def list_possible_actions():
     """ Returns the possible actions that could be applied.
 
