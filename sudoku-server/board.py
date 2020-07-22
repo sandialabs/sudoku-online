@@ -12,7 +12,6 @@ import logger
 # import json
 import uuid
 import config_data
-import board_update_descriptions
 
 
 class Cell():
@@ -419,6 +418,8 @@ class Board():
         self._id = uuid.uuid1().int >> 64
         self._parent_id = None
         self._is_background = False
+        self.accessible_cells = None
+        self.goal_cell = None
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
@@ -457,6 +458,7 @@ class Board():
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
+        self.computeAccessibleCells()
 
     def __str__(self):
         output = "Board " + str(self._id) \
@@ -468,6 +470,36 @@ class Board():
             output += str(self._state[key]) + '\n'
 
         return output
+
+    def computeAccessibleCells(self):
+        """ If we have a goal cell, compute accessible cells. """
+        if self.config.goal_cell_name:
+            offlimits = self.getAssociatedCells(self.config.goal_cell_name)
+            offlimits.append(self.config.goal_cell_name)
+
+            def inlimits(cell):
+                if cell == self.config.goal_cell_name:
+                    return False
+                if self.getCell(cell).isCertain():
+                    return False
+                if cell in offlimits:
+                    return False
+                return True
+
+            self.accessible_cells = \
+                [cell for cell in filter(inlimits,
+                                         self.getAllCells())]
+            if len(self.accessible_cells) == 0:
+                # Devolve to any uncertain cells except the goal cell
+                def inlimits2(cell):
+                    if cell == self.config.goal_cell_name:
+                        return False
+                    if self.getCell(cell).isCertain():
+                        return False
+                    return True
+                self.accessible_cells = \
+                    [cell for cell in filter(inlimits2,
+                                             self.getAllCells())]
 
     def setToBackground(self):
         """ Sets this board to indicate whether it should be considered a background board.
@@ -597,6 +629,11 @@ class Board():
         if self._is_background:
             brd['backtrackingBoard'] = True
         brd = self.config.add_config_mappings_to_dict(brd)
+        self.computeAccessibleCells()
+        if self.accessible_cells:
+            accessible_locs = [list(type(self).getLocations(
+                id, self.getDegree())) for id in self.accessible_cells]
+            brd['accessibleCells'] = accessible_locs
         return brd
         # return json.dumps(brd)
 

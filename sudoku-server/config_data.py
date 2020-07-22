@@ -89,6 +89,9 @@ class ConfigurationData():
         # TODO MAL move configuration in here
         # self.verbosity = 0
 
+        self.goal_cell_name = None
+        self.accessible_cells = []
+
         self.apply_config_from_name()
         self.verify()
 
@@ -96,7 +99,8 @@ class ConfigurationData():
         """ Parsing the puzzle name from the logger, apply required configuration. """
         if not self.log:
             return
-        if self.log.getName() and '?select_ops_upfront' in self.log.getName():
+        name = self.log.getName()
+        if name and '?select_ops_upfront' in name:
             # If we are selecting logical operators up front, they can't be changed later in the game
             self.rules['canChangeLogicalOperators'] = False
         else:
@@ -107,6 +111,13 @@ class ConfigurationData():
             if self.log.puzzle:
                 # We have a puzzle with no name, so we still need to add 'applyops' to the list of actions
                 self.actions.append('applyops')
+        if name and '?goal=' in name:
+            # Get the part specifying the goal cell
+            cell = name.split('?goal=')[1]
+            # And remove anything after the goal cell name if there is anything
+            cell = cell.split('?')[0] if '?' in cell else cell
+            self.goal_cell_name = cell
+
         self.verify()
 
     def copy(self):
@@ -124,6 +135,8 @@ class ConfigurationData():
             json_dict['availableActions'] = self.actions
         if self.rules:
             json_dict['rules'] = self.rules
+        if self.goal_cell_name:
+            json_dict['goal'] = self.goal_cell_name
         return json_dict
 
     def verify(self):
@@ -134,9 +147,6 @@ class ConfigurationData():
         if self.terminate_on_successful_operation:
             assert self.cost_per_matching_set, \
                 'Cannot terminate on successful operation unless applying cost on every matching set'
-        if self.cost_per_attempted_application:
-            assert self.cost_per_matching_set == False, \
-                'Assuming for now that if we are costing per attempted application then we are not also costing on every matched set.'
         # This assumption is because the operators.apply_free_operators, which is used to simplify
         #   the initial board, checks self.simplify before actually executing anything
         if self.simplify_initial_board:

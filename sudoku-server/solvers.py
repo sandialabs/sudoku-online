@@ -219,7 +219,10 @@ def expand_cell(sboard, cell_id):
     If identified cell has only one possible value, simply returns [sboard]
     NOTE: propagation of the assigned value is not performed automatically.
     """
-
+    sboard.computeAccessibleCells()
+    if sboard.accessible_cells:
+        assert cell_id in sboard.accessible_cells, \
+            f'Cannot pivot on cell {cell_id} that is not accessible in {sboard.accessible_cells}'
     cell = sboard.getCell(cell_id)
     if(cell.isCertain()):
         return [sboard]
@@ -299,7 +302,10 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
             cell_id in sboard.
     NOTE: propagation of the assigned value is not performed automatically.
     """
-
+    sboard.computeAccessibleCells()
+    if sboard.accessible_cells:
+        assert cell_id in sboard.accessible_cells, \
+            f'Cannot pivot on cell {cell_id} that is not accessible in {sboard.accessible_cells}'
     cell = sboard.getCell(cell_id)
     if(cell.isCertain()):
         return [sboard]

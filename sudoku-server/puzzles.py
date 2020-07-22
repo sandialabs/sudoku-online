@@ -106,5 +106,9 @@ games = {
     'test_game1_4': {
         'puzzles': ['test2-i24e40', 'xwing_test', 'hard4', 'underconstrained1'],
         'config_alterations': ['select_ops_upfront']
+    },
+    'test_game_ptgprs': {
+        'puzzles': ['pointing_pair_test?goal=A9', 'pointing_pair_test?goal=E2', 'pointing_pair_test?goal=B1'],
+        'config_alterations': ['select_ops_upfront']
     }
 }

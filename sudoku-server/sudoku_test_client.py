@@ -128,7 +128,7 @@ def do_tests():
     # print(f'Getting boards one at a time from {boards}')
 
     for b in boards:
-        msg = f'getting board {b} from game one at a time'
+        msg = f'getting board {b} from {gamename} one at a time'
         do_single_test(msg,
                        lambda d_board: (('puzzleName' in d_board)
                                         and (d_board['puzzleName'] == b)),
@@ -176,7 +176,6 @@ def do_tests():
             'http://localhost:5000/sudoku/request/heuristic',
             json=log_req))
 
-    # MAL TODO Not working yet.
     log_req = {'board': result_applying_ops_upfront_noywings[0], 'action': {
         'action': 'pivot', 'cell': [0, 0]},
         'heuristics': ['inclusion', 'pointingpairs']}
@@ -192,6 +191,45 @@ def do_tests():
         lambda: requests.post(
             'http://localhost:5000/sudoku/request/heuristic',
             json=log_req))
+
+    gamename = 'test_game_ptgprs'
+    boards = do_single_test(f'getting game {gamename}',
+                            lambda d_list: ((len(d_list) == 3)
+                                            and ('pointing_pair_test?goal=B1' in d_list)),
+                            lambda: requests.get(
+                                f'http://localhost:5000/sudoku/request/boardsForGame/{gamename}'))
+
+    for b in boards:
+        msg = f'getting board {b} from {gamename} one at a time'
+        do_single_test(msg,
+                       lambda d_board: (('puzzleName' in d_board)
+                                        and (d_board['puzzleName'] == b)),
+                       lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                                             json={"name": b,
+                                                   'degree': 3}))
+
+    boardname = 'pointing_pair_test?goal=B1'
+    accessible_cells = do_single_test(
+        f'get board for accessible_cells test',
+        lambda d_board: (('puzzleName' in d_board)
+                         and (d_board['puzzleName'] == boardname)
+                         and ('accessibleCells' in d_board)
+                         and ([1, 0] not in d_board['accessibleCells'])),
+        lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                              json={"name": boardname,
+                                    "degree": 3}))
+
+    log_req = {'board': accessible_cells, 'action': {
+        'action': 'pivot', 'cell': [4, 1]},
+        'heuristics': ['inclusion', 'pointingpairs']}
+    do_single_test(
+        f'tried to pivot on valid cell',
+        lambda d_boards: (('puzzleName' in d_boards[0])
+                          and (d_boards[0]['puzzleName'] == boardname)
+                          and ('accessibleCells' in d_boards[0])
+                          and ([1, 0] not in d_boards[0]['accessibleCells'])),
+        lambda: requests.post('http://localhost:5000/sudoku/request/heuristic',
+                              json=log_req))
 
 
 do_tests()
