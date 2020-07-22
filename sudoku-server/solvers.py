@@ -89,14 +89,26 @@ def apply_free_operators(sboard, force=False):
         return sboard
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1
+    # Apply the free operators to a fixed point
+    # All of these fancy shenanigans with control flow
+    #   are just to ensure that these operators are applied
+    #   in the same order whether they are free or paid
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
         for op in sboard.config.free_operations:
             sboard = get_operator(op)(sboard)
             nValues = calculate_status(sboard, op)
-            if nValues < prevValues:
-                # Use the computationally cheapest free operator
-                break
+            if (nValues < prevValues):
+                # If this is the first operator, and it ran
+                #   to completion, then we can pretend the it
+                #   was the base of the fixed point
+                if (op == sboard.config.free_operations[0]
+                    and sboard.config.explore_to_fixed_point
+                        and not sboard.config.terminate_on_successful_operation):  # This last should be redundant
+                    prevValues = nValues
+                # Otherwise we need to restart
+                elif sboard.config.restart_op_search_on_match:
+                    break
     return sboard
 
 
@@ -143,26 +155,31 @@ def logical_solve(sboard, logical_ops):
     Currently iterates between propagating exclusions and assigning
     inclusions until no new constraints are identified.
     """
-
     sboard = apply_free_operators(sboard)
     nValues = sboard.countUncertainValues()
     prevValues = nValues + 1  # Force the first iteration of the loop
     # Iterate until we don't change the board or no uncertain values remain
     while(prevValues > nValues and nValues > 0):
         prevValues = nValues
-
         for op in logical_ops:
             sboard = get_operator(op)(sboard)
-            nValues = calculate_status(sboard, op)
-            if nValues < prevValues:
-                # We progressed the board
+            opValues = calculate_status(sboard, op)
+            if (opValues < prevValues):
+                # Apply free operators if we made any progress
                 sboard = apply_free_operators(sboard)
-                nValues = sboard.countUncertainValues()
-                if sboard.config.restart_op_search_on_match:
-                    # If the operator made a change to board and restart is True,
-                    # we will go back to the beginning of logical_ops
+                freeValues = sboard.countUncertainValues()
+                nValues = freeValues
+                # If this is the first operator, and it ran
+                #   to completion, then we can pretend the it
+                #   was the base of the fixed point
+                if (op == logical_ops[0]
+                    and sboard.config.explore_to_fixed_point
+                        and not sboard.config.terminate_on_successful_operation):  # This last should be redundant
+                    prevValues = opValues
+                # Otherwise we need to restart, unless the free operators didn't change anything
+                if (nValues < prevValues
+                        and sboard.config.restart_op_search_on_match):
                     break
-
     return sboard
 
 
@@ -208,10 +225,10 @@ def expand_cell(sboard, cell_id):
         expansion.append(b)
 
         progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
-        b.config.complete_operation('pivot', progress, b)
+        b.config.complete_operation('pivot', progress, b, True)
 
     progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
-    sboard.config.complete_operation('pivot', progress, sboard)
+    sboard.config.complete_operation('pivot', progress, sboard, True)
 
     return expansion
 
@@ -297,15 +314,15 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
     progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
-    assigned.config.complete_operation(action, progress, assigned)
+    assigned.config.complete_operation(action, progress, assigned, True)
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
     progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
-    removed.config.complete_operation(action, progress, removed)
+    removed.config.complete_operation(action, progress, removed, True)
 
     progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
-    sboard.config.complete_operation(action, progress, sboard)
+    sboard.config.complete_operation(action, progress, sboard, True)
 
     return expansion
 

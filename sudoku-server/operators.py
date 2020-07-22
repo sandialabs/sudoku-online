@@ -35,6 +35,7 @@ def logical_exclusion(sboard):
 
     # get the list of cells with singleton value set
     num_exclusions = 0
+    num_exclusion_assignments = 0
     plist = sboard.getCertainCells()
     for cell in plist:
 
@@ -70,6 +71,7 @@ def logical_exclusion(sboard):
                         # TODO MAL Does exclusion trigger when values are removed as possibilities,
                         # or only when an assignment is made?
                         # Here, we assume the latter.
+                        num_exclusion_assignments += 1
                         terminate = sboard.config.match_set_operation(
                             'exclusion',
                             f'Assigned {c_name} = {board.Cell.displayValue(c.getCertainValue())}',
@@ -85,9 +87,16 @@ def logical_exclusion(sboard):
 
         cell.setPropagated()
 
-    if num_exclusions > 0:
-        sboard.config.complete_operation(
-            'exclusion', f'Removed {num_exclusions} possible values', sboard)
+    # Here, we force a set match for exclusions if no cells were assigned
+    #   since exclusion is being treated oddly above.  This allows board progression
+    #   similar whether things are being counted per_match or per_successful_application
+    if (num_exclusion_assignments == 0
+            and num_exclusions > 0):
+        sboard.config.match_set_operation(
+            'exclusion', f'No exclusions resulted in assignments, but the board was updated', sboard)
+    sboard.config.complete_operation(
+        'exclusion', f'Removed {num_exclusions} possible values', sboard,
+        num_exclusions > 0)
 
     return sboard
 
@@ -149,9 +158,9 @@ def logical_inclusion(sboard):
                         units_to_check.extend(
                             board.Board.getCellUnits(assign_cell))
 
-    if num_inclusions > 0:
-        sboard.config.complete_operation(
-            'inclusion', f'Assigned {num_inclusions} cells', sboard)
+    sboard.config.complete_operation(
+        'inclusion', f'Assigned {num_inclusions} cells', sboard,
+        num_inclusions > 0)
 
     return sboard
 
@@ -261,9 +270,9 @@ def find_hidden_pairs(sboard):
                     if sboard.config.explore_to_fixed_point:
                         num_new_hidden_pairs += 1
 
-    if num_hidden_pairs > 0:
-        sboard.config.complete_operation(
-            'hiddenpairs', f'Found {num_hidden_pairs} hidden pairs that affected board.', sboard)
+    sboard.config.complete_operation(
+        'hiddenpairs', f'Found {num_hidden_pairs} hidden pairs that affected board.', sboard,
+        num_hidden_pairs > 0)
     return sboard
 
 
@@ -346,9 +355,9 @@ def find_hidden_triples(sboard):
                             if sboard.config.explore_to_fixed_point:
                                 num_new_hidden_triples += 1
 
-    if num_hidden_triples > 0:
-        sboard.config.complete_operation(
-            'hiddentriples', f'Found {num_hidden_triples} hidden triples that affected board.', sboard)
+    sboard.config.complete_operation(
+        'hiddentriples', f'Found {num_hidden_triples} hidden triples that affected board.', sboard,
+        num_hidden_triples > 0)
     return sboard
 
 
@@ -453,9 +462,9 @@ def find_hidden_quads(sboard):
                                 if sboard.config.explore_to_fixed_point:
                                     num_new_hidden_quads += 1
 
-    if num_hidden_quads > 0:
-        sboard.config.complete_operation(
-            'hiddenquads', f'Found {num_hidden_quads} hidden quads that affected board.', sboard)
+    sboard.config.complete_operation(
+        'hiddenquads', f'Found {num_hidden_quads} hidden quads that affected board.', sboard,
+        num_hidden_quads > 0)
     return sboard
 
 
@@ -564,9 +573,9 @@ def find_naked_pairs(sboard):
                     if sboard.config.explore_to_fixed_point:
                         num_new_naked_pairs += 1
 
-    if num_naked_pairs > 0:
-        sboard.config.complete_operation(
-            'nakedpairs', f'Found {num_naked_pairs} naked pairs that affected board.', sboard)
+    sboard.config.complete_operation(
+        'nakedpairs', f'Found {num_naked_pairs} naked pairs that affected board.', sboard,
+        num_naked_pairs > 0)
     return sboard
 
 
@@ -641,9 +650,9 @@ def find_naked_triples(sboard):
                         if sboard.config.explore_to_fixed_point:
                             num_new_naked_triples += 1
 
-    if num_naked_triples > 0:
-        sboard.config.complete_operation(
-            'nakedtriples', f'Found {num_naked_triples} naked triples that affected board.', sboard)
+    sboard.config.complete_operation(
+        'nakedtriples', f'Found {num_naked_triples} naked triples that affected board.', sboard,
+        num_naked_triples > 0)
     return sboard
 
 
@@ -728,9 +737,9 @@ def find_naked_quads(sboard):
                             if sboard.config.explore_to_fixed_point:
                                 num_new_naked_quads += 1
 
-    if num_naked_quads > 0:
-        sboard.config.complete_operation(
-            'nakedquads', f'Found {num_naked_quads} naked quads that affected board.', sboard)
+    sboard.config.complete_operation(
+        'nakedquads', f'Found {num_naked_quads} naked quads that affected board.', sboard,
+        num_naked_quads > 0)
     return sboard
 
 
@@ -1010,12 +1019,14 @@ def __find_pointing_candidates(sboard, set_type):
                         if sboard.config.explore_to_fixed_point:
                             num_new_pointing_sets += 1
 
-    if num_pointing_pairs:
+    if set_type == 'pairs':
         sboard.config.complete_operation(
-            'pointingpairs', f'Found {num_pointing_pairs} pointing pairs that affected board.', sboard)
-    elif num_pointing_triples:
+            'pointingpairs', f'Found {num_pointing_pairs} pointing pairs that affected board.', sboard,
+            num_pointing_pairs > 0)
+    elif set_type == 'triples':
         sboard.config.complete_operation(
-            'pointingtriples', f'Found {num_pointing_triples} pointing triples that affected board.', sboard)
+            'pointingtriples', f'Found {num_pointing_triples} pointing triples that affected board.', sboard,
+            num_pointing_triples > 0)
     return sboard
 
 
@@ -1110,9 +1121,9 @@ def find_xwings(sboard):
                             if sboard.config.explore_to_fixed_point:
                                 num_new_xwings += 1
 
-    if num_xwings > 0:
-        sboard.config.complete_operation(
-            'xwings', f'Discovered {num_xwings} that affected the board', sboard)
+    sboard.config.complete_operation(
+        'xwings', f'Discovered {num_xwings} that affected the board', sboard,
+        num_xwings > 0)
     return sboard
 
 
@@ -1232,9 +1243,9 @@ def find_ywings(sboard):
                                     if sboard.config.explore_to_fixed_point:
                                         num_new_ywings += 1
 
-    if num_ywings > 0:
-        sboard.config.complete_operation(
-            'ywings', f'Discovered {num_ywings} that affected the board', sboard)
+    sboard.config.complete_operation(
+        'ywings', f'Discovered {num_ywings} that affected the board', sboard,
+        num_ywings > 0)
     return sboard
 
 
@@ -1315,7 +1326,7 @@ def find_xyzwings(sboard):
                                     if sboard.config.explore_to_fixed_point:
                                         num_new_xyzwings += 1
 
-    if num_xyzwings > 0:
-        sboard.config.complete_operation(
-            'xyzwings', f'Discovered {num_xyzwings} that affected the board', sboard)
+    sboard.config.complete_operation(
+        'xyzwings', f'Discovered {num_xyzwings} that affected the board', sboard,
+        num_xyzwings > 0)
     return sboard

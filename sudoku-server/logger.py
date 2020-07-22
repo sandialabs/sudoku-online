@@ -45,7 +45,13 @@ class SudokuLogger():
     def logOperatorProgress(cls, operator, verbosity1_str=None, board=None):
         """ Log that an operator made progress without logging a new application of the operator
             or causing the cost of the operator to be incurred.
-            Each argument is printed at increasing verbosity levels."""
+            Each argument is printed at increasing verbosity levels.
+        Args:
+            op: the internal string name of the operator called, to be printed at verbosity level 1
+            msg2: a string message to be printed at verbosity 2
+            board: a Board to use to print the state string at verbosity level 3
+            affected_board: a boolean that describes whether the operation affected the Board
+"""
         if(verbosity > 0 and operator):
             print('operator', operator)
         if(verbosity > 1 and verbosity1_str):
@@ -70,8 +76,8 @@ class SudokuLogger():
         for action in board_update_descriptions.board_update_options.keys():
             self.operators_use_count[action] = 0
 
-    def logOperator(self, operator, verbosity1_str=None, board=None):
-        """ Log that an application of an operator as respects a board state. """
+    def logOperator(self, operator, verbosity1_str=None, board=None, affected_board=True):
+        """ Log an application of an operator to a board state, increasing the cost of the operator ot be incurred. """
         self.logOperatorProgress(operator, verbosity1_str, board)
 
         if board:
@@ -79,7 +85,9 @@ class SudokuLogger():
         self.num_operators += 1
         self.operators_use_list.append(operator)
 
-        self.operators_use_count[operator] += 1
+        if affected_board:
+            # Only count the operator if it affected the board
+            self.operators_use_count[operator] += 1
         self.difficulty_score += board_update_descriptions.board_update_options[operator]['cost']
 
     def setPuzzle(self, puzzle):
@@ -152,6 +160,29 @@ class SudokuLogger():
 
         return True
 
+    def get_simple_json_repr(self):
+        """ Return a log dictionary representing the state of this logger object (the minimal information we want saved).
+        """
+        game = {
+            'puzzle': self.getPuzzle(),
+            'name': self.getName(),
+            'difficulty_score': self.difficulty_score,
+        }
+
+        for key in self.operators_use_count.keys():
+            game[f'num_{key}'] = self.operators_use_count[key]
+        return game
+
+    def get_full_json_repr(self):
+        """ Return a log dictionary representing the state of this logger object (all the information we want saved).
+        """
+        game = self.get_simple_json_repr()
+        game['solution'] = self.getSolution()
+        game['difficulty_level'] = self.getDifficultyLevel()
+        game['order_of_operators'] = self.operators_use_list
+        game['board_states'] = self.board_state_list
+        return game
+
     def printLogJSON(self):
         """ Print the json log."""
         append_to_file = False
@@ -182,19 +213,7 @@ class SudokuLogger():
             if log_to_replace:
                 logs.remove(log_to_replace)
 
-        game = {
-            'puzzle': self.getPuzzle(),
-            'name': self.getName(),
-            'solution': self.getSolution(),
-            'difficulty_score': self.difficulty_score,
-            'difficulty_level': self.getDifficultyLevel(),
-            'order_of_operators': self.operators_use_list,
-            'board_states': self.board_state_list
-        }
-
-        for key in self.operators_use_count.keys():
-            game[f'num_{key}'] = self.operators_use_count[key]
-
+        game = self.get_full_json_repr()
         logs.append(game)
 
         if append_to_file:
