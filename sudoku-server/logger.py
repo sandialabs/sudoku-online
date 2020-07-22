@@ -13,7 +13,7 @@ import json
 import pprint
 import board_update_descriptions
 
-verbosity = 3
+verbosity = 0
 
 
 def set_verbosity(v):

@@ -49,19 +49,20 @@ class ConfigurationData():
         # Keep track of scoring information
 
         # If True, have score tracked per game instead of per board
-        self.cost_per_game_not_per_board = True
+        #   Should only be true if cost per requested application is also True
+        self.cost_per_game_not_per_board = False
 
         # If True, we increase the cost of the board every time the operator matches a set.
         self.cost_per_matching_set = False
         # If True, users get charged on a successful application
         #   no matter how many matches they get (>1) on that application
-        self.cost_per_matching_use = False
+        self.cost_per_matching_use = True
         # If True, increase the cost of the puzzle every time a logical operator is attempted,
         # whether or not it was successful
         self.cost_per_attempted_application = False
         # If True, increase the cost of the puzzle every time a logical operator is requested,
         # whether or not it was successful, and no matter how many times it was attempted during that request
-        self.cost_per_requested_application = True
+        self.cost_per_requested_application = False
 
         # If True, increase the count ofthe operator every time it matches a set.
         self.count_per_matching_set = True
