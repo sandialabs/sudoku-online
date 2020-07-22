@@ -49,12 +49,25 @@ class ConfigurationData():
         # Keep track of scoring information
 
         # If True, we increase the cost of the board every time the operator matches a set.
-        # If False (and terminate_on_successful_operation is False), users get charged on a successful application
-        #   no matter how many matches they get (>1) on that application
         self.cost_per_matching_set = True
+        # If True, users get charged on a successful application
+        #   no matter how many matches they get (>1) on that application
+        self.cost_per_matching_use = False
         # If True, increase the cost of the puzzle every time a logical operator is attempted,
         # whether or not it was successful
         self.cost_per_attempted_application = False
+        # If True, increase the cost of the puzzle every time a logical operator is requested,
+        # whether or not it was successful, and no matter how many times it was attempted during that request
+        self.cost_per_requested_application = False
+
+        # If True, increase the count ofthe operator every time it matches a set.
+        self.count_per_matching_set = True
+        # If True, increase the count ofthe operator every time it has a successful appliction (no matter how many sets).
+        self.count_per_matching_use = False
+        # If True, increase the cost of the puzzle every time a logical operator is attempted, successful or not
+        self.count_per_attempted_application = False
+        # If True, increase the cost of the puzzle every time a logical operator is requested, used or not
+        self.count_per_requested_application = False
 
         # Keep track of how to simplify boards and board sets
 
@@ -166,11 +179,14 @@ class ConfigurationData():
         Returns:
             True if the operator should terminate after this operation.
         """
+        cost_it = False if op in self.free_operations else True
         if self.cost_per_matching_set:
-            self.log.logOperator(op, msg2, board)
+            self.log.logOperator(
+                op, f'Costing successful application per matching set. {msg2}', board, self.count_per_matching_set, cost_it)
             # traceback.print_stack(file=sys.stdout)
         else:
-            self.log.logOperatorProgress(op, msg2, board)
+            self.log.logOperator(
+                op, f'Logging (not costing) successful application per matching set. {msg2}', board, self.count_per_matching_set, False)
             # traceback.print_stack(file=sys.stdout)
         return self.terminate_on_successful_operation
 
@@ -185,24 +201,54 @@ class ConfigurationData():
             board: a Board to use to print the state string at verbosity level 3
             affected_board: a boolean that describes whether the operation affected the Board
         Returns:
-            True (unneeded, but to indicate that the operator should terminate).
+            affected_board (unneeded, but to indicate whether the operator should terminate).
         """
+        cost_it = False if op in self.free_operations else True
         if self.cost_per_attempted_application:
             # Cost on completion if costing any application of a logical operator
-            self.log.logOperator(op, msg2, board, affected_board)
+            self.log.logOperator(
+                op, f'Costing attempted application. {msg2}', board, self.count_per_attempted_application, cost_it)
             # traceback.print_stack(file=sys.stdout)
-        elif self.cost_per_matching_set:
-            # Don't cost on completion if we're logging on each matching set
-            self.log.logOperatorProgress(op, msg2, board)
+        if self.cost_per_matching_use and affected_board:
+            # Cost on successful application
+            self.log.logOperator(
+                op, f'Costing successful application. {msg2}', board, self.count_per_matching_use, cost_it)
             # traceback.print_stack(file=sys.stdout)
-        elif affected_board:
-            # Cost on completion if the operator changed the board
-            self.log.logOperator(op, msg2, board)
+        if self.cost_per_matching_set and affected_board:
+            # Don't cost on completion if we're logging on each matching set, but log
+            self.log.logOperatorProgress(
+                op, f'Logging (not costing) successful application that was costed per matching set. {msg2}', board)
             # traceback.print_stack(file=sys.stdout)
-        else:  # Don't cost if the operator didn't change the board
-            self.log.logOperatorProgress(op, msg2, board)
+        if self.cost_per_requested_application and affected_board:
+            # Don't cost on completion if we're costing per requested application, but log
+            self.log.logOperatorProgress(
+                op, f'Logging (not costing) successful application that was costed per request. {msg2}', board)
             # traceback.print_stack(file=sys.stdout)
         return affected_board
+
+    def log_operation_request(self, ops, msg2, board):
+        """ Use the logger that adds the cost if we need to increase our cost every request.
+        This function is called after a logical_solve.
+
+        Args:
+            ops: the list of internal string names of the operators called, to be printed at verbosity level 1
+            msg2: a string message to be printed at verbosity 2
+            board: a Board to use to print the state string at verbosity level 3
+                We replace this argument with
+        Returns:
+            True (unneeded, but to indicate that the operator should terminate).
+        """
+        for op in ops:
+            cost_it = False if op in self.free_operations else True
+            if self.cost_per_requested_application:
+                self.log.logOperator(
+                    op, f'Costing requested application. {msg2}', board, False, cost_it)
+                # traceback.print_stack(file=sys.stdout)
+            else:
+                self.log.logOperatorProgress(
+                    op, f'Logging (not costing) requested application. {msg2}', board)
+                # traceback.print_stack(file=sys.stdout)
+        return self.terminate_on_successful_operation
 
     def debug_print(self, msg1, msg2, board):
         """ Over-use a convenient function to do level 1, 2, 3 verbosity printing.

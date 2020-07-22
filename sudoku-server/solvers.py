@@ -180,6 +180,13 @@ def logical_solve(sboard, logical_ops):
                 if (nValues < prevValues
                         and sboard.config.restart_op_search_on_match):
                     break
+
+    req_ops = list(logical_ops)
+    req_ops.extend(sboard.config.free_operations)
+    sboard.config.log_operation_request(
+        req_ops,
+        f'Requested application of {len(logical_ops)} operators, {len(sboard.config.free_operations)} free operators',
+        sboard)
     return sboard
 
 

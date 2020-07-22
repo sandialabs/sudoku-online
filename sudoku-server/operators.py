@@ -89,7 +89,7 @@ def logical_exclusion(sboard):
 
     # Here, we force a set match for exclusions if no cells were assigned
     #   since exclusion is being treated oddly above.  This allows board progression
-    #   similar whether things are being counted per_match or per_successful_application
+    #   similarly whether things are being counted per_match or per_successful_application
     if (num_exclusion_assignments == 0
             and num_exclusions > 0):
         sboard.config.match_set_operation(

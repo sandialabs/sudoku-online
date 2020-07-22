@@ -41,6 +41,7 @@ SCORE_DIABOLICAL = 25000
 
 class SudokuLogger():
 
+    # TOOD MAL remove
     @ classmethod
     def logOperatorProgress(cls, operator, verbosity1_str=None, board=None):
         """ Log that an operator made progress without logging a new application of the operator
@@ -64,7 +65,6 @@ class SudokuLogger():
         self.name = name
         self.solution = ''
         self.board_state_list = []
-        self.num_operators = 0
         # a list of each operator applictaion so we can keep track of the
         # order that they were applied.
         self.operators_use_list = []
@@ -76,19 +76,19 @@ class SudokuLogger():
         for action in board_update_descriptions.board_update_options.keys():
             self.operators_use_count[action] = 0
 
-    def logOperator(self, operator, verbosity1_str=None, board=None, affected_board=True):
+    def logOperator(self, operator, verbosity1_str=None, board=None, count_operator=True, cost_operator=True):
         """ Log an application of an operator to a board state, increasing the cost of the operator ot be incurred. """
         self.logOperatorProgress(operator, verbosity1_str, board)
 
-        if board:
-            self.board_state_list.append(board.getStateStr(True, False))
-        self.num_operators += 1
-        self.operators_use_list.append(operator)
-
-        if affected_board:
-            # Only count the operator if it affected the board
+        if count_operator:
+            # Only count the operator if we're told to (essentially, at the set level)
             self.operators_use_count[operator] += 1
-        self.difficulty_score += board_update_descriptions.board_update_options[operator]['cost']
+            if board:
+                self.board_state_list.append(board.getStateStr(True, False))
+            self.operators_use_list.append(operator)
+        if cost_operator:
+            # Update the cost if we're told to (essentially, if the operator is not free)
+            self.difficulty_score += board_update_descriptions.board_update_options[operator]['cost']
 
     def setPuzzle(self, puzzle):
         self.puzzle = puzzle
