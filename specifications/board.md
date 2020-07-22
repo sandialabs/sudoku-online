@@ -31,6 +31,7 @@ We may want to highlight certain cells in the board, or pass around additional m
 - *backtrackingBoard*: optional boolean indicating whether this board is only available to allow the user to backtrack and handle incorrect assignments or exclusions
 - *puzzleName*: optional string name of the puzzle
 - *rules*: a dictionary relating the rules under which a board shall be interpreted
+- *cost*: a float showing the cost that should be attributed to this board (assumed for now to be a portion that applies across a board)
 
 ### Current Assignments
 
@@ -82,6 +83,7 @@ The example move lists are probably incorrect.  They're intended as examples of 
     solved: True,
 
     availableActions: ["applyops", "pivot", "assign", "exclude"],
-    rules : {'canChangeLogicalOperators': True}
+    rules : {'canChangeLogicalOperators': True},
+    cost : 87.5
 }
 ```
