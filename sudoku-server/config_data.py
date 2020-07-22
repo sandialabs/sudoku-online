@@ -48,8 +48,11 @@ class ConfigurationData():
 
         # Keep track of scoring information
 
+        # If True, have score tracked per game instead of per board
+        self.cost_per_game_not_per_board = True
+
         # If True, we increase the cost of the board every time the operator matches a set.
-        self.cost_per_matching_set = True
+        self.cost_per_matching_set = False
         # If True, users get charged on a successful application
         #   no matter how many matches they get (>1) on that application
         self.cost_per_matching_use = False
@@ -58,7 +61,7 @@ class ConfigurationData():
         self.cost_per_attempted_application = False
         # If True, increase the cost of the puzzle every time a logical operator is requested,
         # whether or not it was successful, and no matter how many times it was attempted during that request
-        self.cost_per_requested_application = False
+        self.cost_per_requested_application = True
 
         # If True, increase the count ofthe operator every time it matches a set.
         self.count_per_matching_set = True
@@ -113,19 +116,14 @@ class ConfigurationData():
     def add_config_mappings_to_dict(self, json_dict):
         """ Add the config mappings that ought to be shared with the client to the board dictionary
             that will be sent via json. """
-        json_dict['puzzleName'] = self.log.getName()
+        logger_dict = self.log.get_simple_json_repr()
+        for k in logger_dict.keys():
+            json_dict[k] = logger_dict[k]
         if self.actions:
             json_dict['availableActions'] = self.actions
         if self.rules:
             json_dict['rules'] = self.rules
         return json_dict
-
-    def update_config_from_dict_mappings(self, json_dict):
-        """ Add the configuration specified in the board json dictionary. """
-        if 'availableActions' in json_dict:
-            self.actions = json_dict['availableActions']
-        if 'rules' in json_dict:
-            self.rules = json_dict['rules']
 
     def verify(self):
         """ Perform a series of assertions to ensure that the configurations are self-consistent.
@@ -164,7 +162,7 @@ class ConfigurationData():
             Returns:
                 False (unneeded, but to indicate that the operator should not terminate).
         """
-        self.log.logOperatorProgress(op, msg2, board)
+        self.log.logOperator(op, msg2, board, False, False)
         # traceback.print_stack(file=sys.stdout)
         return False
 
@@ -179,15 +177,13 @@ class ConfigurationData():
         Returns:
             True if the operator should terminate after this operation.
         """
+        # Cost it if we are costing per matching set AND it's not a free operation
         cost_it = False if op in self.free_operations else True
-        if self.cost_per_matching_set:
-            self.log.logOperator(
-                op, f'Costing successful application per matching set. {msg2}', board, self.count_per_matching_set, cost_it)
-            # traceback.print_stack(file=sys.stdout)
-        else:
-            self.log.logOperator(
-                op, f'Logging (not costing) successful application per matching set. {msg2}', board, self.count_per_matching_set, False)
-            # traceback.print_stack(file=sys.stdout)
+        self.log.logOperator(
+            op, f'successful application per matching set. {msg2}', board,
+            self.count_per_matching_set,
+            cost_it & self.cost_per_matching_set)
+
         return self.terminate_on_successful_operation
 
     def complete_operation(self, op, msg2, board, affected_board):
@@ -203,27 +199,20 @@ class ConfigurationData():
         Returns:
             affected_board (unneeded, but to indicate whether the operator should terminate).
         """
+        # Cost it if it's not a free operation
         cost_it = False if op in self.free_operations else True
-        if self.cost_per_attempted_application:
-            # Cost on completion if costing any application of a logical operator
-            self.log.logOperator(
-                op, f'Costing attempted application. {msg2}', board, self.count_per_attempted_application, cost_it)
-            # traceback.print_stack(file=sys.stdout)
-        if self.cost_per_matching_use and affected_board:
+        # Cost on completion if costing any application of a logical operator
+        self.log.logOperator(
+            op, f'attempted application. {msg2}', board,
+            self.count_per_attempted_application,
+            cost_it & self.cost_per_attempted_application)
+        if affected_board:
             # Cost on successful application
             self.log.logOperator(
-                op, f'Costing successful application. {msg2}', board, self.count_per_matching_use, cost_it)
-            # traceback.print_stack(file=sys.stdout)
-        if self.cost_per_matching_set and affected_board:
-            # Don't cost on completion if we're logging on each matching set, but log
-            self.log.logOperatorProgress(
-                op, f'Logging (not costing) successful application that was costed per matching set. {msg2}', board)
-            # traceback.print_stack(file=sys.stdout)
-        if self.cost_per_requested_application and affected_board:
-            # Don't cost on completion if we're costing per requested application, but log
-            self.log.logOperatorProgress(
-                op, f'Logging (not costing) successful application that was costed per request. {msg2}', board)
-            # traceback.print_stack(file=sys.stdout)
+                op, f'successful application. {msg2}', board,
+                self.count_per_matching_use,
+                cost_it & self.cost_per_matching_use)
+
         return affected_board
 
     def log_operation_request(self, ops, msg2, board):
@@ -240,20 +229,17 @@ class ConfigurationData():
         """
         for op in ops:
             cost_it = False if op in self.free_operations else True
-            if self.cost_per_requested_application:
-                self.log.logOperator(
-                    op, f'Costing requested application. {msg2}', board, False, cost_it)
-                # traceback.print_stack(file=sys.stdout)
-            else:
-                self.log.logOperatorProgress(
-                    op, f'Logging (not costing) requested application. {msg2}', board)
-                # traceback.print_stack(file=sys.stdout)
+            self.log.logOperator(
+                op, f'requested application. {msg2}', board,
+                self.count_per_requested_application,
+                cost_it & self.cost_per_requested_application)
+            # traceback.print_stack(file=sys.stdout)
         return self.terminate_on_successful_operation
 
     def debug_print(self, msg1, msg2, board):
         """ Over-use a convenient function to do level 1, 2, 3 verbosity printing.
         """
-        self.log.logOperatorProgress(msg1, msg2, board)
+        self.log.logOperator(msg1, msg2, board, False, False)
 
 
 defaultConfig = ConfigurationData()

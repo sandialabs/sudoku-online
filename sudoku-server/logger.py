@@ -13,7 +13,7 @@ import json
 import pprint
 import board_update_descriptions
 
-verbosity = 0
+verbosity = 3
 
 
 def set_verbosity(v):
@@ -41,25 +41,6 @@ SCORE_DIABOLICAL = 25000
 
 class SudokuLogger():
 
-    # TOOD MAL remove
-    @ classmethod
-    def logOperatorProgress(cls, operator, verbosity1_str=None, board=None):
-        """ Log that an operator made progress without logging a new application of the operator
-            or causing the cost of the operator to be incurred.
-            Each argument is printed at increasing verbosity levels.
-        Args:
-            op: the internal string name of the operator called, to be printed at verbosity level 1
-            msg2: a string message to be printed at verbosity 2
-            board: a Board to use to print the state string at verbosity level 3
-            affected_board: a boolean that describes whether the operation affected the Board
-"""
-        if(verbosity > 0 and operator):
-            print('operator', operator)
-        if(verbosity > 1 and verbosity1_str):
-            print(verbosity1_str)
-        if(verbosity > 2 and board):
-            print(board.getStateStr(True, False))
-
     def __init__(self, puzzle=None, name=None):
         self.puzzle = puzzle
         self.name = name
@@ -77,18 +58,33 @@ class SudokuLogger():
             self.operators_use_count[action] = 0
 
     def logOperator(self, operator, verbosity1_str=None, board=None, count_operator=True, cost_operator=True):
-        """ Log an application of an operator to a board state, increasing the cost of the operator ot be incurred. """
-        self.logOperatorProgress(operator, verbosity1_str, board)
+        """ Log an application of an operator to a board state, increasing the cost of the operator ot be incurred.
+            Each argument is printed at increasing verbosity levels.
 
+            Args:
+                op: the internal string name of the operator called, to be printed at verbosity level 1
+                msg2: a string message to be printed at verbosity 2
+                board: a Board to use to print the state string at verbosity level 3
+                affected_board: a boolean that describes whether the operation affected the Board
+        """
         if count_operator:
             # Only count the operator if we're told to (essentially, at the set level)
             self.operators_use_count[operator] += 1
+            verbosity1_str = f'Logging {verbosity1_str}'
             if board:
                 self.board_state_list.append(board.getStateStr(True, False))
             self.operators_use_list.append(operator)
         if cost_operator:
             # Update the cost if we're told to (essentially, if the operator is not free)
             self.difficulty_score += board_update_descriptions.board_update_options[operator]['cost']
+            verbosity1_str = f'Costing {verbosity1_str}'
+
+        if(verbosity > 0 and operator):
+            print('operator', operator)
+        if(verbosity > 1 and verbosity1_str):
+            print(verbosity1_str)
+        if(verbosity > 2 and board):
+            print(board.getStateStr(True, False))
 
     def setPuzzle(self, puzzle):
         self.puzzle = puzzle
@@ -165,22 +161,27 @@ class SudokuLogger():
         """
         game = {
             'puzzle': self.getPuzzle(),
-            'name': self.getName(),
-            'difficulty_score': self.difficulty_score,
+            'puzzleName': self.getName(),
+            'cost': self.getDifficultyScore(),
         }
-
-        for key in self.operators_use_count.keys():
-            game[f'num_{key}'] = self.operators_use_count[key]
         return game
 
     def get_full_json_repr(self):
         """ Return a log dictionary representing the state of this logger object (all the information we want saved).
         """
         game = self.get_simple_json_repr()
+
+        # Repetition for script API compatibility for now.
+        game['difficulty_score'] = self.getDifficultyScore(),
+        game['name'] = self.getName(),
+
         game['solution'] = self.getSolution()
         game['difficulty_level'] = self.getDifficultyLevel()
         game['order_of_operators'] = self.operators_use_list
         game['board_states'] = self.board_state_list
+
+        for key in self.operators_use_count.keys():
+            game[f'num_{key}'] = self.operators_use_count[key]
         return game
 
     def printLogJSON(self):
