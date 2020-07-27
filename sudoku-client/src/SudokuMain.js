@@ -19,13 +19,18 @@ class SudokuMain extends React.Component {
 
 		this.state = {
 			initialBoard: null,
+			cellActions: null,
+			logicalOperators: null,
+
 			availableHeuristics: null,
-			selectedHeuristic: null
+			selectedHeuristic: null,
+			serverAddress: 'http://localhost:5000'
 		};
 	}
 
 	render() {
 		let heuristicPanelContents = [];
+
 
 		if (this.state.availableHeuristics === null) {
 			heuristicPanelContents.push(<p>Heuristic list is not yet available.</p>);
@@ -58,6 +63,8 @@ class SudokuMain extends React.Component {
 							degree={this.props.degree}
 							initialBoard={this.state.initialBoard}
 							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
+							cellActions={this.state.cellActions}
+							logicalOperators={this.state.logicalOperators}
 							/>
 					</div>
 				</div>
@@ -147,20 +154,34 @@ class SudokuMain extends React.Component {
 	}
 
 
-	requestHeuristicList() {
-		const request = { 'heuristic': 'listHeuristics', 
-	                      'board': null };
-
-	    return Promise.resolve(
-	    	JSON.parse(
-	    		executeHeuristic(
-	    			JSON.stringify(request))));
+	requestCellActionList() {
+		const myRequest = {
+			'method': 'GET',
+			'url': this.state.serverAddress + '/sudoku/request/list_cell_actions'
+		};
+		return request(myRequest);
 	}
 
-	populateHeuristicList(resultFromServer) {
-		console.log('Heuristic list from server:');
-		console.log(resultFromServer);
-		this.setState({'availableHeuristics': resultFromServer});
+	requestLogicalOperatorList() {
+		const myRequest = {
+			'method': 'GET',
+			'url': this.state.serverAddress + '/sudoku/request/list_heuristics'
+		}
+		return request(myRequest);
+	}
+
+	populateLogicalOperatorList(resultFromServer) {
+		const parsedResponse = JSON.parse(resultFromServer);
+		console.log('Received ' + parsedResponse.length + ' logical operators from server.');
+		console.log(parsedResponse)
+		this.setState({'logicalOperators': parsedResponse});
+	}
+
+	populateCellActionList(resultFromServer) {
+		const parsedResponse = JSON.parse(resultFromServer);
+		console.log('Received ' + parsedResponse.length + ' cell actions from server.');
+		console.log(parsedResponse)
+		this.setState({'cellActions': parsedResponse});
 	}
 
 	componentDidMount() {
@@ -168,23 +189,29 @@ class SudokuMain extends React.Component {
 		// This will be replaced with a server call once we have a server to call
 
 		this.requestInitialBoard().then(
-			(successResponse) => {this.receiveInitialBoard(successResponse);},
-			(failureResponse) => {console.log('ERROR requesting initial board: ' + failureResponse);}
+				(successResponse) => {this.receiveInitialBoard(successResponse);}
+			).catch(
+				(failure) => {console.log('ERROR requesting initial board: ' + failure);}
 			);
 
-		this.requestHeuristicList().then(
-			heuristicList => { this.populateHeuristicList(heuristicList); }
+		this.requestLogicalOperatorList().then(
+				(opList) => { this.populateLogicalOperatorList(opList); }
+			).catch(
+				(failure) => {console.log('ERROR requesting logical operator list: ' + failure);}
+			);
+
+		this.requestCellActionList().then(
+				(actionList) => {this.populateCellActionList(actionList);}
+			).catch(
+				(failure) => {console.log('ERROR requesting cell action list: ' + failure);}
 			);
 		
 	}
 
 	requestInitialBoard(serverAddress) {
-		if (serverAddress === undefined) {
-			serverAddress = 'http://localhost:5000';
-		}
 		return request({
 			'method': 'GET',
-			'url': serverAddress + '/sudoku/request/initialBoard'
+			'url': this.state.serverAddress + '/sudoku/request/initialBoard'
 		});
 	}
 

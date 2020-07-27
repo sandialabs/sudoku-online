@@ -8,12 +8,19 @@
 //
 // This component manages the game tree, including initial setup.
 
+// Required props:
+//  cellActions: list of cell actions (from server)
+//  logicalOperators: list of logical operators (from server)
+//  initialBoard: top of game
+//  xxx revise this to just be the game object
+
 import React from 'react';
 import { ActiveBoardView } from './ActiveBoardView';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
 import { clone } from 'ramda';
+import { CellActionPanel } from './CellActionPanel';
 
 class SudokuGame extends React.Component {
     constructor(props) {
@@ -21,7 +28,7 @@ class SudokuGame extends React.Component {
 
         this.state = {
             gameTree: null,
-            activeBoardId: null
+            activeBoardId: null,
         };
 
         if (this.props.initialBoard !== null) {
@@ -100,7 +107,8 @@ class SudokuGame extends React.Component {
             return (
                 <div>
                    SudokuGame does not yet have a game tree.  This is OK; it means we don't
-                   have our initial board yet.
+                   have our initial board yet.  If this message doesn't go away immediately,
+                   make sure the server is running on localhost port 5000.
                 </div>
             );
         } else if (this.state.gameTree.data.board === null
@@ -114,7 +122,16 @@ class SudokuGame extends React.Component {
             const board = this.activeBoard();
             console.log('render(): active board serial number: ' + board.serialNumber);
             return (
-                <div>
+                <div id="gameContainer">
+                    <div id="actionsAndOperators">
+                        <span id="cellActions">
+                            <CellActionPanel
+                                actions={this.props.cellActions}
+                                selectedActionChanged={(newAction) => {console.log('selectedActionChanged: ' + newAction);}}
+                                executeAction={() => {console.log('executeAction clicked');}}
+                                />
+                        </span>
+                    </div>
                     <table id="gameTable">
                         <tbody>
                             <tr>
