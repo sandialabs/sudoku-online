@@ -21,6 +21,7 @@ import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
 import { clone } from 'ramda';
 import { CellActionPanel } from './CellActionPanel';
+import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 
 class SudokuGame extends React.Component {
     constructor(props) {
@@ -29,6 +30,8 @@ class SudokuGame extends React.Component {
         this.state = {
             gameTree: null,
             activeBoardId: null,
+            cellActions: null,
+            logicalOperators: null
         };
 
         if (this.props.initialBoard !== null) {
@@ -131,6 +134,13 @@ class SudokuGame extends React.Component {
                                 executeAction={() => {console.log('executeAction clicked');}}
                                 />
                         </span>
+                        <span id="logicalOperators">
+                            <LogicalOperatorPanel
+                                operators={this.props.logicalOperators}
+                                selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
+                                canChange={true}
+                                />
+                        </span>
                     </div>
                     <table id="gameTable">
                         <tbody>
@@ -158,6 +168,11 @@ class SudokuGame extends React.Component {
                 </div>
                 );
         }
+    } // end of render()
+
+
+    handleLogicalOperatorSelection(operators) {
+        console.log('Logical operator selection contains ' + operators.length + ' items');
     }
 }
 
