@@ -46,18 +46,21 @@ tr.sudoku-board-row {
 }
 
 td.sudoku-board-square.active {
-	width: 90px;
-	height: 90px;
+	width: 60px;
+	height: 60px;
 	padding: 0px;
 	margin: 0px;
 	border-right: 1px solid red;
+    text-align: center;
+    font-size: larger;
 }
 
 td.sudoku-board-square.inactive {
-    width: 30px;
-    height: 30px;
+    width: 20px;
+    height: 20px;
     padding: 0px;
     margin: 0px;
+    text-align: center;
     border-right: 1px solid red;
 }
 
@@ -74,8 +77,10 @@ tr.sudoku-choice-grid:first-child {
 }
 
 td.sudoku-choice-grid {
-	width: 30px;
-	height: 30px;
+	width: 20px;
+	height: 20px;
+    margin: 0px;
+    padding: 0px;
 	border-right: 1px solid green;
 }
 
@@ -88,10 +93,14 @@ button.sudoku-choice-grid {
 	padding: 0px;
 	border: none;
 	text-align: center;
-	width: 30px;
-	height: 30px;
+	width: 20px;
+	height: 20px;
 }
 
 button.sudoku-choice-grid.unavailable {
 	background-color: white;
+    padding: 0px;
+    margin: 0px;
+    width: 20px;
+    height: 20px;
 }
