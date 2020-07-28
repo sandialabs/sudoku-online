@@ -124,12 +124,17 @@ class SudokuGame extends React.Component {
         } else {
             const board = this.activeBoard();
             console.log('render(): active board serial number: ' + board.serialNumber);
+            let defaultAction = null;
+            if (this.props.cellActions !== null && this.props.cellActions.length > 0) {
+                defaultAction = this.props.cellActions[0];
+            }
             return (
                 <div id="gameContainer">
                     <div id="actionsAndOperators">
                         <span id="cellActions">
                             <CellActionPanel
                                 actions={this.props.cellActions}
+                                defaultAction={defaultAction}
                                 selectedActionChanged={(newAction) => {console.log('selectedActionChanged: ' + newAction);}}
                                 executeAction={() => {console.log('executeAction clicked');}}
                                 />

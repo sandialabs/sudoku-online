@@ -14,6 +14,7 @@
 // Props:
 //     actions: List of Action objects, detailed below.
 //     selectedActionChanged (optional): Function to call when the user selects a different heuristic
+//     defaultAction: Which action to highlight when the radio buttons are created
 //     executeAction: Function to call when the user presses the "Execute" button
 //   
 // Example Action object:
@@ -26,81 +27,121 @@
 
 import React from 'react';
 
+import { Container } from '@material-ui/core';
+import { FormControl, FormControlLabel, FormLabel } from '@material-ui/core';
+import { Button } from '@material-ui/core';
+import { List, ListItem } from '@material-ui/core';
+import { Radio, RadioGroup } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
+
 class CellActionPanel extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			selectedAction: null,
+			selectedAction: props.defaultAction,
 		}
 	}
 
 	renderActionList() {
-		let radioButtons = 
-			this.props.actions.map(
-				action => {
-					return this.makeRadioButton(action.internal_name, action.user_name, action.cost);
-				}
-			);
-	
-		return (
-			<div id='cellActions'>
-				<h3>Available Cell Actions</h3>
-				<div id='cellActionList'>
-					{radioButtons}
+		let radioButtons = this.makeRadioButtons();
+		console.log('renderActionList: default action is ' + this.props.defaultAction.internal_name);
+		console.log('renderActionList: Rendering ' + this.props.actions.length + ' actions');
 
-					<br />
-					<button
-						onClick={() => this.executeActionButtonPressed()}
-						>
-						Execute Cell Action 
-					</button>
-				</div>
-			</div>
+		return (
+			<Container>
+				<FormControl component="fieldset">
+					<FormLabel component="legend">Cell Action List</FormLabel>
+					<RadioGroup defaultValue={this.props.defaultAction.internal_name}
+								aria-label="cell-action"
+								name="cell-action-radio-group"
+								onChange={(event) => this.handleActionSelection(event)}
+								>
+						{radioButtons}
+					</RadioGroup>
+					<Button onClick={() => this.handleExecuteAction()}
+							variant="contained"
+							color="primary">
+						Execute Selected Action
+					</Button>
+				</FormControl>
+			</Container>
 			);
 	}
-	
+
+	makeRadioButtons() {
+		return this.props.actions.map(
+			(action) => this.makeMaterialRadioButton(
+					action.internal_name,
+					action.user_name + ': ' + action.short_description,
+					action.cost
+				));
+	}	
+
+	makeMaterialRadioButton(internalName, labelText, cost) {
+		const fullLabelText = labelText + ' (Cost: ' + cost + ')';
+		return (
+			<FormControlLabel 
+				value={internalName}
+				control={<Radio />}
+				label={fullLabelText}
+				key={internalName}
+				/>
+				);
+	}
+
 	renderSelectedActionDocumentation() {
 		let costText = 'No cost';
 		let nameText = 'No action selected';
 		let descriptionText = '(select a cell action to see description)';
 
+		let action = null;
 		if (this.state.selectedAction !== null) {
+			action = this.state.selectedAction;
+		} else if (this.props.defaultAction !== null) {
+			action = this.props.defaultAction;
+		}
+
+		if (action !== null) {
 			console.log('Selected action is not null.  Populating description panel.');
-			nameText = this.state.selectedAction.user_name;
-			costText = this.state.selectedAction.cost;
-			descriptionText = this.state.selectedAction.description;
+			nameText = action.user_name;
+			costText = action.cost;
+			descriptionText = action.description;
 		}
 
 		return (
-			<div id="selectedActionDescription">
-				<h4>Currently Selected Action</h4>
-				<ul>
-					<li><strong>Name:</strong> {nameText}</li>
-					<li><strong>Cost:</strong> {costText}</li>
-					<li><strong>Description:</strong> {descriptionText}</li>
-				</ul>
-			</div>
+			<Container>
+				<Typography variant="h6">Currently Selected Action</Typography>
+				<List>
+					<ListItem><strong>Name:</strong> {nameText}</ListItem>
+					<ListItem><strong>Cost:</strong> {costText}</ListItem>
+					<ListItem><strong>Description:</strong> {descriptionText}</ListItem>
+				</List>
+			</Container>
 		);
 	}
 
+	actionsUnavailable() {
+		return (this.props.actions === undefined
+				|| this.props.actions === null
+				|| this.props.actions.length === 0);
+	}
+
 	render() {
-		if (this.props.actions === undefined ||
-			this.props.actions === null ||
-			this.props.actions.length === 0) {
+		if (this.actionsUnavailable()) {
 			return (
-				<div id='cellActionList'>
+				<Container>
 					Waiting for action list...
-				</div>
+				</Container>
 				);
 		
 		} else {
 			const actionListPanel = this.renderActionList();
 			const actionDescriptionPanel = this.renderSelectedActionDocumentation();
 			return (
-				<div id='cellActionPanel'>
+				<Container>
 					{actionListPanel}
 					{actionDescriptionPanel}
-				</div>
+				</Container>
 				);
 		}
 	}
@@ -115,44 +156,26 @@ class CellActionPanel extends React.Component {
 		return null;
 	}
 
-	makeRadioButton(internalName, userText, cost) {
-		console.log('makeRadioButton: internalName ' + internalName + ', userText ' + userText );
-		return (
-			<div className='cellActionForm' key={internalName}>
-			  <label>
-			    <input
-			      type='radio'
-			      name='selectCellAction'
-			      value={internalName}
-			      checked={(this.state.selectedAction !== null && this.state.selectedAction.internal_name === internalName)}
-			      onChange={event => {this.handleActionSelection(event);}}
-			      className='radio-button cellAction'
-			      />
-			    {userText} (Cost: {cost})
-			  </label>
-			</div>
-			);
-	}
-
 	// Call the executeAction() function from the props with the
-	executeActionButtonPressed() {
+	handleExecuteAction() {
+		console.log('DEBUG: handleExecuteAction: Execute button pressed');
 		if (this.props.executeAction) {
 			this.props.executeAction(this.state.selectedAction);
 		}
 	}
 
 	handleActionSelection(changeEvent) {
+		console.log('DEBUG: handleActionSelection: Selected action is ' + changeEvent.target.value);
 		if (this.state.selectedAction !== changeEvent.target.value) {
-			console.log('DEBUG: Selected cell action changing to ' + changeEvent.target.value);
-		}
-		const action = this.findActionObject(changeEvent.target.value);
-		if (action !== null) {
-			this.setState({
-				'selectedAction': action
-			});
-		} else {
-			console.log("ERROR: Couldn't find action object for new selected action " + changeEvent.target.value);
-		}
+			const action = this.findActionObject(changeEvent.target.value);
+			if (action !== null) {
+				this.setState({
+					'selectedAction': action
+					});
+			} else {
+				console.log("ERROR: Couldn't find action object for new selected action " + changeEvent.target.value);
+			}
+		}	
 	}
 }
 
