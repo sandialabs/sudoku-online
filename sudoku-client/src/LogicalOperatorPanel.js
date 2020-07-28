@@ -31,24 +31,36 @@
 // }
 
 import React from 'react';
-import {Checkbox} from './Checkbox';
+import { Checkbox } from '@material-ui/core';
+import { Container } from '@material-ui/core';
+import { FormControl, FormControlLabel, FormGroup, FormLabel } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
 
 class LogicalOperatorPanel extends React.Component {
 	constructor(props) {
 		super(props);
 
-		const locator = {};
-		if (this.props.operators !== null) {
-			for (let operator of this.props.operators) {
-				locator[operator.internal_name] = operator;
+		this.state = {
+			itemStatus: {} 
+		};
+
+		this.handleCheckBoxChange = this.handleCheckBoxChange.bind(this);
+	}
+
+	findOperatorByName(name) {
+		for (const op of this.props.operators) {
+			if (op.internal_name === name) {
+				return op;
 			}
 		}
+		console.log('ERROR: findOperatorByName: Couldn\'t find operator ' + name);
+		return null;
+	}
 
-		this.state = {
-			selectedOperatorNames: new Set(),
-			};
-
-		this.locator = locator;
+	operatorsAvailable() {
+		return (this.props.operators !== undefined
+				&& this.props.operators !== null
+				&& this.props.operators.length > 0);	
 	}
 
 	renderOperatorList() {
@@ -58,12 +70,10 @@ class LogicalOperatorPanel extends React.Component {
 					return this.makeCheckBox(operator);
 				});
 
-
 		return (
-			<div id='logicalOperators'>
-				<h3>Available Logical Operators</h3>
+			<FormGroup name='logicalOperatorCheckList'>
 				{checkBoxes}
-			</div>
+			</FormGroup>
 			);
 	}
 	
@@ -76,23 +86,21 @@ class LogicalOperatorPanel extends React.Component {
 	}
 
 	render() {
-		if (this.props.operators === undefined ||
-			this.props.operators === null ||
-			this.props.operators.length === 0) {
+		if (!this.operatorsAvailable()) {
 			return (
-				<div id='logicalOperators'>
+				<Container name='logicalOperators'>
 					Waiting for operator list...
-				</div>
+				</Container>
 				);
 		
 		} else {
 			const operatorListPanel = this.renderOperatorList();
 			const operatorDescriptionPanel = this.renderSelectedOperatorDocumentation();
 			return (
-				<div id='logicalOperators'>
+				<Container name='logicalOperators'>
 					{operatorListPanel}
 					{operatorDescriptionPanel}
-				</div>
+				</Container>
 				);
 		}
 	}
@@ -100,61 +108,43 @@ class LogicalOperatorPanel extends React.Component {
 	makeCheckBox(operator) {
 		const labelText = operator.user_name + ' (Cost: ' + operator.cost + ')';
 		const internalName = operator.internal_name;
-		console.log('Creating checkbox with internal name ' + internalName);
 		return (
-			<Checkbox
+			<FormControlLabel
+				control={
+					<Checkbox 
+						onChange={this.handleCheckBoxChange}
+						name={internalName}
+					 	/>
+					 }
 				label={labelText}
-				name={internalName}
-				key={internalName}
-				isSelected={(this.state.selectedOperatorNames.has(internalName))}
-				onCheckboxChange={changeEvent => {this.handleCheckBoxChange(changeEvent);}}
 				/>
-
 				);
 	}
 
-	handleCheckBoxChange(changeEvent) {
-		const {name} = changeEvent.target;
-		console.log('handleCheckBoxChange: ' + name + ' toggled');
-		console.log('target:');
-		console.log(changeEvent.target);
-		if (this.state.selectedOperatorNames.has(name)) {
-			this.removeOperationFromSelection(name);
-		} else {
-			this.addOperationToSelection(name);
-		}
+	handleCheckBoxChange(changeEvent, isChecked, value) {
+		const itemName = changeEvent.target.name;
+		const updatedItemStatus = {...this.state.itemStatus};
+		updatedItemStatus[itemName] = isChecked;
+
+
+		console.log('handleCheckBoxChange: ' + itemName + ' toggled to ' + isChecked);
+	
+		this.setState({
+			itemStatus: updatedItemStatus
+		});
+		this.announceSelectedOperators(updatedItemStatus);
 	}
 
-	addOperationToSelection(name) {
-		const newSelection = this.state.selectedOperatorNames.add(name); 
-		this.setState({
-			selectedOperatorNames: newSelection
-		});
-		// We don't just take this from this.state because state updates 
-		// are asynchronous.  If we want the just-updated value, we have to
-		// pass it ourselves.
-		this.announceSelectedOperators(newSelection);
-	}
-
-	removeOperationFromSelection(name) {
-		const newSelection = this.state.selectedOperatorNames.delete(name);
-		this.setState({
-			selectedOperatorNames: newSelection
-		});
-		// We don't just take this from this.state because state updates 
-		// are asynchronous.  If we want the just-updated value, we have to
-		// pass it ourselves.
-		this.announceSelectedOperators(newSelection);
-	}	
-
-	announceSelectedOperators(operatorNames) {
-		const operators = [];
+	announceSelectedOperators(checkboxStatus) {
+		const selectedOperatorNames = 
+			Object.keys(checkboxStatus)
+				  .filter(opName => checkboxStatus[opName]);
+		const selectedOperators =
+			selectedOperatorNames.map(opName => this.findOperatorByName(opName));
 		console.log('announceSelectedOperators called');
-		return;
-		for (const name of operatorNames) {
-			operators.push(this.locator[name]);
-		}
-		this.props.selectionChanged(operators);
+		console.log('currently selected operators: ' + JSON.stringify(selectedOperatorNames));
+
+		this.props.selectionChanged(selectedOperators);
 	}
 }
 
