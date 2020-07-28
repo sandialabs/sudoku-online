@@ -225,7 +225,7 @@ def _jsonify_action(name, description_dict):
     """ Remove all the extra cruft and dispatch fields,
         and create one dict describing the named action / operator. """
     short_description = {'internal_name': name}
-    for data in ['requested_arguments', 'cost', 'user_name', 'description']:
+    for data in ['requested_arguments', 'cost', 'user_name', 'description', 'short_description']:
         if data in description_dict:
             short_description[data] = description_dict[data]
     return short_description
