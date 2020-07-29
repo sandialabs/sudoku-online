@@ -34,6 +34,7 @@ import React from 'react';
 import { Checkbox } from '@material-ui/core';
 import { Container } from '@material-ui/core';
 import { FormControl, FormControlLabel, FormGroup, FormLabel } from '@material-ui/core';
+import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
 class LogicalOperatorPanel extends React.Component {
@@ -99,7 +100,6 @@ class LogicalOperatorPanel extends React.Component {
 			return (
 				<Container name='logicalOperators'>
 					{operatorListPanel}
-					{operatorDescriptionPanel}
 				</Container>
 				);
 		}
@@ -108,17 +108,20 @@ class LogicalOperatorPanel extends React.Component {
 	makeCheckBox(operator) {
 		const labelText = operator.user_name + ' (Cost: ' + operator.cost + ')';
 		const internalName = operator.internal_name;
+		const tooltipText = operator.user_name + ': ' + operator.description;
 		return (
-			<FormControlLabel
-				control={
-					<Checkbox 
-						onChange={this.handleCheckBoxChange}
-						name={internalName}
-					 	/>
-					 }
-				label={labelText}
-				/>
-				);
+			<Tooltip title={tooltipText} key={operator.internal_name}>
+				<FormControlLabel
+					control={
+						<Checkbox 
+							onChange={this.handleCheckBoxChange}
+							name={operator.internal_name}
+						 	/>
+						 }
+					label={labelText}
+					/>
+			</Tooltip>
+			);
 	}
 
 	handleCheckBoxChange(changeEvent, isChecked, value) {

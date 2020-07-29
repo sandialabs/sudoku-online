@@ -32,6 +32,7 @@ import { FormControl, FormControlLabel, FormLabel } from '@material-ui/core';
 import { Button } from '@material-ui/core';
 import { List, ListItem } from '@material-ui/core';
 import { Radio, RadioGroup } from '@material-ui/core';
+import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
 class CellActionPanel extends React.Component {
@@ -44,9 +45,7 @@ class CellActionPanel extends React.Component {
 
 	renderActionList() {
 		let radioButtons = this.makeRadioButtons();
-		console.log('renderActionList: default action is ' + this.props.defaultAction.internal_name);
-		console.log('renderActionList: Rendering ' + this.props.actions.length + ' actions');
-
+	
 		return (
 			<Container>
 				<FormControl component="fieldset">
@@ -70,64 +69,32 @@ class CellActionPanel extends React.Component {
 
 	makeRadioButtons() {
 		return this.props.actions.map(
-			(action) => this.makeMaterialRadioButton(
-					action.internal_name,
-					action.user_name + ': ' + action.short_description,
-					action.cost
-				));
+			(action) => this.makeMaterialRadioButton(action)
+			);
 	}	
 
-	makeMaterialRadioButton(internalName, labelText, cost) {
-		const fullLabelText = labelText + ' (Cost: ' + cost + ')';
+	makeMaterialRadioButton(action) {
+		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
+		const toolTipText = action.user_name + ': ' + action.description;
 		return (
-			<FormControlLabel 
-				value={internalName}
-				control={<Radio />}
-				label={fullLabelText}
-				key={internalName}
-				/>
+			<Tooltip title={toolTipText} key={action.internal_name}>
+				<FormControlLabel 
+					value={action.internal_name}
+					control={<Radio />}
+					label={fullLabelText}
+					/>
+			</Tooltip>
 				);
 	}
 
-	renderSelectedActionDocumentation() {
-		let costText = 'No cost';
-		let nameText = 'No action selected';
-		let descriptionText = '(select a cell action to see description)';
-
-		let action = null;
-		if (this.state.selectedAction !== null) {
-			action = this.state.selectedAction;
-		} else if (this.props.defaultAction !== null) {
-			action = this.props.defaultAction;
-		}
-
-		if (action !== null) {
-			console.log('Selected action is not null.  Populating description panel.');
-			nameText = action.user_name;
-			costText = action.cost;
-			descriptionText = action.description;
-		}
-
-		return (
-			<Container>
-				<Typography variant="h6">Currently Selected Action</Typography>
-				<List>
-					<ListItem><strong>Name:</strong> {nameText}</ListItem>
-					<ListItem><strong>Cost:</strong> {costText}</ListItem>
-					<ListItem><strong>Description:</strong> {descriptionText}</ListItem>
-				</List>
-			</Container>
-		);
-	}
-
-	actionsUnavailable() {
-		return (this.props.actions === undefined
-				|| this.props.actions === null
-				|| this.props.actions.length === 0);
+	actionsAvailable() {
+		return (this.props.actions !== undefined
+				&& this.props.actions !== null
+				&& this.props.actions.length !== 0);
 	}
 
 	render() {
-		if (this.actionsUnavailable()) {
+		if (!this.actionsAvailable()) {
 			return (
 				<Container>
 					Waiting for action list...
@@ -136,11 +103,9 @@ class CellActionPanel extends React.Component {
 		
 		} else {
 			const actionListPanel = this.renderActionList();
-			const actionDescriptionPanel = this.renderSelectedActionDocumentation();
 			return (
-				<Container>
+				<Container name='cellActions'>
 					{actionListPanel}
-					{actionDescriptionPanel}
 				</Container>
 				);
 		}
