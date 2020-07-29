@@ -15,6 +15,8 @@
 //  xxx revise this to just be the game object
 
 import React from 'react';
+import { Grid } from '@material-ui/core';
+
 import { ActiveBoardView } from './ActiveBoardView';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
@@ -68,10 +70,13 @@ class SudokuGame extends React.Component {
             'cell': cell,
             'value': choice
         };
-
-        return this.props.issueBoardRequest(board, action)
-                         .then(result => {this.handleNewBoards(board.serialNumber, action, result);})
- //                        .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
+        this.setState({
+            selectedBoardSquare: cell,
+            selectedValue: choice
+        });
+ //        return this.props.issueBoardRequest(board, action)
+ //                         .then(result => {this.handleNewBoards(board.serialNumber, action, result);})
+ // //                        .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
     }
 
     handleNewBoards(parentSerial, action, response) {
@@ -101,7 +106,11 @@ class SudokuGame extends React.Component {
     changeActiveBoard(boardSerial) {
         if (boardSerial !== this.state.activeBoardId) {         
             console.log('SudokuGame: Request received to change active board to ' + boardSerial + '.');
-            this.setState({activeBoardId: boardSerial});
+            this.setState({
+                activeBoardId: boardSerial,
+                selectedBoardSquare: null,
+                selectedValue: null
+            });
         }    
     }
 
@@ -124,24 +133,29 @@ class SudokuGame extends React.Component {
         } else {
             const board = this.activeBoard();
             console.log('render(): active board serial number: ' + board.serialNumber);
+            let defaultAction = null;
+            if (this.props.cellActions !== null && this.props.cellActions.length > 0) {
+                defaultAction = this.props.cellActions[0];
+            }
             return (
                 <div id="gameContainer">
-                    <div id="actionsAndOperators">
-                        <span id="cellActions">
+                    <Grid container spacing={3} id="actionsAndOperators">
+                        <Grid item xs={6}>
                             <CellActionPanel
                                 actions={this.props.cellActions}
+                                defaultAction={defaultAction}
                                 selectedActionChanged={(newAction) => {console.log('selectedActionChanged: ' + newAction);}}
                                 executeAction={() => {console.log('executeAction clicked');}}
                                 />
-                        </span>
-                        <span id="logicalOperators">
+                        </Grid>
+                        <Grid item xs={6}>
                             <LogicalOperatorPanel
                                 operators={this.props.logicalOperators}
                                 selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
                                 canChange={true}
                                 />
-                        </span>
-                    </div>
+                        </Grid>
+                    </Grid>
                     <table id="gameTable">
                         <tbody>
                             <tr>
@@ -158,7 +172,6 @@ class SudokuGame extends React.Component {
                                    <p>Currently active: Board {board.serialNumber}</p>
                                    <ActiveBoardView
                                         board={board}
-                                        active={true}
                                         announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
                                         />
                                 </td>
