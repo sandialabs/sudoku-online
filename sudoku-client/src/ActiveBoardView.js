@@ -84,7 +84,7 @@ class ActiveBoardView extends React.Component {
 		}
 
 		return (
-			<table className="sudoku-board-table">
+			<table className="sudoku-board active">
 				<tbody>{tableRows}</tbody>
 			</table>
 			);
