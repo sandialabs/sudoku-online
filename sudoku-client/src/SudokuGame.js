@@ -15,6 +15,8 @@
 //  xxx revise this to just be the game object
 
 import React from 'react';
+import { Grid } from '@material-ui/core';
+
 import { ActiveBoardView } from './ActiveBoardView';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
@@ -130,23 +132,23 @@ class SudokuGame extends React.Component {
             }
             return (
                 <div id="gameContainer">
-                    <div id="actionsAndOperators">
-                        <span id="cellActions">
+                    <Grid container spacing={3} id="actionsAndOperators">
+                        <Grid item xs={6}>
                             <CellActionPanel
                                 actions={this.props.cellActions}
                                 defaultAction={defaultAction}
                                 selectedActionChanged={(newAction) => {console.log('selectedActionChanged: ' + newAction);}}
                                 executeAction={() => {console.log('executeAction clicked');}}
                                 />
-                        </span>
-                        <span id="logicalOperators">
+                        </Grid>
+                        <Grid item xs={6}>
                             <LogicalOperatorPanel
                                 operators={this.props.logicalOperators}
                                 selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
                                 canChange={true}
                                 />
-                        </span>
-                    </div>
+                        </Grid>
+                    </Grid>
                     <table id="gameTable">
                         <tbody>
                             <tr>

@@ -34,6 +34,7 @@ import React from 'react';
 import { Checkbox } from '@material-ui/core';
 import { Container } from '@material-ui/core';
 import { FormControl, FormControlLabel, FormGroup, FormLabel } from '@material-ui/core';
+import { Paper } from '@material-ui/core';
 import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
@@ -89,18 +90,19 @@ class LogicalOperatorPanel extends React.Component {
 	render() {
 		if (!this.operatorsAvailable()) {
 			return (
-				<Container name='logicalOperators'>
+				<Paper name='logicalOperators'>
 					Waiting for operator list...
-				</Container>
+				</Paper>
 				);
 		
 		} else {
 			const operatorListPanel = this.renderOperatorList();
 			const operatorDescriptionPanel = this.renderSelectedOperatorDocumentation();
 			return (
-				<Container name='logicalOperators'>
+				<Paper name='logicalOperators'>
+					<Typography variant="h5">Logical Operators</Typography>
 					{operatorListPanel}
-				</Container>
+				</Paper>
 				);
 		}
 	}

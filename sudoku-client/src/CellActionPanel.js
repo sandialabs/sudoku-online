@@ -31,6 +31,7 @@ import { Container } from '@material-ui/core';
 import { FormControl, FormControlLabel, FormLabel } from '@material-ui/core';
 import { Button } from '@material-ui/core';
 import { List, ListItem } from '@material-ui/core';
+import { Paper } from '@material-ui/core';
 import { Radio, RadioGroup } from '@material-ui/core';
 import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
@@ -47,23 +48,20 @@ class CellActionPanel extends React.Component {
 		let radioButtons = this.makeRadioButtons();
 	
 		return (
-			<Container>
-				<FormControl component="fieldset">
-					<FormLabel component="legend">Cell Action List</FormLabel>
-					<RadioGroup defaultValue={this.props.defaultAction.internal_name}
-								aria-label="cell-action"
-								name="cell-action-radio-group"
-								onChange={(event) => this.handleActionSelection(event)}
-								>
-						{radioButtons}
-					</RadioGroup>
-					<Button onClick={() => this.handleExecuteAction()}
-							variant="contained"
-							color="primary">
-						Execute Selected Action
-					</Button>
-				</FormControl>
-			</Container>
+			<FormControl component="fieldset">
+				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
+							aria-label="cell-action"
+							name="cell-action-radio-group"
+							onChange={(event) => this.handleActionSelection(event)}
+							>
+					{radioButtons}
+				</RadioGroup>
+				<Button onClick={() => this.handleExecuteAction()}
+						variant="contained"
+						color="primary">
+					Execute Selected Action
+				</Button>
+			</FormControl>
 			);
 	}
 
@@ -96,17 +94,18 @@ class CellActionPanel extends React.Component {
 	render() {
 		if (!this.actionsAvailable()) {
 			return (
-				<Container>
+				<Paper>
 					Waiting for action list...
-				</Container>
+				</Paper>
 				);
 		
 		} else {
 			const actionListPanel = this.renderActionList();
 			return (
-				<Container name='cellActions'>
+				<Paper name='cellActions'>
+					<Typography variant="h5">Cell Actions</Typography>
 					{actionListPanel}
-				</Container>
+				</Paper>
 				);
 		}
 	}
