@@ -70,10 +70,13 @@ class SudokuGame extends React.Component {
             'cell': cell,
             'value': choice
         };
-
-        return this.props.issueBoardRequest(board, action)
-                         .then(result => {this.handleNewBoards(board.serialNumber, action, result);})
- //                        .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
+        this.setState({
+            selectedBoardSquare: cell,
+            selectedValue: choice
+        });
+ //        return this.props.issueBoardRequest(board, action)
+ //                         .then(result => {this.handleNewBoards(board.serialNumber, action, result);})
+ // //                        .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
     }
 
     handleNewBoards(parentSerial, action, response) {
@@ -103,7 +106,11 @@ class SudokuGame extends React.Component {
     changeActiveBoard(boardSerial) {
         if (boardSerial !== this.state.activeBoardId) {         
             console.log('SudokuGame: Request received to change active board to ' + boardSerial + '.');
-            this.setState({activeBoardId: boardSerial});
+            this.setState({
+                activeBoardId: boardSerial,
+                selectedBoardSquare: null,
+                selectedValue: null
+            });
         }    
     }
 
@@ -165,7 +172,6 @@ class SudokuGame extends React.Component {
                                    <p>Currently active: Board {board.serialNumber}</p>
                                    <ActiveBoardView
                                         board={board}
-                                        active={true}
                                         announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
                                         />
                                 </td>

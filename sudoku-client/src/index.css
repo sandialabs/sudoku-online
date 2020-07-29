@@ -47,7 +47,7 @@ tr.sudoku-board-row {
 	border-bottom: 1px solid red;
 }
 
-td.sudoku-board-square.active {
+td.sudoku-board-square {
 	width: 60px;
 	height: 60px;
 	padding: 0px;
@@ -57,13 +57,14 @@ td.sudoku-board-square.active {
     font-size: larger;
 }
 
-td.sudoku-board-square.inactive {
-    width: 20px;
-    height: 20px;
+td.sudoku-board-square.selected {
+    width: 60px;
+    height: 60px;
     padding: 0px;
     margin: 0px;
+    border: 3px solid red;
     text-align: center;
-    border-right: 1px solid red;
+    font-size: larger;
 }
 
 table.sudoku-choice-grid {
@@ -82,9 +83,13 @@ tr.sudoku-choice-grid:first-child {
 td.sudoku-choice-grid {
 	width: 20px;
 	height: 20px;
-    margin: 0px;
-    padding: 0px;
 	border-right: 1px solid green;
+}
+
+td.sudoku-choice-grid.selected {
+    width: 20px;
+    height: 20px;
+    border: 3px solid green;
 }
 
 td.sudoku-choice-grid:last-child {
