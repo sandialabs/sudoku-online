@@ -27,10 +27,8 @@
 
 import React from 'react';
 
-import { Container } from '@material-ui/core';
-import { FormControl, FormControlLabel, FormLabel } from '@material-ui/core';
+import { FormControl, FormControlLabel } from '@material-ui/core';
 import { Button } from '@material-ui/core';
-import { List, ListItem } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import { Radio, RadioGroup } from '@material-ui/core';
 import { Tooltip } from '@material-ui/core';

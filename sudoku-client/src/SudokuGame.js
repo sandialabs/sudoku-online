@@ -47,7 +47,7 @@ class SudokuGame extends React.Component {
                 || ourBoard.serialNumber === null)
             {
                 ourBoard.serialNumber = newSerialNumber('board');
-                console.log('SudokuGame: Assigning serial number ' + ourBoard.serialNumber + ' to initial board.');
+                console.log('WARNING: SudokuGame: Assigning serial number ' + ourBoard.serialNumber + ' to initial board.');
             }
             this.state.gameTree = GameTree.makeGameTreeNode(ourBoard);
             this.state.activeBoardId = this.state.gameTree.data.board.serialNumber;

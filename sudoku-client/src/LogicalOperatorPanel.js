@@ -32,8 +32,7 @@
 
 import React from 'react';
 import { Checkbox } from '@material-ui/core';
-import { Container } from '@material-ui/core';
-import { FormControl, FormControlLabel, FormGroup, FormLabel } from '@material-ui/core';
+import { FormControlLabel, FormGroup } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
@@ -79,14 +78,6 @@ class LogicalOperatorPanel extends React.Component {
 			);
 	}
 	
-	renderSelectedOperatorDocumentation() {
-		return (
-			<div id="operatorDocumentation">
-				Documentation forthcoming.
-			</div>
-		);
-	}
-
 	render() {
 		if (!this.operatorsAvailable()) {
 			return (
@@ -97,7 +88,6 @@ class LogicalOperatorPanel extends React.Component {
 		
 		} else {
 			const operatorListPanel = this.renderOperatorList();
-			const operatorDescriptionPanel = this.renderSelectedOperatorDocumentation();
 			return (
 				<Paper name='logicalOperators'>
 					<Typography variant="h5">Logical Operators</Typography>
@@ -109,7 +99,6 @@ class LogicalOperatorPanel extends React.Component {
 
 	makeCheckBox(operator) {
 		const labelText = operator.user_name + ' (Cost: ' + operator.cost + ')';
-		const internalName = operator.internal_name;
 		const tooltipText = operator.user_name + ': ' + operator.description;
 		return (
 			<Tooltip title={tooltipText} key={operator.internal_name}>
