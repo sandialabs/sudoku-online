@@ -77,7 +77,7 @@ class SudokuChoiceGrid extends React.Component {
 	makeChoiceButton(key, value) {
 		let cellClasses = 'sudoku-choice-grid available';
 		if (this.props.boardSquareIsSelected
-			&& value == this.props.selectedValue) {
+			&& value === this.props.selectedValue) {
 			cellClasses += ' selected';
 		}
 		return (

@@ -101,8 +101,8 @@ class ActiveBoardView extends React.Component {
 	makeSquare(row, column, assignments, moveLists) {
 		let cellStyleName = 'sudoku-board-square active degree-' + this.props.board.degree;
 		if (this.state.selectedSquare !== null
-			&& this.state.selectedSquare[0] == row
-			&& this.state.selectedSquare[1] == column) {
+			&& this.state.selectedSquare[0] === row
+			&& this.state.selectedSquare[1] === column) {
 			cellStyleName += ' selected';
 		}
 
