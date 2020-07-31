@@ -120,11 +120,15 @@ class CellActionPanel extends React.Component {
 		return null;
 	}
 
-	// Call the executeAction() function from the props with the
 	handleExecuteAction() {
 		console.log('DEBUG: handleExecuteAction: Execute button pressed');
+		console.log('selectedAction is ' + this.state.selectedAction + ', defaultAction is ' + this.props.defaultAction);
 		if (this.props.executeAction) {
-			this.props.executeAction(this.state.selectedAction);
+			let action = this.state.selectedAction;
+			if (action === null) {
+				action = this.props.defaultAction;
+			} 
+			this.props.executeAction(action);
 		}
 	}
 
