@@ -26,6 +26,8 @@ class SudokuMain extends React.Component {
 			selectedHeuristic: null,
 			serverAddress: 'http://localhost:5000'
 		};
+
+		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
 	}
 
 	render() {
@@ -65,6 +67,7 @@ class SudokuMain extends React.Component {
 							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 							cellActions={this.state.cellActions}
 							logicalOperators={this.state.logicalOperators}
+							issueActionRequest={this.sendActionRequestToServer}
 							/>
 					</div>
 				</div>
@@ -133,6 +136,29 @@ class SudokuMain extends React.Component {
 		return this.mockupHeuristicRequest(request);
 	}
 
+	/* Send a request to the server to perform the requested action.
+	 *
+	 * It is the caller's responsibility to populate the action object
+	 * with the following items:
+	 *
+	 * - board
+	 * - requested action (internal name)
+	 * - list of requested logical operators (internal names)
+	 */
+	sendActionRequestToServer(action) {
+		const myRequest = {
+			'method': 'POST',
+			'url': this.state.serverAddress + '/sudoku/request/heuristic',
+			'headers': {
+				'Content-Type': 'application/json; utf-8',
+				'Accept': 'application/json'
+			},
+			'body': JSON.stringify(action)
+		}
+		return request(myRequest)
+				.then((reply) => JSON.parse(reply))
+				.catch((error) => console.log('ERROR sending action request to server: ' + error));
+	}
 	/* Pretend that we're calling out to a server to evaluate a heuristic
 	 *
 	 * At present, our heuristics are all in Heuristics.js and SudokuMockup.js

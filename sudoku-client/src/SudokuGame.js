@@ -12,6 +12,7 @@
 //  cellActions: list of cell actions (from server)
 //  logicalOperators: list of logical operators (from server)
 //  initialBoard: top of game
+//  issueActionRequest: function
 //  xxx revise this to just be the game object
 
 import React from 'react';
@@ -24,6 +25,7 @@ import GameTree from './GameTree';
 import { clone } from 'ramda';
 import { CellActionPanel } from './CellActionPanel';
 import { LogicalOperatorPanel } from './LogicalOperatorPanel';
+import PropTypes from 'prop-types';
 
 class SudokuGame extends React.Component {
     constructor(props) {
@@ -32,8 +34,9 @@ class SudokuGame extends React.Component {
         this.state = {
             gameTree: null,
             activeBoardId: null,
-            cellActions: null,
-            logicalOperators: null
+            selectedLogicalOperators: [],
+            selectedBoardSquare: null,
+            selectedValue: null
         };
 
         if (this.props.initialBoard !== null) {
@@ -61,25 +64,13 @@ class SudokuGame extends React.Component {
     } 
 
     boardAnnouncesChoice(board, cell, choice) {
-        console.log("Board announcing choice: board serial number "
-                    + board.serialNumber 
-                    + ", clicked cell " 
-                    + cell);
-        const action = {
-            'action': 'selectValueForCell',
-            'cell': cell,
-            'value': choice
-        };
         this.setState({
             selectedBoardSquare: cell,
             selectedValue: choice
         });
- //        return this.props.issueBoardRequest(board, action)
- //                         .then(result => {this.handleNewBoards(board.serialNumber, action, result);})
- // //                        .catch(result => {console.log('ERROR handling heuristic request: ' + result);});
     }
 
-    handleNewBoards(parentSerial, action, response) {
+    handleNewBoards(parentSerial, response) {
         console.log('handleNewBoards: parentSerial is ' + parentSerial);
         console.log('type of response: ' + typeof(response));
         console.log(response);
@@ -90,13 +81,16 @@ class SudokuGame extends React.Component {
                 this.state.gameTree,
                 parentSerial,
                 response
-                )
+                ),
         });
+
+        this.changeActiveBoard(response[0].serialNumber);
+
     }
 
     activeBoard() {
         if (!this.state.hasOwnProperty('activeBoardId')) {
-            console.log('ERROR: Game has no active board.  This shouldn\'t happen.');
+            throw new Error('ERROR: Game has no active board.  This shouldn\'t happen.');
         } else {
             const node = GameTree.findNodeById(this.state.gameTree, this.state.activeBoardId);
             return node.data.board;
@@ -144,8 +138,8 @@ class SudokuGame extends React.Component {
                             <CellActionPanel
                                 actions={this.props.cellActions}
                                 defaultAction={defaultAction}
-                                selectedActionChanged={(newAction) => {console.log('selectedActionChanged: ' + newAction);}}
-                                executeAction={() => {console.log('executeAction clicked');}}
+                                selectedActionChanged={(newAction) => {this.handleCellActionSelection(newAction)}}
+                                executeAction={(action) => this.handleExecuteAction(action)}
                                 />
                         </Grid>
                         <Grid item xs={6}>
@@ -186,7 +180,42 @@ class SudokuGame extends React.Component {
 
     handleLogicalOperatorSelection(operators) {
         console.log('Logical operator selection contains ' + operators.length + ' items');
+        this.setState({
+            selectedLogicalOperators: operators
+        });
     }
+
+    handleCellActionSelection(selectedAction) {
+        this.setState({
+            selectedCellAction: selectedAction
+        })
+    }
+
+    handleExecuteAction(action) {
+        const request = {
+            action: {
+                action: action.internal_name,
+                cell: this.state.selectedBoardSquare, 
+                value: this.state.selectedValue
+            },
+            board: this.activeBoard(),
+            operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
+        };
+
+
+        console.log('DEBUG: handleExecuteAction running.');
+        console.log('request: ');
+        console.log(request);
+        this.props.issueActionRequest(request)
+            .then(response => this.handleNewBoards(this.activeBoard().serialNumber, response));
+    }
+
 }
 
+SudokuGame.propTypes = {
+    cellActions: PropTypes.array,
+    logicalOperators: PropTypes.array,    
+    initialBoard: PropTypes.object,
+    issueActionRequest: PropTypes.func.isRequired
+}
 export default SudokuGame;
