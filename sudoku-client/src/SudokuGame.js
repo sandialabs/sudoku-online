@@ -129,6 +129,7 @@ class SudokuGame extends React.Component {
             console.log('render(): active board serial number: ' + board.serialNumber);
             let defaultAction = null;
             if (this.props.cellActions !== null && this.props.cellActions.length > 0) {
+                // FIXME: make sure the default action is not disabled
                 defaultAction = this.props.cellActions[0];
             }
             return (
@@ -137,7 +138,7 @@ class SudokuGame extends React.Component {
                         <Grid item xs={6}>
                             <CellActionPanel
                                 allActions={this.props.cellActions}
-                                permittedActions={[]}
+                                permittedActions={board.availableActions}
                                 defaultAction={defaultAction}
                                 selectedActionChanged={(newAction) => {this.handleCellActionSelection(newAction)}}
                                 executeAction={(action) => this.handleExecuteAction(action)}
@@ -147,7 +148,7 @@ class SudokuGame extends React.Component {
                             <LogicalOperatorPanel
                                 operators={this.props.logicalOperators}
                                 selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
-                                canChange={true}
+                                canChange={board.rules.canChangeLogicalOperators}
                                 />
                         </Grid>
                     </Grid>
