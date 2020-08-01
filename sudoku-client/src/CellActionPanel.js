@@ -73,8 +73,10 @@ class CellActionPanel extends React.Component {
 	}	
 
 	makeMaterialRadioButton(action) {
-		const actionPermitted = (this.props.permittedActions.length == 0
-			                     || this.props.permittedActions.indexOf(action.internal_name) != -1);
+		const actionPermitted = (
+			this.props.permittedActions.length === 0
+            || this.props.permittedActions.indexOf(action.internal_name) !== -1);
+		
 		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
 		const forbiddenText = 'This action is not permitted on this board.';
 		let toolTipText = action.user_name + ': ' + action.description;
@@ -87,7 +89,7 @@ class CellActionPanel extends React.Component {
 			<Tooltip title={toolTipText} key={action.internal_name}>
 				<FormControlLabel
 					value={action.internal_name}
-					disabled={(actionPermitted == false)}
+					disabled={(actionPermitted === false)}
 					control={<Radio />}
 					label={fullLabelText}
 					/>
