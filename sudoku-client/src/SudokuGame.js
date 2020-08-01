@@ -230,8 +230,8 @@ class SudokuGame extends React.Component {
 }
 
 SudokuGame.propTypes = {
-    cellActions: PropTypes.array,
-    logicalOperators: PropTypes.array,    
+    cellActions: PropTypes.array.isRequired,
+    logicalOperators: PropTypes.array.isRequired,    
     initialBoard: PropTypes.object,
     issueActionRequest: PropTypes.func.isRequired
 }
