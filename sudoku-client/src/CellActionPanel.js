@@ -12,7 +12,8 @@
 // Detailed descriptive text is  in a panel below (or beside?) the radio buttons.
 // 
 // Props:
-//     actions: List of Action objects, detailed below.
+//     allActions: List of Action objects, detailed below.
+//     permittedActions: Actions permitted for the currently active board.
 //     selectedActionChanged (optional): Function to call when the user selects a different heuristic
 //     defaultAction: Which action to highlight when the radio buttons are created
 //     executeAction: Function to call when the user presses the "Execute" button
@@ -33,6 +34,8 @@ import { Paper } from '@material-ui/core';
 import { Radio, RadioGroup } from '@material-ui/core';
 import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
+
+import PropTypes from 'prop-types';
 
 class CellActionPanel extends React.Component {
 	constructor(props) {
@@ -64,29 +67,38 @@ class CellActionPanel extends React.Component {
 	}
 
 	makeRadioButtons() {
-		return this.props.actions.map(
+		return this.props.allActions.map(
 			(action) => this.makeMaterialRadioButton(action)
 			);
 	}	
 
 	makeMaterialRadioButton(action) {
+		const actionPermitted = (this.props.permittedActions.length == 0
+			                     || this.props.permittedActions.indexOf(action.internal_name) != -1);
 		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
-		const toolTipText = action.user_name + ': ' + action.description;
+		const forbiddenText = 'This action is not permitted on this board.';
+		let toolTipText = action.user_name + ': ' + action.description;
+
+		if (!actionPermitted) {
+			toolTipText = forbiddenText;
+		}
+		
 		return (
 			<Tooltip title={toolTipText} key={action.internal_name}>
-				<FormControlLabel 
+				<FormControlLabel
 					value={action.internal_name}
+					disabled={(actionPermitted == false)}
 					control={<Radio />}
 					label={fullLabelText}
 					/>
-			</Tooltip>
-				);
+				</Tooltip>
+			);
 	}
 
 	actionsAvailable() {
-		return (this.props.actions !== undefined
-				&& this.props.actions !== null
-				&& this.props.actions.length !== 0);
+		return (this.props.allActions !== undefined
+				&& this.props.allActions !== null
+				&& this.props.allActions.length !== 0);
 	}
 
 	render() {
@@ -109,7 +121,7 @@ class CellActionPanel extends React.Component {
 	}
 
 	findActionObject(actionInternalName) {
-		for (const action of this.props.actions) {
+		for (const action of this.props.allActions) {
 			if (action.internal_name === actionInternalName) {
 				return action;
 			}
@@ -144,5 +156,13 @@ class CellActionPanel extends React.Component {
 		}	
 	}
 }
+
+CellActionPanel.propTypes = {
+	allActions: PropTypes.array.isRequired,
+	permittedActions: PropTypes.array.isRequired,
+	selectedActionChanged: PropTypes.func,
+	defaultAction: PropTypes.object,
+	executeAction: PropTypes.func.isRequired
+};
 
 export { CellActionPanel };

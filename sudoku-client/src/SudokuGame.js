@@ -136,7 +136,8 @@ class SudokuGame extends React.Component {
                     <Grid container spacing={3} id="actionsAndOperators">
                         <Grid item xs={6}>
                             <CellActionPanel
-                                actions={this.props.cellActions}
+                                allActions={this.props.cellActions}
+                                permittedActions={[]}
                                 defaultAction={defaultAction}
                                 selectedActionChanged={(newAction) => {this.handleCellActionSelection(newAction)}}
                                 executeAction={(action) => this.handleExecuteAction(action)}
@@ -208,6 +209,22 @@ class SudokuGame extends React.Component {
         console.log(request);
         this.props.issueActionRequest(request)
             .then(response => this.handleNewBoards(this.activeBoard().serialNumber, response));
+    }
+
+    /* The score for a game is the sum of the 'cost' attribute for all of its nodes. */
+    computeScore() {
+        const all_scores = [];
+
+        GameTree.walkTree(
+            this.state.gameTree,
+            (node) => {
+                if ('cost' in node && node.cost !== null) {
+                    all_scores.push(node.cost);
+                }
+            }
+            );
+
+        return all_scores.reduce((a, b) => (a+b), 0);
     }
 
 }

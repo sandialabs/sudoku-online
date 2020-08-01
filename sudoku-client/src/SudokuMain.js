@@ -18,11 +18,8 @@ class SudokuMain extends React.Component {
 
 		this.state = {
 			initialBoard: null,
-			cellActions: null,
-			logicalOperators: null,
-
-			availableHeuristics: null,
-			selectedHeuristic: null,
+			cellActions: [],
+			logicalOperators: [],
 			serverAddress: 'http://localhost:5000'
 		};
 
@@ -147,7 +144,8 @@ class SudokuMain extends React.Component {
 
 	receiveInitialBoard(response) {
 		const board = JSON.parse(response);
-		console.log('Initial board: name ' + board.name + ', serial number ' + board.serialNumber);
+		console.log('Initial board: name ' + board.name + ', serial number ' + board.serialNumber + ', board object:');
+		console.log(board);
 		this.setState({initialBoard: board});
 	}
 }
