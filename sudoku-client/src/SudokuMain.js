@@ -69,7 +69,7 @@ class SudokuMain extends React.Component {
 	sendActionRequestToServer(action) {
 		const myRequest = {
 			'method': 'POST',
-			'url': this.state.serverAddress + '/sudoku/request/heuristic',
+			'url': this.state.serverAddress + '/sudoku/request/evaluate_cell_action',
 			'headers': {
 				'Content-Type': 'application/json; utf-8',
 				'Accept': 'application/json'
@@ -92,7 +92,7 @@ class SudokuMain extends React.Component {
 	requestLogicalOperatorList() {
 		const myRequest = {
 			'method': 'GET',
-			'url': this.state.serverAddress + '/sudoku/request/list_heuristics'
+			'url': this.state.serverAddress + '/sudoku/request/list_logical_operators'
 		}
 		return request(myRequest);
 	}

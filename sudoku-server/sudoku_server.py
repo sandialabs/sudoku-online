@@ -50,7 +50,7 @@ def get_boards_for_game(gamename):
 
 
 # MAL TODO talk to Andy about changing this to a different name
-@app.route('/sudoku/request/heuristic', methods=['POST'])
+@app.route('/sudoku/request/evaluate_cell_action', methods=['POST'])
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.
 
@@ -64,7 +64,7 @@ def take_given_action():
     return jsonify(game.parse_and_apply_action(content))
 
 
-@app.route('/sudoku/request/list_heuristics', methods=['GET'])
+@app.route('/sudoku/request/list_logical_operators', methods=['GET'])
 def list_possible_operators():
     """ Returns the possible logical operators that could be applied.
 
