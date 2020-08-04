@@ -135,8 +135,8 @@ class SudokuGame extends React.Component {
             }
             const currentScore = this.computeScore();
             return (
-                <div id="gameContainer">
-                    <Grid container id="actionsAndOperators">
+                <Grid container id="gameContainer">
+                    <Grid container item xs={12} id="actionsAndOperators">
                         <Grid item xs={6}>
                             <CellActionPanel
                                 allActions={this.props.cellActions}
@@ -159,29 +159,19 @@ class SudokuGame extends React.Component {
                             </Paper>
                         </Grid>
                     </Grid>
-                    <table id="gameTable">
-                        <tbody>
-                            <tr>
-                                <td id="entireTreeCell">
-                                    <div>
-                                        <p>This cell will contain the entire game tree.</p>
-                                        <GameTreeView
-                                            tree={this.state.gameTree}
-                                            changeActiveBoard={(serial) => {this.changeActiveBoard(serial);}}
-                                            />
-                                    </div>
-                                </td>
-                                <td id="activeBoardCell">
-                                   <p>Currently active: Board {board.serialNumber}</p>
-                                   <ActiveBoardView
-                                        board={board}
-                                        announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
-                                        />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                    <Grid container item id="gameTree" xs={6}>
+                        <GameTreeView
+                            tree={this.state.gameTree}
+                            changeActiveBoard={(serial) => {this.changeActiveBoard(serial);}}
+                            />
+                    </Grid>
+                    <Grid container item id="activeBoard" xs={6}>
+                         <ActiveBoardView
+                            board={board}
+                            announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
+                            />
+                    </Grid>
+                </Grid>
                 );
         }
     } // end of render()
