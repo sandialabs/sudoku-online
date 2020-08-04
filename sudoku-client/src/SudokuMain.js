@@ -10,7 +10,7 @@
 // 
 import React from 'react';
 import SudokuGame from './SudokuGame';
-import { requestInitialBoard, executeHeuristic } from './SudokuMockup';
+import { request } from './SudokuUtilities';
 
 class SudokuMain extends React.Component {
 	constructor(props) {
@@ -18,25 +18,15 @@ class SudokuMain extends React.Component {
 
 		this.state = {
 			initialBoard: null,
-			availableHeuristics: null,
-			selectedHeuristic: null
+			cellActions: [],
+			logicalOperators: [],
+			serverAddress: 'http://localhost:5000'
 		};
+
+		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
 	}
 
 	render() {
-		let heuristicPanelContents = [];
-
-		if (this.state.availableHeuristics === null) {
-			heuristicPanelContents.push(<p>Heuristic list is not yet available.</p>);
-		} else {
-			heuristicPanelContents = 
-				this.state.availableHeuristics.map(
-					heuristic => {
-						return this.makeHeuristicRadioButton(heuristic.internal_name, heuristic.user_name);
-					}
-				);
-		}
-
 		if (this.state.initialBoard !== null) {
 			return (
 				<div key={3}>
@@ -48,15 +38,14 @@ class SudokuMain extends React.Component {
 				        	<li>Handle communication with the server.</li>
 					    </ul>
 					</div>
-					<div key={5}>
-						<p>Available Heuristics</p>
-						{heuristicPanelContents}
-					</div>
 					<div key={6}>
 						<SudokuGame 
 							degree={this.props.degree}
 							initialBoard={this.state.initialBoard}
 							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
+							cellActions={this.state.cellActions}
+							logicalOperators={this.state.logicalOperators}
+							issueActionRequest={this.sendActionRequestToServer}
 							/>
 					</div>
 				</div>
@@ -68,114 +57,96 @@ class SudokuMain extends React.Component {
 		}
 	}
 
-	makeHeuristicRadioButton(internalName, userName) {
-		console.log('makeHeuristicRadioButton: internalName ' + internalName + ', userName ' + userName + ', selectedHeuristic ' + this.state.selectedHeuristic);
-		return (
-			<div className='heuristic-form' key={internalName}>
-			  <label>
-			    <input
-			      type='radio'
-			      name='selectHeuristic'
-			      value={internalName}
-			      checked={this.state.selectedHeuristic === internalName}
-			      onChange={event => {this.handleHeuristicSelection(event);}}
-			      className='heuristic-radio-button'
-			      />
-			    {userName}
-			  </label>
-			</div>
-			);
-	}
-
-	handleHeuristicSelection(changeEvent) {
-		console.log('handleHeuristicSelection: Currently selected heuristic before change is ' + this.state.selectedHeuristic);
-		console.log('handleHeuristicSelection: New heuristic is ' + changeEvent.target.value);
-		this.setState({
-			'selectedHeuristic': changeEvent.target.value
-		});
-	}
-
-	/* Send off a request for asynchronous evaluation of a heuristic.
+	/* Send a request to the server to perform the requested action.
 	 *
-	 * This function will eventually make an HTTP call to an external
-	 * server.  For now, it calls a mockup function that pretends
-	 * to be asynchronous.
-	 * 
-	 * Arguments:
-	 *     board: Sudoku board to send (should it already be JSON?)
-	 *     action: struct containing the request being made
+	 * It is the caller's responsibility to populate the action object
+	 * with the following items:
 	 *
-	 * Returns:
-	 *     Promise that will resolve with the results of whatever heuristic runs.
+	 * - board
+	 * - requested action (internal name)
+	 * - list of requested logical operators (internal names)
 	 */
+	sendActionRequestToServer(action) {
+		const myRequest = {
+			'method': 'POST',
+			'url': this.state.serverAddress + '/sudoku/request/heuristic',
+			'headers': {
+				'Content-Type': 'application/json; utf-8',
+				'Accept': 'application/json'
+			},
+			'body': JSON.stringify(action)
+		}
+		return request(myRequest)
+				.then((reply) => JSON.parse(reply))
+				.catch((error) => console.log('ERROR sending action request to server: ' + error));
+	}
 
-	handleBoardRequest(board, action) {
-		console.log(
-			'handleBoardRequest called, current heuristic is ' 
-			+ this.state.selectedHeuristic
-			+ ' and board is ' + board);
-		const request = {
-			board: board,
-			action: action,
-			heuristic: this.state.selectedHeuristic
+	requestCellActionList() {
+		const myRequest = {
+			'method': 'GET',
+			'url': this.state.serverAddress + '/sudoku/request/list_cell_actions'
 		};
-
-		// When we switch over to an actual server, this line will be replaced
-		// with something that makes an actual HTTP request.
-		return this.mockupHeuristicRequest(request);
+		return request(myRequest);
 	}
 
-	/* Pretend that we're calling out to a server to evaluate a heuristic
-	 *
-	 * At present, our heuristics are all in Heuristics.js and SudokuMockup.js
-	 * and are called as (synchronous) functions.  In order to move this prototype
-	 * closer to the regime where we're actually calling out to a distant server,
-	 * we wrap that function call in a Javascript Promise object to force the
-	 * recipient to work as if it's asynchronous.
-	 */
-
-	mockupHeuristicRequest(request) {
-		const requestAsString = JSON.stringify(request);
-		const resultAsString = executeHeuristic(requestAsString);
-
-		console.log('mockupHeuristicRequest: resultAsString is ' + resultAsString);
-		return Promise.resolve(
-			JSON.parse(
-				executeHeuristic(
-					JSON.stringify(request))));
+	requestLogicalOperatorList() {
+		const myRequest = {
+			'method': 'GET',
+			'url': this.state.serverAddress + '/sudoku/request/list_heuristics'
+		}
+		return request(myRequest);
 	}
 
-
-	requestHeuristicList() {
-		const request = { 'heuristic': 'listHeuristics', 
-	                      'board': null };
-
-	    return Promise.resolve(
-	    	JSON.parse(
-	    		executeHeuristic(
-	    			JSON.stringify(request))));
+	populateLogicalOperatorList(resultFromServer) {
+		const parsedResponse = JSON.parse(resultFromServer);
+		console.log('Received ' + parsedResponse.length + ' logical operators from server.');
+		console.log(parsedResponse)
+		this.setState({'logicalOperators': parsedResponse});
 	}
 
-	populateHeuristicList(resultFromServer) {
-		console.log('Heuristic list from server:');
-		console.log(resultFromServer);
-		this.setState({'availableHeuristics': resultFromServer});
+	populateCellActionList(resultFromServer) {
+		const parsedResponse = JSON.parse(resultFromServer);
+		console.log('Received ' + parsedResponse.length + ' cell actions from server.');
+		console.log(parsedResponse)
+		this.setState({'cellActions': parsedResponse});
 	}
 
 	componentDidMount() {
 		console.log('Main panel mounted.  Call out to get the initial game state.');
 		// This will be replaced with a server call once we have a server to call
 
-		const boardPromise = Promise.resolve(JSON.parse(requestInitialBoard(3)));
-
-		boardPromise.then(
-			(board) => (this.setState({initialBoard: board}))
+		this.requestInitialBoard().then(
+				(successResponse) => {this.receiveInitialBoard(successResponse);}
+			).catch(
+				(failure) => {console.log('ERROR requesting initial board: ' + failure);}
 			);
 
-		this.requestHeuristicList().then(
-			heuristicList => { this.populateHeuristicList(heuristicList); }
+		this.requestLogicalOperatorList().then(
+				(opList) => { this.populateLogicalOperatorList(opList); }
+			).catch(
+				(failure) => {console.log('ERROR requesting logical operator list: ' + failure);}
+			);
+
+		this.requestCellActionList().then(
+				(actionList) => {this.populateCellActionList(actionList);}
+			).catch(
+				(failure) => {console.log('ERROR requesting cell action list: ' + failure);}
 			);
 		
+	}
+
+	requestInitialBoard(serverAddress) {
+		return request({
+			'method': 'GET',
+			'url': this.state.serverAddress + '/sudoku/request/initialBoard'
+		});
+	}
+
+	receiveInitialBoard(response) {
+		const board = JSON.parse(response);
+		console.log('Initial board: name ' + board.name + ', serial number ' + board.serialNumber + ', board object:');
+		console.log(board);
+		this.setState({initialBoard: board});
 	}
 }
 

@@ -10,7 +10,7 @@
  */
 
 import React, {Component} from 'react';
-import { Treebeard, decorators as defaultDecorators } from 'react-treebeard';
+import { Treebeard, theme as defaultTheme, decorators as defaultDecorators } from 'react-treebeard';
 import { clone } from 'ramda';
 import { GameTreeBoard } from './GameTreeBoard';
 import PropTypes from 'prop-types';
@@ -50,6 +50,12 @@ class GameTreeView extends Component {
 
         this.decorators = clone(defaultDecorators);
         this.decorators.Header = GameTreeBoardHeader;
+
+        this.theme = clone(defaultTheme);
+        this.theme.tree.base.backgroundColor = 'white';
+        this.theme.tree.base.color = 'black';
+        this.theme.tree.node.subtree = '50px';
+        this.theme.tree.node.activeLink.background = '#A0A0A0';
     }
     
     // The game tree will always be fully expanded.  Clicking on a node only
@@ -78,6 +84,7 @@ class GameTreeView extends Component {
                     data={this.state.renderableTree}
                     onToggle={this.onToggle}
                     decorators={this.decorators}
+                    style={this.theme}
                 />
             );
         } else {

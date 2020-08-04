@@ -28,7 +28,7 @@ function setSymmetricDifference(a, b) {
 	return setDifference(setUnion(a, b), setIntersection(a, b));
 }
 
-var SerialNumbers = { };
+const SerialNumbers = { };
 
 /** Request a serial number for a named category
  *
@@ -363,6 +363,47 @@ function makeBoard(degree, assignments, availableMoves) {
 	};
 }
 
+function request(requestObject) {
+	let xhr = new XMLHttpRequest();
+	return new Promise((resolve, reject) => {
+		console.log('DEBUG: request: Preparing \''
+			+ (requestObject.method || 'GET[default]') + ' '
+			+ requestObject.url + '\'');
+        xhr.open(requestObject.method || "GET", requestObject.url);
+        if (requestObject.headers) {
+            Object.keys(requestObject.headers).forEach(key => {
+                xhr.setRequestHeader(key, requestObject.headers[key]);
+            });
+        }
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(xhr.response);
+            } else {
+                reject(xhr.statusText);
+            }
+        };
+        xhr.onerror = () => reject(xhr.statusText);
+        xhr.send(requestObject.body);
+    });
+}
+
+const SudokuUtilitiesNamespace = {
+	clearRandomCells: clearRandomCells,
+	computeMoveLists: computeMoveLists,
+	filledBoard: filledBoard,
+	initialMoveList: initialMoveList,
+	makeBoard: makeBoard,
+	newSerialNumber: newSerialNumber, 
+	range: range, 
+	request: request,
+	setDifference: setDifference, 
+	setIntersection: setIntersection, 
+	setUnion: setUnion
+};
+
+
+export default SudokuUtilitiesNamespace;
+
 export { 
 	clearRandomCells,
 	computeMoveLists,
@@ -371,6 +412,7 @@ export {
 	makeBoard,
 	newSerialNumber, 
 	range, 
+	request,
 	setDifference, 
 	setIntersection, 
 	setUnion,

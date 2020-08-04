@@ -8,6 +8,8 @@
 //
 
 import React from 'react';
+import PropTypes from 'prop-types';
+
 // import { range } from './SudokuUtilities';
 
 /// SudokuBoard: Renderable, interactive Sudoku board
@@ -38,6 +40,7 @@ import React from 'react';
 // The hierarchy will go farther down when we render the move list
 // in each cell.
   
+
 class SudokuChoiceGrid extends React.Component {
 	render() {
 		let gridRows = this.makeChoiceGridContents();
@@ -72,8 +75,15 @@ class SudokuChoiceGrid extends React.Component {
 	}
 
 	makeChoiceButton(key, value) {
+		let cellClasses = 'sudoku-choice-grid available';
+		if (this.props.boardSquareIsSelected) {
+			cellClasses += ' selected-square';
+			if (value === this.props.selectedValue) {
+				cellClasses += ' selected-value';
+			}
+		}
 		return (
-			<td className='sudoku-choice-grid available' key={key}>
+			<td className={cellClasses} key={key}>
 				<button className='sudoku-choice-grid'
 						onClick={() => {this.handleClick(value);}}
 					>
@@ -85,9 +95,13 @@ class SudokuChoiceGrid extends React.Component {
 
 	makeBlankSquare(key) {
 		const blankSpace = '\u00A0';
+		let classes = 'sudoku-choice-grid unavailable';
+		if (this.props.boardSquareIsSelected) {
+			classes += ' selected-square';
+		}
 		return (
-			<td className='sudoku-choice-grid unavailable' key={key}>
-				<button className='sudoku-choice-grid unavailable'>{blankSpace}</button>
+			<td className={classes} key={key}>
+				<button className={classes}>{blankSpace}</button>
 			</td>
 			);
 	}
@@ -97,5 +111,10 @@ class SudokuChoiceGrid extends React.Component {
 	}
 }
 
+SudokuChoiceGrid.propTypes = {
+	degree: PropTypes.number.isRequired,
+	boardSquareIsSelected: PropTypes.bool.isRequired,
+	selectedValue: PropTypes.number
+};
 
 export default SudokuChoiceGrid;

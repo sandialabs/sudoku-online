@@ -5,6 +5,8 @@ import SudokuMain from './SudokuMain';
 import './index.css';
 
 
+import 'fontsource-roboto';
+
 // ReactDOM.render(
 //   <React.StrictMode>
 //     <p>

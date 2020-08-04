@@ -1,6 +1,6 @@
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+
+  font-family: 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -12,86 +12,145 @@ code {
     monospace;
 }
 
-table {
+table.active-board {
 	table-layout: fixed;
 	border-collapse: collapse;
+    border-style: solid;
+    border-color: black;
+    border-width: 5px;
 }
 
-
-.sudoku-board-table {
-	border-style: solid;
-	border-color: black;
-	border-width: 5px;
-}
 
 /*
- * Handle the internal borders between each DxD block with nth-child. 
- * Note that there is no every-nth-child selector so we have to hard-code 
- * a few of these. 
+ * Styles for active board display
  */
 
-/* Internal borders between blocks */
-tr.sudoku-board-row.degree-3:nth-child(3n+3) {
-	border-bottom: 3px solid black;
+td.active-board.square {
+    margin: 0px;
+    padding: 0px;
 }
 
-td.sudoku-board-square.degree-3:nth-child(3n+3) {
-	border-right: 3px solid black;
+/* Internal borders between blocks */
+tr.active-board.degree-3:nth-child(3n+3) {
+	border-bottom: 3px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+td.active-board.square.degree-3:nth-child(3n+3) {
+	border-right: 3px solid gray;
+    margin: 0;
+    padding: 0;
 }
 
 
 /* The rest of the internal borders - not between blocks, just squares */
-tr.sudoku-board-row {
-	border-bottom: 1px solid red;
+tr.active-board {
+	border-bottom: 2px solid #FFA0A0;
+    margin: 0;
+    padding: 0;
 }
 
-td.sudoku-board-square.active {
-	width: 90px;
-	height: 90px;
-	padding: 0px;
-	margin: 0px;
-	border-right: 1px solid red;
+td.active-board.square {
+	border-right: 2px solid #FFA0A0;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    width: 60px;
+    height: 60px;
 }
 
-td.sudoku-board-square.inactive {
-    width: 30px;
-    height: 30px;
-    padding: 0px;
-    margin: 0px;
-    border-right: 1px solid red;
+td.active-board.square.selected-square {
+    border: 3px solid red;
+    background-color: #D0D0FF;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    width: 27px;
+    height: 27px;
 }
+
+/*
+ * Styles for the choice grid within the unassigned cells in the 
+ * active board
+ */
 
 table.sudoku-choice-grid {
 	margin: 0;
 	padding: 0;
+    border-collapse: collapse;
 }
 
 tr.sudoku-choice-grid {
-	border-top: 1px solid green;
+	border-bottom: 1px solid blue;
+    margin: 0;
+    padding: 0;
 }
-tr.sudoku-choice-grid:first-child {
-	border-top: none;
+
+tr.sudoku-choice-grid:last-child {
+    border-bottom: none;
 }
 
 td.sudoku-choice-grid {
-	width: 30px;
-	height: 30px;
-	border-right: 1px solid green;
+    border-right: 1px solid blue;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    width: 20px;
+    height: 20px;
 }
 
 td.sudoku-choice-grid:last-child {
-	border-right: none;
+    border-right: none;
+}
+
+td.sudoku-choice-grid.selected-square.selected-value {
+    border: 3px solid blue;
 }
 
 button.sudoku-choice-grid {
-	margin: 0px;
-	padding: 0px;
-	border: none;
+    background-color: transparent;
 	text-align: center;
-	width: 30px;
-	height: 30px;
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: 19px;
+    height: 19px;
 }
 
-button.sudoku-choice-grid.unavailable {
-	background-color: white;
+/*
+ * Styles for the tables in the game tree view
+ */
+
+table.game-tree-board {
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin: 0px;
+    padding: 0px;
+    border: 2px solid gray;
+}
+
+tr.game-tree-board {
+    border-bottom: 1px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+tr.game-tree-board.degree-3:nth-child(3n+3) {
+    border-bottom: 2px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+td.game-tree-board {
+    border-right: 1px solid gray;
+    width: 18px;
+    height: 18px;
+    text-align: center;
+}
+
+td.game-tree-board.degree-3:nth-child(3n+3) {
+    border-right: 2px solid gray;
+    margin: 0;
+    padding: 0;
 }
