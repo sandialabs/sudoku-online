@@ -1,5 +1,8 @@
 # Request/Response format for heuristics
 
+NOTE: THIS FILE IS OUT OF DATE
+
+
 Communication between the client and the server will be over HTTP using JSON as the format.
 
 ## Request Format
