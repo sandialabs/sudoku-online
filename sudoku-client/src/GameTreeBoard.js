@@ -13,12 +13,7 @@ class GameTreeBoard extends React.Component {
 	
 	render() {
 		const assignmentArray = this.props.board.assignments;
-
-		return (
-			<div id="gameTreeBoard-{this.props.board.serialNumber}" className="board game-tree">
-					{this.makeBoardTable(assignmentArray)}
-			</div>
-		);	
+		return this.makeBoardTable(assignmentArray);	
 	}
 
 	/// Make the board as an array of blocks.
@@ -38,9 +33,11 @@ class GameTreeBoard extends React.Component {
 	//     
 	makeBoardTable(assignments) {
 		const D = this.props.board.degree;
+		const tableStyle = 'game-tree-board degree-' + D;
+		const boardId = 'game-tree-board-' + this.props.board.serialNumber;
+
 		const tableRows = [];
 
-		const rowStyleName = 'sudoku-board-row degree-' + D;
 		for (let row = 0; row < D*D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D*D; ++col) {
@@ -49,19 +46,19 @@ class GameTreeBoard extends React.Component {
 					);
 			}
 			tableRows.push(
-				<tr className={rowStyleName} key={row}>{squaresInRow}</tr>
+				<tr className={tableStyle} key={row}>{squaresInRow}</tr>
 				);
 		}
 
 		return (
-			<table className="sudoku-board-table">
+			<table className={tableStyle} id={boardId}>
 				<tbody>{tableRows}</tbody>
 			</table>
 			);
 	}
 
 	makeSquare(row, column, assignments) {
-		let cellStyleName = 'sudoku-board-square inactive degree-' + this.props.degree;
+		let cellStyleName = 'game-tree-board degree-' + this.props.board.degree;
 		if (assignments[row][column] !== null) {
 			return (
 				<td className={cellStyleName} key={column}>
