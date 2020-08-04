@@ -17,7 +17,8 @@
 
 import React from 'react';
 import { Grid } from '@material-ui/core';
-
+import { Typography } from '@material-ui/core';
+import { Paper } from '@material-ui/core';
 import { ActiveBoardView } from './ActiveBoardView';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
@@ -132,9 +133,10 @@ class SudokuGame extends React.Component {
                 // FIXME: make sure the default action is not disabled
                 defaultAction = this.props.cellActions[0];
             }
+            const currentScore = this.computeScore();
             return (
                 <div id="gameContainer">
-                    <Grid container spacing={3} id="actionsAndOperators">
+                    <Grid container id="actionsAndOperators">
                         <Grid item xs={6}>
                             <CellActionPanel
                                 allActions={this.props.cellActions}
@@ -150,6 +152,11 @@ class SudokuGame extends React.Component {
                                 selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
                                 canChange={board.rules.canChangeLogicalOperators}
                                 />
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Paper>
+                                <Typography variant="h4">Current Score: {currentScore}</Typography>
+                            </Paper>
                         </Grid>
                     </Grid>
                     <table id="gameTable">
@@ -219,12 +226,15 @@ class SudokuGame extends React.Component {
         GameTree.walkTree(
             this.state.gameTree,
             (node) => {
-                if ('cost' in node && node.cost !== null) {
-                    all_scores.push(node.cost);
+                if ('cost' in node.data.board) {
+                    all_scores.push(node.data.board.cost);
                 }
             }
             );
 
+        console.log('computeScore: score array for game tree: ' + JSON.stringify(all_scores));
+        console.log('game tree:');
+        console.log(this.state.gameTree);
         return all_scores.reduce((a, b) => (a+b), 0);
     }
 
