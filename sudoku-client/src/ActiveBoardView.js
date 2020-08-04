@@ -101,7 +101,7 @@ class ActiveBoardView extends React.Component {
 		if (this.state.selectedSquare !== null
 			&& this.state.selectedSquare[0] === row
 			&& this.state.selectedSquare[1] === column) {
-			cellStyleName += ' selected';
+			cellStyleName += ' selected-square';
 		}
 
 		const allCellStyleNames = cellStyleName;

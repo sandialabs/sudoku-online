@@ -46,13 +46,13 @@ td.active-board.square.degree-3:nth-child(3n+3) {
 
 /* The rest of the internal borders - not between blocks, just squares */
 tr.active-board {
-	border-bottom: 1px solid red;
+	border-bottom: 2px solid #FFA0A0;
     margin: 0;
     padding: 0;
 }
 
 td.active-board.square {
-	border-right: 1px solid red;
+	border-right: 2px solid #FFA0A0;
     text-align: center;
     margin: 0;
     padding: 0;
@@ -60,8 +60,9 @@ td.active-board.square {
     height: 60px;
 }
 
-td.active-board.square.selected {
+td.active-board.square.selected-square {
     border: 3px solid red;
+    background-color: #D0D0FF;
     text-align: center;
     margin: 0;
     padding: 0;
@@ -81,7 +82,7 @@ table.sudoku-choice-grid {
 }
 
 tr.sudoku-choice-grid {
-	border-bottom: 1px solid green;
+	border-bottom: 1px solid blue;
     margin: 0;
     padding: 0;
 }
@@ -91,7 +92,8 @@ tr.sudoku-choice-grid:last-child {
 }
 
 td.sudoku-choice-grid {
-    border-right: 1px solid green;
+    border-right: 1px solid blue;
+    background-color: transparent;
     margin: 0;
     padding: 0;
     width: 20px;
@@ -102,12 +104,12 @@ td.sudoku-choice-grid:last-child {
     border-right: none;
 }
 
-td.sudoku-choice-grid.selected {
-    border: 3px solid green;
+td.sudoku-choice-grid.selected-square.selected-value {
+    border: 3px solid blue;
 }
 
 button.sudoku-choice-grid {
-    background-color: white;
+    background-color: transparent;
 	text-align: center;
     border: none;
     margin: 0;

@@ -76,9 +76,11 @@ class SudokuChoiceGrid extends React.Component {
 
 	makeChoiceButton(key, value) {
 		let cellClasses = 'sudoku-choice-grid available';
-		if (this.props.boardSquareIsSelected
-			&& value === this.props.selectedValue) {
-			cellClasses += ' selected';
+		if (this.props.boardSquareIsSelected) {
+			cellClasses += ' selected-square';
+			if (value === this.props.selectedValue) {
+				cellClasses += ' selected-value';
+			}
 		}
 		return (
 			<td className={cellClasses} key={key}>
@@ -93,9 +95,13 @@ class SudokuChoiceGrid extends React.Component {
 
 	makeBlankSquare(key) {
 		const blankSpace = '\u00A0';
+		let classes = 'sudoku-choice-grid unavailable';
+		if (this.props.boardSquareIsSelected) {
+			classes += ' selected-square';
+		}
 		return (
-			<td className='sudoku-choice-grid unavailable' key={key}>
-				<button className='sudoku-choice-grid unavailable'>{blankSpace}</button>
+			<td className={classes} key={key}>
+				<button className={classes}>{blankSpace}</button>
 			</td>
 			);
 	}
