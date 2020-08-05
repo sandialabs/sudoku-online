@@ -24,6 +24,7 @@ class SudokuMain extends React.Component {
 		};
 
 		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
+		this.submitFinishedGameTree = this.submitFinishedGameTree.bind(this);
 	}
 
 	render() {
@@ -46,6 +47,7 @@ class SudokuMain extends React.Component {
 							cellActions={this.state.cellActions}
 							logicalOperators={this.state.logicalOperators}
 							issueActionRequest={this.sendActionRequestToServer}
+							submitFinishedGameTree={this.submitFinishedGameTree}
 							/>
 					</div>
 				</div>
@@ -93,6 +95,18 @@ class SudokuMain extends React.Component {
 		const myRequest = {
 			'method': 'GET',
 			'url': this.state.serverAddress + '/sudoku/request/list_logical_operators'
+		}
+		return request(myRequest);
+	}
+
+	submitFinishedGameTree(tree) {
+		const myRequest = {
+			method: 'POST',
+			url: this.state.serverAddress + '/sudoku/request/submit_game_tree',
+			headers: {
+				'Content-Type': 'application/json; utf-8'
+			},
+			body: JSON.stringify(tree)
 		}
 		return request(myRequest);
 	}

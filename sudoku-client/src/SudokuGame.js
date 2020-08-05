@@ -13,17 +13,22 @@
 //  logicalOperators: list of logical operators (from server)
 //  initialBoard: top of game
 //  issueActionRequest: function
-//  xxx revise this to just be the game object
+//  submitFinishedGameTree: function
+//  
 
 import React from 'react';
+import { clone } from 'ramda';
+
+import { Button } from '@material-ui/core';
 import { Grid } from '@material-ui/core';
-import { Typography } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
+import { Typography } from '@material-ui/core';
+
+
 import { ActiveBoardView } from './ActiveBoardView';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
-import { clone } from 'ramda';
 import { CellActionPanel } from './CellActionPanel';
 import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
@@ -65,6 +70,7 @@ class SudokuGame extends React.Component {
     } 
 
     boardAnnouncesChoice(board, cell, choice) {
+        console.log('DEBUG: boardAnnouncesChoice: cell (' + cell[0] + ', ' + cell[1] + '), value ' + choice);
         this.setState({
             selectedBoardSquare: cell,
             selectedValue: choice
@@ -171,10 +177,19 @@ class SudokuGame extends React.Component {
                             announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
                             />
                     </Grid>
+                    <Grid item xs={12} id="doneButtonContainer">
+                        <Button variant="contained" color="primary" onClick={() => this.handleFinish()}>Finish This Board</Button>
+                    </Grid>
                 </Grid>
                 );
         }
     } // end of render()
+
+
+    handleFinish() {
+        console.log('Finishing board and submitting result.');
+        this.props.submitFinishedGameTree(this.state.gameTree);
+    }
 
 
     handleLogicalOperatorSelection(operators) {
@@ -222,9 +237,6 @@ class SudokuGame extends React.Component {
             }
             );
 
-        console.log('computeScore: score array for game tree: ' + JSON.stringify(all_scores));
-        console.log('game tree:');
-        console.log(this.state.gameTree);
         return all_scores.reduce((a, b) => (a+b), 0);
     }
 
@@ -234,6 +246,7 @@ SudokuGame.propTypes = {
     cellActions: PropTypes.array.isRequired,
     logicalOperators: PropTypes.array.isRequired,    
     initialBoard: PropTypes.object,
-    issueActionRequest: PropTypes.func.isRequired
+    issueActionRequest: PropTypes.func.isRequired,
+    submitFinishedGameTree: PropTypes.func.isRequired
 }
 export default SudokuGame;

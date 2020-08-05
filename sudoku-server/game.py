@@ -9,14 +9,19 @@ Test code for Sudoku games.
 Requires python3.
 """
 
-import enum
+# Imports from our own code
 import board
-import solvers
-import puzzles
-import random
-import operators
-import config_data
 import board_update_descriptions
+import config_data
+import operators
+import puzzles
+import solvers
+
+# Imports from Python standard library
+import enum
+import json
+import random
+import sys
 
 
 def get_initial_board(content):
@@ -102,7 +107,7 @@ def __parse_cell_arg(cell_loc):
 def __parse_value_arg(value):
     """ Parse a value. """
     assert isinstance(value, int) and value >= 0, \
-        "Assuming that all values are represented as non-negative ints."
+        "Assuming that all values are represented as non-negative ints. (offending value: {})".format(value)
     #print(f'Found value argument {value}')
     return value
 
@@ -180,6 +185,8 @@ def parse_and_apply_action(content):
     assert 'action' in action_dict, "Failed assumption that action request specified the action to take."
     action_choice = action_dict['action']
 
+    print("Action choice: {}".format(action_choice), file=sys.stderr)
+
     try:
         args = __collect_args(action_choice, action_dict)
         collected = solvers.take_action(
@@ -256,6 +263,13 @@ def get_cell_actions():
 
     return actions
 
+def submit_game_tree(tree):
+    print("Saving game tree.", file=sys.stderr)
+    with open('latest-game.json', 'w') as outfile:
+        outfile.write(json.dumps(tree))
+    return {
+        'message': 'Game tree successfully saved.'
+    }
 
 class ActiveGameTreeState():
     """

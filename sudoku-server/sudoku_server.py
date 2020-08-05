@@ -82,6 +82,21 @@ def list_possible_actions():
     """
     return jsonify(game.get_cell_actions())
 
+@app.route('/sudoku/request/submit_game_tree', methods=['POST'])
+def submit_game_tree():
+    """Receive a completed game tree from the client.
+
+    This is a placeholder method.  We may wind up doing this entirely
+    on the client side, sending it from there to S3.
+    """
+
+    content = request.json
+    if content is None:
+        print("Cannot save game tree without a tree to save")
+        return jsonify(None)
+
+    return jsonify(game.submit_game_tree(content))
+
 
 if __name__ == '__main__':
     app.run(host='http://localhost:5000', debug=True)
