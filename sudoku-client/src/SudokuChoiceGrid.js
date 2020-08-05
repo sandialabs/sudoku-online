@@ -42,6 +42,11 @@ import PropTypes from 'prop-types';
   
 
 class SudokuChoiceGrid extends React.Component {
+	constructor(props) {
+		super(props);
+		this.handleClick = this.handleClick.bind(this);
+	}
+
 	render() {
 		let gridRows = this.makeChoiceGridContents();
 		return (
@@ -85,7 +90,8 @@ class SudokuChoiceGrid extends React.Component {
 		return (
 			<td className={cellClasses} key={key}>
 				<button className='sudoku-choice-grid'
-						onClick={() => {this.handleClick(value);}}
+						onClick={this.handleClick}
+						value={value}
 					>
 					{value}
 				</button>
@@ -106,8 +112,9 @@ class SudokuChoiceGrid extends React.Component {
 			);
 	}
 
-	handleClick(value) {
-		this.props.announceChoiceSelection(this.props.boardRow, this.props.boardColumn, value);
+	handleClick(event) {
+		event.stopPropagation();
+		this.props.announceChoiceSelection(this.props.boardRow, this.props.boardColumn, parseInt(event.target.value, 10));
 	}
 }
 
