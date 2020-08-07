@@ -312,17 +312,19 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
 
     expansion = []
     assigned = board.Board(sboard)
-    expansion.append(assigned)
     removed = board.Board(sboard)
-    expansion.append(removed)
 
     action = None
     if make_exclusion_primary:
         assigned.setToBackground()
         action = 'exclude'
+        expansion.append(removed)
+        expansion.append(assigned)
     else:
         removed.setToBackground()
         action = 'assign'
+        expansion.append(assigned)
+        expansion.append(removed)
 
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)

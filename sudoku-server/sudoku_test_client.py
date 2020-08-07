@@ -20,7 +20,7 @@ def do_single_test(dbg_message, success_func, req_func):
     print(f'Testing {dbg_message}.')
     res = req_func()
     if not res.ok:
-        print(f'Failed to get result {dbg_message}.')
+        print(f'Failed to get result {dbg_message} but got {res}.')
         return
     result = res.json()
     if success_func(result):

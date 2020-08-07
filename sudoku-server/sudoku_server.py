@@ -41,7 +41,7 @@ def get_boards_for_game(gamename):
     """
     name = escape(gamename)
     # MAL TODO is there a way to let the app.route say if you ask for something without a gamename then we can make it None?
-    if name is 'get_me_something_random':
+    if name == 'get_me_something_random':
         name = None
     board_names = game.get_boards_for_game(name)
     return jsonify(board_names)

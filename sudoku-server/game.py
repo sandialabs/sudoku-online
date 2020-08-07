@@ -203,7 +203,7 @@ def parse_and_apply_action(content):
     for full_board in result:
         jsoned_result.append(full_board.getSimpleJson())
         if game_score and full_board.config.cost_per_game_not_per_board:
-            if average_score is 0:
+            if average_score == 0:
                 average_score = full_board.config.log.difficulty_score
             else:
                 assert average_score == full_board.config.log.difficulty_score, \
