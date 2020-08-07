@@ -13,9 +13,11 @@ import game
 import board
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from markupsafe import escape
-app = Flask(__name__)
 
+app = Flask(__name__)
+CORS(app)
 
 @app.route('/sudoku/request/initialBoard', methods=['GET', 'POST'])
 def get_initial_board():
@@ -48,7 +50,7 @@ def get_boards_for_game(gamename):
 
 
 # MAL TODO talk to Andy about changing this to a different name
-@app.route('/sudoku/request/heuristic', methods=['POST'])
+@app.route('/sudoku/request/evaluate_cell_action', methods=['POST'])
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.
 
@@ -62,7 +64,7 @@ def take_given_action():
     return jsonify(game.parse_and_apply_action(content))
 
 
-@app.route('/sudoku/request/list_heuristics', methods=['GET'])
+@app.route('/sudoku/request/list_logical_operators', methods=['GET'])
 def list_possible_operators():
     """ Returns the possible logical operators that could be applied.
 
@@ -79,6 +81,21 @@ def list_possible_actions():
     and applyLogicalOperators (list of logical operators to apply)
     """
     return jsonify(game.get_cell_actions())
+
+@app.route('/sudoku/request/submit_game_tree', methods=['POST'])
+def submit_game_tree():
+    """Receive a completed game tree from the client.
+
+    This is a placeholder method.  We may wind up doing this entirely
+    on the client side, sending it from there to S3.
+    """
+
+    content = request.json
+    if content is None:
+        print("Cannot save game tree without a tree to save")
+        return jsonify(None)
+
+    return jsonify(game.submit_game_tree(content))
 
 
 if __name__ == '__main__':

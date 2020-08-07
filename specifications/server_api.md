@@ -35,7 +35,7 @@ Do we need any other parameters for this request?
 
 ### Evaluate Heuristic
 
-*URL*: `/sudoku/request/heuristic`
+*URL*: `/sudoku/request/evaluate_cell_action`
 
 *Body*:
 
@@ -47,7 +47,7 @@ Do we need any other parameters for this request?
         'cell': [0,4],
         'value': 3
     },
-    'heuristics': ['inclusion', 'pointingpairs', 'ywings']
+    'operators': ['inclusion', 'pointingpairs', 'ywings']
 }
 ```
 
@@ -69,7 +69,7 @@ Example response:
 
 ```json
 [
-    { 'internal_name': 'inclusion', 'user_name': 'Inclusion: assign values that have only one possible cell.', 'cost': 100,
+    { 'internal_name': 'inclusion', 'user_name': 'Inclusion', 'short_description': 'Assign values that have only one possible cell.', 'cost': 100,
     'description': 'Search board units for values that have only one possible cell and make that assignment.'},
     { 'internal_name': 'pointingpairs', 'user_name': 'Pointing pairs: remove aligned value pairs from other units.', 'cost': 250,
     'description': 'If any one value is present only two or three times in just one unit, then we can remove that number from the intersection of a number unit. There are four types of intersections: 1. A pair or triple in a box - if they are aligned on a row, the value can be removed from the rest of the row. 2. A pair or triple in a box, if they are aligned on a column, the value can be removed from the rest of the column. 3. A pair or triple on a row - if they are all in the same box, the value can be removed from the rest of the box. 4. A pair or triple on a column - if they are all in the same box, the value can be removed from the rest of the box.' }

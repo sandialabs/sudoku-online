@@ -34,19 +34,25 @@
 //    (to be filled in)
 
 import React from 'react';
-                               
+import PropTypes from 'prop-types';
+
 import SudokuChoiceGrid from './SudokuChoiceGrid';
 
 class ActiveBoardView extends React.Component {
+	constructor(props) {
+		super(props);
+
+		this.state = {
+			selectedSquare: null,
+			selectedChoiceSquare: null
+		}
+	}
 	render() {
 		const moveListArray = this.props.board.availableMoves;
 		const assignmentArray = this.props.board.assignments;
 
-		return (
-			<div key="3" id="board-{this.props.board.serialNumber}" className="board">
-					{this.makeBoardTable(assignmentArray, moveListArray)}
-			</div>
-		);	
+		return this.makeBoardTable(assignmentArray, moveListArray);
+
 	}
 
 
@@ -70,7 +76,7 @@ class ActiveBoardView extends React.Component {
 		const D = this.props.board.degree;
 		const tableRows = [];
 
-		const rowStyleName = 'sudoku-board-row degree-' + D;
+		const tableStyle = 'active-board degree-' + D;
 		for (let row = 0; row < D*D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D*D; ++col) {
@@ -79,24 +85,25 @@ class ActiveBoardView extends React.Component {
 					);
 			}
 			tableRows.push(
-				<tr className={rowStyleName} key={row}>{squaresInRow}</tr>
+				<tr key={row} className={tableStyle}>{squaresInRow}</tr>
 				);
 		}
 
 		return (
-			<table className="sudoku-board-table">
+			<table className={tableStyle}>
 				<tbody>{tableRows}</tbody>
 			</table>
 			);
 	}
 
 	makeSquare(row, column, assignments, moveLists) {
-		let cellStyleName = 'sudoku-board-square degree-' + this.props.board.degree;
-		if (this.props.active) {
-			cellStyleName += ' active'; 
-		} else {
-			cellStyleName += ' inactive';
+		let cellStyleName = 'active-board square degree-' + this.props.board.degree;
+		if (this.state.selectedSquare !== null
+			&& this.state.selectedSquare[0] === row
+			&& this.state.selectedSquare[1] === column) {
+			cellStyleName += ' selected-square';
 		}
+
 		const allCellStyleNames = cellStyleName;
 		if (assignments[row][column] !== null) {
 			return (
@@ -105,28 +112,30 @@ class ActiveBoardView extends React.Component {
 				</td>
 				);
 		} else {
-			if (this.props.active) {
-				const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
-				return (
-					<td className={allCellStyleNames} key={column}>
-						{choiceGrid}
-					</td>
-				);
-			} else {
-				return (
-					<td className={allCellStyleNames} key={column}></td>
-					);
-			}
+			const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
+			return (
+				<td className={allCellStyleNames} key={column} onClick={() => this.selectCell(row, column)}>
+					{choiceGrid}
+				</td>
+			);
 		}
 	}
 
 	makeChoiceGrid(moveList, boardRow, boardColumn) {
+		const squareIsSelected = (
+			this.state.selectedSquare !== null
+			&& this.state.selectedSquare[0] === boardRow
+			&& this.state.selectedSquare[1] === boardColumn
+			);
+
 		return (
 			<SudokuChoiceGrid
 				degree={this.props.board.degree}
 				moveList={moveList}
 				boardRow={boardRow}
 				boardColumn={boardColumn}
+				boardSquareIsSelected={squareIsSelected}
+				selectedValue={this.state.selectedValue}
 				announceChoiceSelection={ (row, column, value) => {this.choiceSelected(row, column, value);} }
 				/>
 			);
@@ -134,11 +143,21 @@ class ActiveBoardView extends React.Component {
 
 	choiceSelected(row, column, value) {
 		console.log('Board: User chose value ' + value + ' in cell (' + row + ', ' + column + ')');
-		if ('announceChoice' in this.props) {
-			this.props.announceChoice(this.props.board, [row, column], value);
-		} else {
-			console.log('ActiveBoardView: No announceChoice callback in props.');
-		}
+		this.setState({
+			selectedSquare: [row, column],
+			selectedValue: value
+		});
+
+		this.props.announceChoice(this.props.board, [row, column], value);
+	}
+
+	selectCell(row, column) {
+		console.log('Board: User selected cell (' + row + ', ' + column + ')');
+		this.setState({
+			selectedSquare: [row, column]
+		});
+
+		this.props.announceChoice(this.props.board, [row, column], -1);
 	}
 
 	asJson() {
@@ -150,5 +169,9 @@ class ActiveBoardView extends React.Component {
 	}
 }
 
+ActiveBoardView.propTypes = {
+	announceChoice: PropTypes.func.isRequired,
+	board: PropTypes.object.isRequired
+}
 
 export { ActiveBoardView };
