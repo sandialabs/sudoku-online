@@ -12,23 +12,31 @@ import React from 'react';
 import SudokuGame from './SudokuGame';
 import { request } from './SudokuUtilities';
 
+
+
+ 
 class SudokuMain extends React.Component {
 	constructor(props) {
 		super(props);
 
 		this.state = {
-			initialBoard: null,
+			boards: null,
 			cellActions: [],
 			logicalOperators: [],
 			serverAddress: 'http://localhost:5000'
 		};
+
+
+        // Change the next line to determine which game gets requested
+        //this.state.gameName = 'test_game1_6_operators_open';
+        this.state.gameName = 'test_game1_6';
 
 		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
 		this.submitFinishedGameTree = this.submitFinishedGameTree.bind(this);
 	}
 
 	render() {
-		if (this.state.initialBoard !== null) {
+		if (this.state.boards !== null) {
 			return (
 				<div key={3}>
 					<div key={4}>
@@ -42,12 +50,14 @@ class SudokuMain extends React.Component {
 					<div key={6}>
 						<SudokuGame 
 							degree={this.props.degree}
-							initialBoard={this.state.initialBoard}
+							boards={this.state.boards}
+							gameConfiguration={this.state.gameConfiguration}
 							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 							cellActions={this.state.cellActions}
 							logicalOperators={this.state.logicalOperators}
 							issueActionRequest={this.sendActionRequestToServer}
 							submitFinishedGameTree={this.submitFinishedGameTree}
+							requestBoard={(boardInfo) => {return this.requestBoard(boardInfo);}}
 							/>
 					</div>
 				</div>
@@ -129,12 +139,6 @@ class SudokuMain extends React.Component {
 		console.log('Main panel mounted.  Call out to get the initial game state.');
 		// This will be replaced with a server call once we have a server to call
 
-		this.requestInitialBoard().then(
-				(successResponse) => {this.receiveInitialBoard(successResponse);}
-			).catch(
-				(failure) => {console.log('ERROR requesting initial board: ' + failure);}
-			);
-
 		this.requestLogicalOperatorList().then(
 				(opList) => { this.populateLogicalOperatorList(opList); }
 			).catch(
@@ -147,12 +151,40 @@ class SudokuMain extends React.Component {
 				(failure) => {console.log('ERROR requesting cell action list: ' + failure);}
 			);
 		
+		this.requestGameConfiguration().then(
+			(boardList) => {
+				console.log('Board list received:');
+				console.log(boardList);
+				this.setState({boards: boardList});
+			}).catch(
+				(failure) => {console.log('ERROR requesting game information: ' + failure);}
+			);
 	}
+
+	requestGameConfiguration() {
+		return request({
+			'method': 'GET',
+			'url': this.state.serverAddress + '/sudoku/request/boardsForGame/' + this.state.gameName
+		});
+	}
+	
 
 	requestInitialBoard(serverAddress) {
 		return request({
 			'method': 'GET',
 			'url': this.state.serverAddress + '/sudoku/request/initialBoard'
+		});
+	}
+
+	requestBoard(boardInfo) {
+		return request({
+			'method': 'POST',
+			'url': this.state.serverAddress + '/sudoku/request/initialBoard',
+			'headers': {
+				'Content-Type': 'application/json; utf-8',
+				'Accept': 'application/json'
+			},
+			'body': JSON.stringify(boardInfo)
 		});
 	}
 
