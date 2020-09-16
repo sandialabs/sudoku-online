@@ -42,10 +42,20 @@ class SudokuGame extends React.Component {
             activeBoardId: null,
             selectedLogicalOperators: [],
             selectedBoardSquare: null,
-            selectedValue: null
+            selectedValue: null,
+            currentPuzzle: null,
         };
 
-        if (this.props.initialBoard !== null) {
+        if (this.props.boards === undefined) {
+            console.log('SudokuGame: No boards at all in props.');
+        } else if (this.props.boards === null) {
+            console.log('SudokuGame: Board array in props is null.');
+        } else {
+            console.log('Sudokugame: Received ' + this.props.boards.length + ' boards for game.');
+        }
+
+
+        if (this.props.initialBoard !== null && this.props.initialBoard !== undefined) {
             console.log('SudokuGame: Non-null initial board supplied with props for constructor.');
             const ourBoard = clone(this.props.initialBoard);
             if ((!('serialNumber' in ourBoard)) 
@@ -185,12 +195,15 @@ class SudokuGame extends React.Component {
         }
     } // end of render()
 
+    componentDidMount() {
+        console.log('SudokuGame.componentDidMount() called');
+        this.requestNextBoard()
+    }
 
     handleFinish() {
         console.log('Finishing board and submitting result.');
         this.props.submitFinishedGameTree(this.state.gameTree);
     }
-
 
     handleLogicalOperatorSelection(operators) {
         console.log('Logical operator selection contains ' + operators.length + ' items');
@@ -240,6 +253,10 @@ class SudokuGame extends React.Component {
         return all_scores.reduce((a, b) => (a+b), 0);
     }
 
+    requestNextBoard() {
+        console.log('DEBUG: requestNextBoard: this.state.gameConfiguration is:');
+        console.log(this.state.gameConfiguration);
+    }
 }
 
 SudokuGame.propTypes = {
@@ -247,6 +264,12 @@ SudokuGame.propTypes = {
     logicalOperators: PropTypes.array.isRequired,    
     initialBoard: PropTypes.object,
     issueActionRequest: PropTypes.func.isRequired,
-    submitFinishedGameTree: PropTypes.func.isRequired
+    submitFinishedGameTree: PropTypes.func.isRequired,
+    requestBoard: PropTypes.func.isRequired,
+    boards: PropTypes.array
 }
 export default SudokuGame;
+
+// YOU ARE HERE: 
+// 
+// requestBoard is now being passed in.  Implement requestNextBoard and keep track of which board in the game we're on.
