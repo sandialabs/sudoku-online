@@ -155,7 +155,7 @@ class SudokuMain extends React.Component {
 			(boardList) => {
 				console.log('Board list received:');
 				console.log(boardList);
-				this.setState({boards: boardList});
+				this.setState({boards: JSON.parse(boardList)});
 			}).catch(
 				(failure) => {console.log('ERROR requesting game information: ' + failure);}
 			);
