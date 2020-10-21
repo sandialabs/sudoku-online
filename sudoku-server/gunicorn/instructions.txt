@@ -1,0 +1,6 @@
+What to do in order to wrap flask application sudoku_server.py in gunicorn. 
+
+Step 1. Please place the file gunicorn.config.py in your etc directory (cd /etc/) 
+step 2. Make sure wsgi.py is located in sudoku-online/sudoku-server/
+Step 3. From sudoku-online/sudoku-server/ run the command "gunicorn -c /etc/gunicorn.conf.py wsgi:app" (change the etc path if it is not the same
+Step 4. To test run the sudoku_test_client in another terminal and watch as the server interacts with the client.
