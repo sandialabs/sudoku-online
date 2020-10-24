@@ -52,7 +52,7 @@ class SudokuGame extends React.Component {
             selectedLogicalOperators: [],
             selectedBoardSquare: null,
             selectedValue: null,
-            selectLogicalOperatorsUpFront: null,
+            selectLogicalOperatorsUpFront: false,
             logicalOperatorsSelected: false
         };
 
@@ -162,6 +162,15 @@ class SudokuGame extends React.Component {
             // const updatedActions = clone(this.props.cellActions);
             // updatedActions.push(SELECT_OPS_ACTION);
             const currentScore = this.computeScore();
+            const actionsEnabled = (
+                this.state.selectLogicalOperatorsUpFront === false
+                || this.state.logicalOperatorsSelected
+                );
+            const logicalOperatorsFrozen = (
+                this.state.selectLogicalOperatorsUpFront 
+                && this.state.logicalOperatorsSelected
+                );
+
             return (
                 <Grid container id="gameContainer">
                     <Grid container item xs={12} id="actionsAndOperators">
@@ -172,13 +181,15 @@ class SudokuGame extends React.Component {
                                 defaultAction={defaultAction}
                                 selectedActionChanged={(newAction) => {this.handleCellActionSelection(newAction)}}
                                 executeAction={(action) => this.handleExecuteAction(action)}
+                                actionsEnabled={actionsEnabled}
                                 />
                         </Grid>
                         <Grid item xs={6}>
                             <LogicalOperatorPanel
                                 operators={this.props.logicalOperators}
                                 selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
-                                canChange={board.rules.canChangeLogicalOperators}
+                                selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
+                                logicalOperatorsFrozen={logicalOperatorsFrozen}
                                 />
                         </Grid>
                         <Grid item xs={12}>
@@ -220,7 +231,8 @@ class SudokuGame extends React.Component {
     handleLogicalOperatorSelection(operators) {
         console.log('Logical operator selection contains ' + operators.length + ' items');
         this.setState({
-            selectedLogicalOperators: operators
+            selectedLogicalOperators: operators,
+            logicalOperatorsSelected: true
         });
     }
 

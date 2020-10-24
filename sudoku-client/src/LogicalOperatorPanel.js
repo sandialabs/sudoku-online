@@ -37,6 +37,8 @@ import { Paper } from '@material-ui/core';
 import { Tooltip } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
+import PropTypes from 'prop-types';
+
 class LogicalOperatorPanel extends React.Component {
 	constructor(props) {
 		super(props);
@@ -141,5 +143,13 @@ class LogicalOperatorPanel extends React.Component {
 		this.props.selectionChanged(selectedOperators);
 	}
 }
+
+LogicalOperatorPanel.propTypes = {
+	logicalOperatorsFrozen: PropTypes.bool.isRequired,
+	operators: PropTypes.array.isRequired,
+	selectLogicalOperatorsUpFront: PropTypes.bool.isRequired,
+	selectionChanged: PropTypes.func.isRequired,
+
+};
 
 export { LogicalOperatorPanel };

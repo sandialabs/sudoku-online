@@ -48,7 +48,6 @@ class CellActionPanel extends React.Component {
 
 	renderActionList() {
 		let radioButtons = this.makeRadioButtons();
-	
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
@@ -60,7 +59,8 @@ class CellActionPanel extends React.Component {
 				</RadioGroup>
 				<Button onClick={() => this.handleExecuteAction()}
 						variant="contained"
-						color="primary">
+						color="primary"
+						disabled={!this.props.actionsEnabled}>
 					Execute Selected Action
 				</Button>
 			</FormControl>
@@ -105,6 +105,7 @@ class CellActionPanel extends React.Component {
 	}
 
 	render() {
+		console.log('DEBUG: CellActionPanel: actionsEnabled == ' + this.state.actionsEnabled);
 		if (!this.actionsAvailable()) {
 			return (
 				<Paper>
@@ -165,7 +166,8 @@ CellActionPanel.propTypes = {
 	permittedActions: PropTypes.array.isRequired,
 	selectedActionChanged: PropTypes.func,
 	defaultAction: PropTypes.object,
-	executeAction: PropTypes.func.isRequired
+	executeAction: PropTypes.func.isRequired,
+	actionsEnabled: PropTypes.bool.isRequired,
 };
 
 export { CellActionPanel };
