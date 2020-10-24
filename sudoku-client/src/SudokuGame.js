@@ -297,8 +297,9 @@ class SudokuGame extends React.Component {
                     this.setState({
                         currentPuzzleIndex: nextBoardIndex
                     });
-                    this.configureNewBoard(JSON.parse(boardAsString);
-                });
+                    this.configureNewBoard(JSON.parse(boardAsString));
+                }
+                )
             .catch(
                 (errorResponse) => {
                     console.log('ERROR fetching board ' + nextBoardIndex + ' (' + boardName + '): '

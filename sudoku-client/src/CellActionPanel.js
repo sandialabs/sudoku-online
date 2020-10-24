@@ -37,6 +37,7 @@ import { Typography } from '@material-ui/core';
 
 import PropTypes from 'prop-types';
 
+
 class CellActionPanel extends React.Component {
 	constructor(props) {
 		super(props);
