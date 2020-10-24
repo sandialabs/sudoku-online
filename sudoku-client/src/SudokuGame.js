@@ -33,19 +33,39 @@ import { CellActionPanel } from './CellActionPanel';
 import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
 
+
+const SELECT_OPS_ACTION = {
+    cost: 0,
+    description: 'Select cell operations that will be applied after every move',
+    internal_name: 'selectops',
+    user_name: 'Select Logical Operations',
+};
+
 class SudokuGame extends React.Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            currentPuzzleIndex: null,
             gameTree: null,
             activeBoardId: null,
             selectedLogicalOperators: [],
             selectedBoardSquare: null,
-            selectedValue: null
+            selectedValue: null,
+            selectLogicalOperatorsUpFront: null,
+            logicalOperatorsSelected: false
         };
 
-        if (this.props.initialBoard !== null) {
+        if (this.props.boards === undefined) {
+            console.log('SudokuGame: No boards at all in props.');
+        } else if (this.props.boards === null) {
+            console.log('SudokuGame: Board array in props is null.');
+        } else {
+            console.log('Sudokugame: Received ' + this.props.boards.length + ' boards for game.');
+        }
+
+
+        if (this.props.initialBoard !== null && this.props.initialBoard !== undefined) {
             console.log('SudokuGame: Non-null initial board supplied with props for constructor.');
             const ourBoard = clone(this.props.initialBoard);
             if ((!('serialNumber' in ourBoard)) 
@@ -139,6 +159,8 @@ class SudokuGame extends React.Component {
                 // FIXME: make sure the default action is not disabled
                 defaultAction = this.props.cellActions[0];
             }
+            // const updatedActions = clone(this.props.cellActions);
+            // updatedActions.push(SELECT_OPS_ACTION);
             const currentScore = this.computeScore();
             return (
                 <Grid container id="gameContainer">
@@ -185,12 +207,15 @@ class SudokuGame extends React.Component {
         }
     } // end of render()
 
+    componentDidMount() {
+        console.log('SudokuGame.componentDidMount() called');
+        this.requestNextBoard()
+    }
 
     handleFinish() {
         console.log('Finishing board and submitting result.');
         this.props.submitFinishedGameTree(this.state.gameTree);
     }
-
 
     handleLogicalOperatorSelection(operators) {
         console.log('Logical operator selection contains ' + operators.length + ' items');
@@ -240,13 +265,72 @@ class SudokuGame extends React.Component {
         return all_scores.reduce((a, b) => (a+b), 0);
     }
 
+    configureNewBoard(board) {
+        // XXX YOU ARE HERE
+        // Check to see if 'selectOps' is in this board's permitted actions.
+        // If so, set flags that will tell render() to display the info dialog,
+        // the logical ops panel to display its "Confirm Selection" button,
+        // and disable the cell actions until that's done.
+        this.initializeGameTree(board);
+    }
+
+    requestNextBoard() {
+        if (this.props.boards === null || this.props.boards.length === 0) {
+            console.log('ERROR: Can\'t request next board when there are no boards!');
+            return;
+        }
+
+        let nextBoardIndex = 0;
+
+        if (this.state.currentPuzzleIndex !== null) {
+            nextBoardIndex = this.state.currentPuzzleIndex + 1;
+            if (nextBoardIndex === this.props.puzzles.length) {
+                console.log('ERROR: Can\'t advance past the last board.');
+                return;
+            }
+        }
+
+        const boardName = this.props.boards[nextBoardIndex];
+        this.props.requestBoard({name: boardName})
+            .then(
+                (boardAsString) => {
+                    this.setState({
+                        currentPuzzleIndex: nextBoardIndex
+                    });
+                    this.configureNewBoard(JSON.parse(boardAsString));
+                }
+                )
+            .catch(
+                (errorResponse) => {
+                    console.log('ERROR fetching board ' + nextBoardIndex + ' (' + boardName + '): '
+                        + errorResponse);
+                }
+                );
+    }
 }
+
 
 SudokuGame.propTypes = {
     cellActions: PropTypes.array.isRequired,
     logicalOperators: PropTypes.array.isRequired,    
     initialBoard: PropTypes.object,
     issueActionRequest: PropTypes.func.isRequired,
-    submitFinishedGameTree: PropTypes.func.isRequired
+    submitFinishedGameTree: PropTypes.func.isRequired,
+    requestBoard: PropTypes.func.isRequired,
+    boards: PropTypes.array
 }
 export default SudokuGame;
+
+// YOU ARE HERE: 
+// After that, set a flag in this.state that talks about whether or not we need to set the operators up front.
+// 
+// If we do, add a "Confirm Operator Selection" button to the logical operator panel.  Have it pop up a yes/no
+// modal dialog box: "The N logical operators you have chosen will cost X points per move.  Select Confirm to
+// make your selection or Cancel to go back and change your choices.  Once you confirm your choices, you will
+// not be able to modify them until you start another board."
+// 
+// After confirmation, enable all the cell actions and proceed as normal.
+// 
+// Alternately, pop up that dialog as soon as the board is displayed and explain that for this game you have
+// to select operators up front.  That's probably the better idea because it doesn't require the user to 
+// guess at anything.

@@ -99,6 +99,10 @@ puzzles = {
 }
 
 games = {
+    'test_game1_6_operators_open': {
+        'puzzles': ['test2-i24e40', 'easy1', 'xwing_test', 'hard4', 'underconstrained1', 'test7-i26e36hp10'],
+        'config_alterations': []
+    },
     'test_game1_6': {
         'puzzles': ['test2-i24e40', 'easy1', 'xwing_test', 'hard4', 'underconstrained1', 'test7-i26e36hp10'],
         'config_alterations': ['select_ops_upfront']
