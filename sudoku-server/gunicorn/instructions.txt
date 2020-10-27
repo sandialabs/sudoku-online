@@ -1,6 +1,14 @@
 What to do in order to wrap flask application sudoku_server.py in gunicorn. 
+Before following the steps below make sure to have flask, gunicorn, and supervisor installed
 
 Step 1. Please place the file gunicorn.config.py in your etc directory (cd /etc/) 
 step 2. Make sure wsgi.py is located in sudoku-online/sudoku-server/
-Step 3. From sudoku-online/sudoku-server/ run the command "gunicorn -c /etc/gunicorn.conf.py wsgi:app" (change the etc path if it is not the same
-Step 4. To test run the sudoku_test_client in another terminal and watch as the server interacts with the client.
+Step 3. Please place the file sudoku-server.conf into /etc/supervisor/conf.d/ and change the paths for the logs and directory to match the location on your computer.
+Step 4. To start supervisor, run command "sudo service supervisor start"
+Step 5. Make sure supervisor is running with the command "service supervisor status"
+Step 6. Run the following commands to start gunicorn in the background:
+       $ sudo supervisorctl reread
+       $ sudo supervisorctl update
+       $ sudo supervisorctl avail
+       $ sudo supervisorctl restart sudoku_server
+Step 7. To test run the sudoku_test_client in another terminal and watch as the server interacts with the client.
