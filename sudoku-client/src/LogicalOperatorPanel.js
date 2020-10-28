@@ -31,6 +31,7 @@
 // }
 
 import React from 'react';
+import { Button } from '@material-ui/core';
 import { Checkbox } from '@material-ui/core';
 import { FormControlLabel, FormGroup } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
@@ -80,6 +81,10 @@ class LogicalOperatorPanel extends React.Component {
 			);
 	}
 	
+	confirmLogicalOperators() {
+		this.setState()
+	}
+
 	render() {
 		if (!this.operatorsAvailable()) {
 			return (
@@ -90,12 +95,34 @@ class LogicalOperatorPanel extends React.Component {
 		
 		} else {
 			const operatorListPanel = this.renderOperatorList();
-			return (
-				<Paper name='logicalOperators'>
-					<Typography variant="h5">Logical Operators</Typography>
-					{operatorListPanel}
-				</Paper>
-				);
+			if (this.props.selectLogicalOperatorsUpFront) {
+				let selectOperatorButtonText = "Confirm Logical Operators";
+				if (this.props.logicalOperatorsFrozen) {
+					selectOperatorButtonText = "Logical Operators Frozen";
+				}
+				return (
+					<Paper name='logicalOperators'>
+						<Typography variant="h5">Logical Operators</Typography>
+						{operatorListPanel}
+						<Button onClick={() => this.props.confirmOperatorSelection()}
+							variant="contained"
+							color="primary"
+							disabled={this.props.logicalOperatorsFrozen}>
+						{selectOperatorButtonText}
+						</Button>	
+					</Paper>
+					);
+			} else {
+				return (
+					<Paper name='logicalOperators'>
+						<Typography variant="h5">Logical Operators</Typography>
+						{operatorListPanel}
+						<p>
+							Operator selection can change freely.
+						</p>
+					</Paper>
+					);
+			}
 		}
 	}
 
@@ -109,6 +136,7 @@ class LogicalOperatorPanel extends React.Component {
 						<Checkbox 
 							onChange={this.handleCheckBoxChange}
 							name={operator.internal_name}
+							disabled={this.props.logicalOperatorsFrozen}
 						 	/>
 						 }
 					label={labelText}
@@ -145,6 +173,7 @@ class LogicalOperatorPanel extends React.Component {
 }
 
 LogicalOperatorPanel.propTypes = {
+	confirmOperatorSelection: PropTypes.func,
 	logicalOperatorsFrozen: PropTypes.bool.isRequired,
 	operators: PropTypes.array.isRequired,
 	selectLogicalOperatorsUpFront: PropTypes.bool.isRequired,

@@ -56,15 +56,6 @@ class SudokuGame extends React.Component {
             logicalOperatorsSelected: false
         };
 
-        if (this.props.boards === undefined) {
-            console.log('SudokuGame: No boards at all in props.');
-        } else if (this.props.boards === null) {
-            console.log('SudokuGame: Board array in props is null.');
-        } else {
-            console.log('Sudokugame: Received ' + this.props.boards.length + ' boards for game.');
-        }
-
-
         if (this.props.initialBoard !== null && this.props.initialBoard !== undefined) {
             console.log('SudokuGame: Non-null initial board supplied with props for constructor.');
             const ourBoard = clone(this.props.initialBoard);
@@ -90,7 +81,6 @@ class SudokuGame extends React.Component {
     } 
 
     boardAnnouncesChoice(board, cell, choice) {
-        console.log('DEBUG: boardAnnouncesChoice: cell (' + cell[0] + ', ' + cell[1] + '), value ' + choice);
         this.setState({
             selectedBoardSquare: cell,
             selectedValue: choice
@@ -98,11 +88,6 @@ class SudokuGame extends React.Component {
     }
 
     handleNewBoards(parentSerial, response) {
-        console.log('handleNewBoards: parentSerial is ' + parentSerial);
-        console.log('type of response: ' + typeof(response));
-        console.log(response);
-        console.log('response length: ' + response.length);
-
         this.setState({
             gameTree: GameTree.addBoards(
                 this.state.gameTree,
@@ -159,8 +144,6 @@ class SudokuGame extends React.Component {
                 // FIXME: make sure the default action is not disabled
                 defaultAction = this.props.cellActions[0];
             }
-            // const updatedActions = clone(this.props.cellActions);
-            // updatedActions.push(SELECT_OPS_ACTION);
             const currentScore = this.computeScore();
             const actionsEnabled = (
                 this.state.selectLogicalOperatorsUpFront === false
@@ -190,6 +173,10 @@ class SudokuGame extends React.Component {
                                 selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
                                 selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
                                 logicalOperatorsFrozen={logicalOperatorsFrozen}
+                                confirmOperatorSelection={() => {
+                                    console.log("SudokuGame: Confirming logical operator selection.");
+                                    this.setState({logicalOperatorsSelected: true});
+                                }}
                                 />
                         </Grid>
                         <Grid item xs={12}>
@@ -219,7 +206,6 @@ class SudokuGame extends React.Component {
     } // end of render()
 
     componentDidMount() {
-        console.log('SudokuGame.componentDidMount() called');
         this.requestNextBoard()
     }
 
@@ -231,8 +217,7 @@ class SudokuGame extends React.Component {
     handleLogicalOperatorSelection(operators) {
         console.log('Logical operator selection contains ' + operators.length + ' items');
         this.setState({
-            selectedLogicalOperators: operators,
-            logicalOperatorsSelected: true
+            selectedLogicalOperators: operators
         });
     }
 
@@ -253,9 +238,6 @@ class SudokuGame extends React.Component {
             operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
         };
 
-
-        console.log('DEBUG: handleExecuteAction running.');
-        console.log('request: ');
         console.log(request);
         this.props.issueActionRequest(request)
             .then(response => this.handleNewBoards(this.activeBoard().serialNumber, response));
@@ -283,6 +265,17 @@ class SudokuGame extends React.Component {
         // If so, set flags that will tell render() to display the info dialog,
         // the logical ops panel to display its "Confirm Selection" button,
         // and disable the cell actions until that's done.
+        if (board.puzzleName.indexOf("select_ops_upfront") !== -1) {
+            this.setState({
+                selectLogicalOperatorsUpFront: true,
+                logicalOperatorsSelected: false
+            });
+        } else {
+            this.setState({
+                selectLogicalOperatorsUpFront: false,
+                logicalOperatorsSelected: false
+            });
+        }
         this.initializeGameTree(board);
     }
 
