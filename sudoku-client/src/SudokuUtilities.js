@@ -3,11 +3,11 @@
 
 import { 
 	array2D, 
-	arrayRotateLeft,
-	arrayRotateRight,
+//	arrayRotateLeft,
+//	arrayRotateRight,
 	dimensions,
-	swapRows2D, 
-	swapColumns2D
+//	swapRows2D, 
+//	swapColumns2D
 } from './ArrayUtilities';
 
 import { clone } from 'ramda';
@@ -24,9 +24,9 @@ function setDifference(a, b) {
 	return new Set([...a].filter(x => !b.has(x)));
 }
 
-function setSymmetricDifference(a, b) {
-	return setDifference(setUnion(a, b), setIntersection(a, b));
-}
+// function setSymmetricDifference(a, b) {
+// 	return setDifference(setUnion(a, b), setIntersection(a, b));
+// }
 
 const SerialNumbers = { };
 
@@ -71,39 +71,39 @@ function range(size) {
 // use randomizeFilledBoard() to scramble this while 
 // maintaining the correctness of the solution.
 
-function filledBoard(degree) {
-	const boardSize = degree*degree;
-	var board = array2D(boardSize, boardSize);
-	const rows = degree*degree;
-	const columns = degree*degree;
-	var row, column;
+// function filledBoard(degree) {
+// 	const boardSize = degree*degree;
+// 	var board = array2D(boardSize, boardSize);
+// 	const rows = degree*degree;
+// 	const columns = degree*degree;
+// 	var row, column;
 
-	// Start by filling the first row of the board trivially.  We 
-	// will transform this first row to get all the others.
-	for (column = 0; column < columns; ++column) {
-		board[0][column] = column;
-	}
+// 	// Start by filling the first row of the board trivially.  We 
+// 	// will transform this first row to get all the others.
+// 	for (column = 0; column < columns; ++column) {
+// 		board[0][column] = column;
+// 	}
 
-	// The board is full, but all the columns have the same value.  
-	// Rotating according to the following scheme will fix that.
-	for (row = 1; row < boardSize; ++row) {
-		const isFirstRowInBlock = ((row % degree) === 0);
+// 	// The board is full, but all the columns have the same value.  
+// 	// Rotating according to the following scheme will fix that.
+// 	for (row = 1; row < boardSize; ++row) {
+// 		const isFirstRowInBlock = ((row % degree) === 0);
 
-		if (isFirstRowInBlock) {
-			board[row] = arrayRotateLeft(board[row-1], 1);
-		} else {
-			board[row] = arrayRotateLeft(board[row-1], degree);
-		}
-	}
-	return board;
-}
+// 		if (isFirstRowInBlock) {
+// 			board[row] = arrayRotateLeft(board[row-1], 1);
+// 		} else {
+// 			board[row] = arrayRotateLeft(board[row-1], degree);
+// 		}
+// 	}
+// 	return board;
+// }
 
 // Return a random integer in (low, high].
-function randomInRange(low, high) {
-	return Math.floor(
-		low + Math.random() * (high - low)
-		);
-}
+// function randomInRange(low, high) {
+// 	return Math.floor(
+// 		low + Math.random() * (high - low)
+// 		);
+// }
 
 /// Return a Set() with the assignments in a given row.
 //
@@ -241,22 +241,22 @@ function computeMoveLists(board) {
 //         (assuming that you've seeded the random number generator)
 //         Defaults to 100.
 //         
-function randomizeFilledBoard(board, numSwaps=100) {
-	const D = getDegree(board);
+// function randomizeFilledBoard(board, numSwaps=100) {
+// 	const D = getDegree(board);
 
-	for (let i = 0; i < numSwaps; ++i) {
-		// First: are we swapping rows or columns?
-		const swapRow = randomInRange(0, 2);
-		let whichBlock = randomInRange(0, D);
-		let fromId = (D*whichBlock) + randomInRange(0, D);
-		let toId = (D*whichBlock) + randomInRange(0, D);
-		if (swapRow) {
-			board = swapRows2D(board, fromId, toId);
-		} else {
-			board = swapColumns2D(board, fromId, toId);
-		}
-	}
-}
+// 	for (let i = 0; i < numSwaps; ++i) {
+// 		// First: are we swapping rows or columns?
+// 		const swapRow = randomInRange(0, 2);
+// 		let whichBlock = randomInRange(0, D);
+// 		let fromId = (D*whichBlock) + randomInRange(0, D);
+// 		let toId = (D*whichBlock) + randomInRange(0, D);
+// 		if (swapRow) {
+// 			board = swapRows2D(board, fromId, toId);
+// 		} else {
+// 			board = swapColumns2D(board, fromId, toId);
+// 		}
+// 	}
+// }
 
 // Return a random int in the range [min, max)
  function randomInt(min, max) {
@@ -296,63 +296,63 @@ function randomizeFilledBoard(board, numSwaps=100) {
  	return result;
  }
 
-function boardIsConsistent(board) {
-	const D = getDegree(board);
-	const [rows, columns] = dimensions(board);
-	let row, column;
-	const allMoves = range(D*D);
+// function boardIsConsistent(board) {
+// 	const D = getDegree(board);
+// 	const [rows, columns] = dimensions(board);
+// 	let row, column;
+// 	const allMoves = range(D*D);
 
-	// Check all the rows individually
-	for (row = 0; row < rows; ++row) {
-		let currentMoves = clone(allMoves);
-		for (column = 0; column < columns; ++column) {
-			const move = board[row][column];
-			if (move !== null) {
-				if (currentMoves[move] === -1) {
-					return false;
-				} else {
-					currentMoves[move] = -1;
-				}
-			}
-		}
-	}
+// 	// Check all the rows individually
+// 	for (row = 0; row < rows; ++row) {
+// 		let currentMoves = clone(allMoves);
+// 		for (column = 0; column < columns; ++column) {
+// 			const move = board[row][column];
+// 			if (move !== null) {
+// 				if (currentMoves[move] === -1) {
+// 					return false;
+// 				} else {
+// 					currentMoves[move] = -1;
+// 				}
+// 			}
+// 		}
+// 	}
 
-	// Check all the columns individually
-	for (column = 0; column < columns; ++column) {
-		let currentMoves = clone(allMoves);
-		for (row = 0; row < rows; ++row) {
-			const move = board[row][column];
-			if (move !== null) {
-				if (currentMoves[move] === -1) {
-					return false;
-				} else {
-					currentMoves[move] = -1;
-				}
-			}
-		}
-	}
+// 	// Check all the columns individually
+// 	for (column = 0; column < columns; ++column) {
+// 		let currentMoves = clone(allMoves);
+// 		for (row = 0; row < rows; ++row) {
+// 			const move = board[row][column];
+// 			if (move !== null) {
+// 				if (currentMoves[move] === -1) {
+// 					return false;
+// 				} else {
+// 					currentMoves[move] = -1;
+// 				}
+// 			}
+// 		}
+// 	}
 
-	// Check each block
-	for (row = 0; row < D; ++row) {
-		for (column = 0; column < D; ++column) {
-			let currentMoves = clone(allMoves);
-			for (let r = D*row; r < D*(row+1); ++r) {
-				for (let c = D*column; c < D*(column+1); ++c) {
-					const move = board[r][c];
-					if (move !== null) {
-						if (currentMoves[move] === -1) {
-							return false;
-						} else {
-							currentMoves[move] = -1;
-						}
-					}		
-				}
-			}
-		}
-	}
+// 	// Check each block
+// 	for (row = 0; row < D; ++row) {
+// 		for (column = 0; column < D; ++column) {
+// 			let currentMoves = clone(allMoves);
+// 			for (let r = D*row; r < D*(row+1); ++r) {
+// 				for (let c = D*column; c < D*(column+1); ++c) {
+// 					const move = board[r][c];
+// 					if (move !== null) {
+// 						if (currentMoves[move] === -1) {
+// 							return false;
+// 						} else {
+// 							currentMoves[move] = -1;
+// 						}
+// 					}		
+// 				}
+// 			}
+// 		}
+// 	}
 	
-	return true;
-}
+// 	return true;
+// }
 
 function makeBoard(degree, assignments, availableMoves) {
 	return {
@@ -390,7 +390,7 @@ function request(requestObject) {
 const SudokuUtilitiesNamespace = {
 	clearRandomCells: clearRandomCells,
 	computeMoveLists: computeMoveLists,
-	filledBoard: filledBoard,
+//	filledBoard: filledBoard,
 	initialMoveList: initialMoveList,
 	makeBoard: makeBoard,
 	newSerialNumber: newSerialNumber, 
@@ -407,7 +407,7 @@ export default SudokuUtilitiesNamespace;
 export { 
 	clearRandomCells,
 	computeMoveLists,
-	filledBoard,
+//	filledBoard,
 	initialMoveList,
 	makeBoard,
 	newSerialNumber, 

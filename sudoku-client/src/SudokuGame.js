@@ -34,13 +34,6 @@ import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
 
 
-const SELECT_OPS_ACTION = {
-    cost: 0,
-    description: 'Select cell operations that will be applied after every move',
-    internal_name: 'selectops',
-    user_name: 'Select Logical Operations',
-};
-
 class SudokuGame extends React.Component {
     constructor(props) {
         super(props);
