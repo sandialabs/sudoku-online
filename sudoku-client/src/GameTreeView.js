@@ -173,32 +173,6 @@ function prepareTreeForTreebeard(sudokuTree) {
     return ourTree;
 }
 
-// Copy the properties from an existing tree to a new one
-// for all the nodes whose serial numbers are in both trees.
-// 
-// Returns a new tree.  Arguments are not modified.
-//
-// NOTE: this would be a lot faster if we made a couple of 
-// node-finder structures.  As it is, this is O(n^2).
-
-function overlayViewState(newTree, oldTree) {
-    const ourTree = clone(newTree);
-    const viewStateProperties = ['active'];
-    GameTree.walkTree(oldTree,
-        (oldNode) => {
-            const serial = oldNode.id;
-            const newNode = GameTree.findNodeById(newTree, serial);
-            if (newNode !== null) {
-                for (const propName of viewStateProperties) {
-                    newNode[propName] = oldNode[propName];
-                }
-            }
-        }
-        );
-    return ourTree;
-}
-
-
 const GameTreeBoardHeader = ({onSelect, style, customStyles, node}) => {
     return (
         <GameTreeBoard

@@ -48,7 +48,10 @@ class CellActionPanel extends React.Component {
 
 	renderActionList() {
 		let radioButtons = this.makeRadioButtons();
-	
+		let buttonText = "Execute Selected Action";
+		if (!this.props.actionsEnabled) {
+			buttonText = "Cell Actions Not Yet Available";
+		}
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
@@ -60,14 +63,16 @@ class CellActionPanel extends React.Component {
 				</RadioGroup>
 				<Button onClick={() => this.handleExecuteAction()}
 						variant="contained"
-						color="primary">
-					Execute Selected Action
+						color="primary"
+						disabled={!this.props.actionsEnabled}>
+					{buttonText}
 				</Button>
 			</FormControl>
 			);
 	}
 
 	makeRadioButtons() {
+		console.log('permitted actions[0]: ' + this.props.permittedActions[0]);
 		return this.props.allActions.map(
 			(action) => this.makeMaterialRadioButton(action)
 			);
@@ -76,7 +81,13 @@ class CellActionPanel extends React.Component {
 	makeMaterialRadioButton(action) {
 		const actionPermitted = (
 			this.props.permittedActions.length === 0
-            || this.props.permittedActions.indexOf(action.internal_name) !== -1);
+            || this.props.permittedActions.indexOf(action.internal_name) !== -1
+            || (
+            	// XXX This is a hack -- selectops is not working as expected
+            	this.props.actionsEnabled &&
+            	this.props.permittedActions.indexOf('selectops') !== -1
+            	)
+            	);
 		
 		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
 		const forbiddenText = 'This action is not permitted on this board.';
@@ -105,6 +116,7 @@ class CellActionPanel extends React.Component {
 	}
 
 	render() {
+		console.log('DEBUG: CellActionPanel: actionsEnabled == ' + this.props.actionsEnabled);
 		if (!this.actionsAvailable()) {
 			return (
 				<Paper>
@@ -165,7 +177,8 @@ CellActionPanel.propTypes = {
 	permittedActions: PropTypes.array.isRequired,
 	selectedActionChanged: PropTypes.func,
 	defaultAction: PropTypes.object,
-	executeAction: PropTypes.func.isRequired
+	executeAction: PropTypes.func.isRequired,
+	actionsEnabled: PropTypes.bool.isRequired,
 };
 
 export { CellActionPanel };
