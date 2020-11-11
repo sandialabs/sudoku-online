@@ -49,6 +49,7 @@ class SudokuLogger():
         # a list of each operator applictaion so we can keep track of the
         # order that they were applied.
         self.operators_use_list = []
+        self.operators_called = []
         self.difficulty_score = 0
 
         # operators_use_count provides a dict of each operator that was used and
@@ -232,6 +233,90 @@ class SudokuLogger():
                 file.write(json_logs)
 
         return False
+        
+    def logCall(self, operator):
+        self.operators_called.append(operator)
+
+    def printCSV(self):
+        file_name = 'logs.csv'
+        headers = []
+        operators_use_count = self.operators_use_count
+        num_headers = 0
+        puzzle_already_logged = False
+        
+        if not os.path.isfile(file_name):
+            headers = ['Puzzle',
+                        'Starting State',
+                        'Ending State',
+                        'Score',
+                        'Difficulty',
+                        'Order of operators',
+                        'Called Ops - No Free',
+                        'Called Ops - Excl. Free', 
+                        'Called Ops - Excl. & Incl. Free']
+            for key in operators_use_count.keys():
+                 headers.append('num ' + key)
+
+            headers.append('Total Count')
+        
+            num_headers = len(headers)
+        
+            f = open(file_name, "w+")
+            for i in range(num_headers+1):
+                if i == num_headers:
+                     f.write('\n')
+                elif i == num_headers - 1:
+                    f.write(headers[i])
+                else:
+                    f.write(headers[i]+',')
+            f.close()
+        else:
+            f = open(file_name)
+            csv_f = csv.reader(f)
+            for row in csv_f:
+                if self.getPuzzle() == row[1].replace('\'',''):
+                    puzzle_already_logged = True
+            f.close()
+        
+        if puzzle_already_logged:
+            print('already logged this puzzle')
+            print(dir(self))
+        else:
+            f = open(file_name, "a+")
+
+            f.write('\'' + self.getName() + '\',')
+            f.write('\'' + self.getPuzzle() + '\',')
+            f.write('\'' + self.getSolution()['assignments'] + '\',')
+            f.write(str(self.difficulty_score) + ',')
+            f.write(self.getDifficultyLevel() + ',')
+           
+            f.write('[') 
+            for operator in self.operators_use_list:
+                f.write(operator + ';')
+            f.write(']')
+            f.write(', [')
+            for operator in self.operators_called:
+                f.write(operator + ';')
+            f.write('], [')
+            for operator in self.operators_called:
+                if not str(operator) == 'exclusion':
+                    f.write(operator + ';')
+            f.write('], [')
+            for operator in self.operators_called:
+                if not (str(operator) == 'exclusion' or str(operator) == 'inclusion'):
+                    f.write(operator + ';')
+            f.write(']')
+        
+            f.write(',')
+            acc = 0
+            for key in self.operators_use_count.keys():
+                f.write(str(operators_use_count[key]) + ',')
+                acc += operators_use_count[key]
+
+            f.write(str(acc))
+            f.write('\n')
+
+            f.close()
 
 
 log = SudokuLogger()
