@@ -82,34 +82,60 @@ def get_action(action_name):
     return function
 
 
+BREAK = int(0xdead)
+NORMAL = int(0xcafe)
+def apply_one_operator(op, sboard):
+    """ Apply one operator.
+        Returns:
+            boolean Changed if the operator changed the board.
+    """
+    prevValues = sboard.countUncertainValues()
+    sboard = get_operator(op)(sboard)
+    newValues = calculate_status(sboard, op)
+    changed = newValues < prevValues
+    if changed and sboard.config.restart_op_search_on_match:
+        return (sboard, BREAK)
+    return (sboard, NORMAL)
+
+
+def apply_logical_operator(op, sboard):
+    """ Apply one logical operator.
+    """
+    prevValues = sboard.countUncertainValues()
+    (sboard, control) = apply_one_operator(op)(sboard)
+    sboard = apply_free_operators(sboard)
+    if sboard.config.retry_logical_op_after_free_ops and control != BREAK and sboard.countUncertainValues() < prevValues:
+        ## Continue to iterate on the single logical operator, including free operators
+        return apply_logical_operator(op, sboard)
+    return (sboard, control)
+
+
+def loop_operators(sboard, operations_list, function_to_apply):
+    """  Loop over operations list, applying function_to_apply,
+         given initial sboard, following configured control flow,
+         until no values change.
+    """
+    initialUncertainValues = sboard.countUncertainValues()
+    while(initialUncertainValues > 0):
+        for op in operations_list:
+            (sboard, control) = function_to_apply(op, sboard)
+            if control == BREAK:
+                break
+        ## If none of the operators did anything, exit the loop
+        if initialUncertainValues == sboard.countUncertainValues():
+            break
+    return sboard
+
+
 def apply_free_operators(sboard, force=False):
     """ Iterate over free operators until no values change. """
     # Simplify if we're being forced or our config allows it
     if (force == False and sboard.config.simplify == False):
         return sboard
-    nValues = sboard.countUncertainValues()
-    prevValues = nValues + 1
     # Apply the free operators to a fixed point
-    # All of these fancy shenanigans with control flow
-    #   are just to ensure that these operators are applied
-    #   in the same order whether they are free or paid
-    while(prevValues > nValues and nValues > 0):
-        prevValues = nValues
-        for op in sboard.config.free_operations:
-            sboard = get_operator(op)(sboard)
-            nValues = calculate_status(sboard, op)
-            if (nValues < prevValues):
-                # If this is the first operator, and it ran
-                #   to completion, then we can pretend the it
-                #   was the base of the fixed point
-                if (op == sboard.config.free_operations[0]
-                    and sboard.config.explore_to_fixed_point
-                        and not sboard.config.terminate_on_successful_operation):  # This last should be redundant
-                    prevValues = nValues
-                # Otherwise we need to restart
-                elif sboard.config.restart_op_search_on_match:
-                    break
-    return sboard
+    return loop_operators(sboard,
+                          sboard.config.free_operations,
+                          apply_one_operator)
 
 
 # -----------------------------------------------------------------------------
@@ -155,31 +181,10 @@ def logical_solve(sboard, logical_ops):
     Currently iterates between propagating exclusions and assigning
     inclusions until no new constraints are identified.
     """
-    sboard = apply_free_operators(sboard)
-    nValues = sboard.countUncertainValues()
-    prevValues = nValues + 1  # Force the first iteration of the loop
     # Iterate until we don't change the board or no uncertain values remain
-    while(prevValues > nValues and nValues > 0):
-        prevValues = nValues
-        for op in logical_ops:
-            sboard = get_operator(op)(sboard)
-            opValues = calculate_status(sboard, op)
-            if (opValues < prevValues):
-                # Apply free operators if we made any progress
-                sboard = apply_free_operators(sboard)
-                freeValues = sboard.countUncertainValues()
-                nValues = freeValues
-                # If this is the first operator, and it ran
-                #   to completion, then we can pretend the it
-                #   was the base of the fixed point
-                if (op == logical_ops[0]
-                    and sboard.config.explore_to_fixed_point
-                        and not sboard.config.terminate_on_successful_operation):  # This last should be redundant
-                    prevValues = opValues
-                # Otherwise we need to restart, unless the free operators didn't change anything
-                if (nValues < prevValues
-                        and sboard.config.restart_op_search_on_match):
-                    break
+    sboard = loop_operators(sboard,
+                            logical_ops,
+                            apply_logical_operator)
 
     req_ops = list(logical_ops)
     req_ops.extend(sboard.config.free_operations)

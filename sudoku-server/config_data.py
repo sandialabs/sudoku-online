@@ -40,6 +40,8 @@ class ConfigurationData():
         # If True, we should terminate on a logical_operator's first successful application.
         # If False, we continue to try to find all matching possibilities for an operator.
         self.terminate_on_successful_operation = False
+        # If True, apply a single logical operator to a fixed point, interleaving free operators as appropriate
+        self.retry_logical_op_after_free_ops = True
         # If True, have a logical operator explore to a fixed point
         # (i.e., re-explore the entire board for the operator after changes have been made)
         self.explore_to_fixed_point = True
