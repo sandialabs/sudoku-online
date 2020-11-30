@@ -12,6 +12,7 @@ import csv
 import json
 import pprint
 import board_update_descriptions
+import board
 
 verbosity = 0
 
@@ -51,12 +52,17 @@ class SudokuLogger():
         self.operators_use_list = []
         self.operators_called = []
         self.difficulty_score = 0
-
+        self.board_updates = []
+        self.test = []
+        self.final_board = None
+        self.most_uncertain = 'None'
         # operators_use_count provides a dict of each operator that was used and
         # the number of times they were applied.
         self.operators_use_count = dict()
+        self.operators_called_count = dict()
         for action in board_update_descriptions.board_update_options.keys():
             self.operators_use_count[action] = 0
+            self.operators_called_count[action] = 0
 
     def logOperator(self, operator, verbosity1_str=None, board=None, count_operator=True, cost_operator=True):
         """ Log an application of an operator to a board state, increasing the cost of the operator ot be incurred.
@@ -235,7 +241,54 @@ class SudokuLogger():
         return False
         
     def logCall(self, operator):
-        self.operators_called.append(operator)
+        last = len(self.operators_called)-1
+        if last == -1:
+            self.operators_called.append(operator)
+            self.operators_called_count[operator] +=1
+        else:
+            if not operator == self.operators_called[last]:
+                self.operators_called.append(operator)
+                self.operators_called_count[operator] +=1
+    
+    def logState(self, operator, sboard):
+        last = len(self.board_updates) -1
+        ustate = self.create_state(sboard, uncertain = True)
+        if last == -1:
+            self.board_updates.append((operator, ustate))
+            self.final_board = sboard
+        else:
+            if not operator == self.operators_called[last]:
+                self.board_updates.append((operator, ustate))
+                self.final_board = sboard
+
+    def create_state(self, sboard, uncertain = False):
+        b = ''
+        for cell_id in sorted(sboard.getAllCells(sboard.getDegree())):
+            cell = sboard.getCell(cell_id)
+            val = cell.getStateStr().strip()
+            if val == '.' and uncertain:
+                val = '{'+cell_id.strip()+':'+cell.getStateStr(True).strip()+'}'
+            b+=val
+        return b 
+
+    def uncertain_cells(self, sboard):
+        if sboard is None:
+            return [], []
+        m_cell = []
+        total_u = []
+        for cell_id in sorted(sboard.getAllCells(sboard.getDegree())):
+            if not sboard.getCell(cell_id).isCertain():
+                group = sboard.getAssociatedCells(cell_id)
+                count = 0
+                tot = 0
+                for element in group:
+                    if not sboard.getCell(element).isCertain():
+                        count+=1
+                        tot += len(sboard.getCell(element).getValues())
+                m_cell.append(cell_id+": "+str(count))
+                total_u.append(cell_id+": "+str(tot))
+        return m_cell, total_u
+            
 
     def printCSV(self):
         file_name = 'logs.csv'
@@ -251,11 +304,15 @@ class SudokuLogger():
                         'Score',
                         'Difficulty',
                         'Order of operators',
-                        'Called Ops - No Free',
-                        'Called Ops - Excl. Free', 
-                        'Called Ops - Excl. & Incl. Free']
+                        'Called Ops - Excl. Free',
+                        'States between calls', 
+                        'Count of uncertain cells in associated cells before last non-free operator', 
+                        'Count of total uncertain values in associated cells before last non-free operator '] 
+            for key in self.operators_called_count.keys():
+                headers.append('Num called '+ key)
+
             for key in operators_use_count.keys():
-                 headers.append('num ' + key)
+                 headers.append('Num ' + key + ' uses')
 
             headers.append('Total Count')
         
@@ -280,7 +337,9 @@ class SudokuLogger():
         
         if puzzle_already_logged:
             print('already logged this puzzle')
-            print(dir(self))
+            print(self.operators_called)
+            print(self.board_updates)
+            print(self.uncertain_cells(self.final_board))
         else:
             f = open(file_name, "a+")
 
@@ -297,17 +356,21 @@ class SudokuLogger():
             f.write(', [')
             for operator in self.operators_called:
                 f.write(operator + ';')
+            f.write('] , [')
+            for state in self.board_updates:
+                f.write(state[0]+ ':'+ state[1]+ ';')
             f.write('], [')
-            for operator in self.operators_called:
-                if not str(operator) == 'exclusion':
-                    f.write(operator + ';')
-            f.write('], [')
-            for operator in self.operators_called:
-                if not (str(operator) == 'exclusion' or str(operator) == 'inclusion'):
-                    f.write(operator + ';')
-            f.write(']')
-        
-            f.write(',')
+            assoc, total = self.uncertain_cells(self.final_board)
+            for word in assoc:
+                f.write(word + ';')
+            f.write('],[')
+            for num in total:
+                f.write(num+';')
+            f.write('],')
+            
+            for key in self.operators_called_count.keys():
+                f.write(str(self.operators_called_count[key])+ ',')
+
             acc = 0
             for key in self.operators_use_count.keys():
                 f.write(str(operators_use_count[key]) + ',')

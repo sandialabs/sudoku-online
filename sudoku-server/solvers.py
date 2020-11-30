@@ -90,9 +90,13 @@ def apply_one_operator(op, sboard):
             boolean Changed if the operator changed the board.
     """
     prevValues = sboard.countUncertainValues()
+    prevBoard = board.Board(sboard)
     sboard = get_operator(op)(sboard)
     newValues = calculate_status(sboard, op)
     changed = newValues < prevValues
+    if changed and not op in sboard.config.free_operations:
+        sboard.config.log.logCall(op)
+        sboard.config.log.logState(op, prevBoard)
     if changed and sboard.config.restart_op_search_on_match:
         return (sboard, BREAK)
     return (sboard, NORMAL)
@@ -102,7 +106,7 @@ def apply_logical_operator(op, sboard):
     """ Apply one logical operator.
     """
     prevValues = sboard.countUncertainValues()
-    (sboard, control) = apply_one_operator(op)(sboard)
+    (sboard, control) = apply_one_operator(op,sboard)
     sboard = apply_free_operators(sboard)
     if sboard.config.retry_logical_op_after_free_ops and control != BREAK and sboard.countUncertainValues() < prevValues:
         ## Continue to iterate on the single logical operator, including free operators
@@ -124,6 +128,7 @@ def loop_operators(sboard, operations_list, function_to_apply):
         ## If none of the operators did anything, exit the loop
         if initialUncertainValues == sboard.countUncertainValues():
             break
+        initialUncertainValues = sboard.countUncertainValues()
     return sboard
 
 
