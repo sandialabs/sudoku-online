@@ -10,7 +10,8 @@
  */
 
 import React, {Component} from 'react';
-import { Treebeard, theme as defaultTheme, decorators as defaultDecorators } from 'react-treebeard';
+import { Treebeard, theme as defaultTheme, decorators as defaultDecorators } from './modified-react-treebeard';
+import Header from './modified-react-treebeard/components/Decorators/Header';
 import { clone } from 'ramda';
 import { GameTreeBoard } from './GameTreeBoard';
 import PropTypes from 'prop-types';
@@ -41,115 +42,73 @@ class GameTreeView extends Component {
     constructor(props){
         super(props);
         this.onToggle = this.onToggle.bind(this);
-//        this.onSelect = this.onSelect.bind(this);
+        this.onSelect = this.onSelect.bind(this);
 
-        this.state = {
-            renderableTree: prepareTreeForTreebeard(clone(this.props.tree)),
-            selectedNode: null
-        };
+        // this.state = {
+        //     renderableTree: prepareTreeForTreebeard(clone(this.props.tree)),
+        //     selectedNode: null
+        // };
 
         this.decorators = clone(defaultDecorators);
-        this.decorators.Header = GameTreeBoardHeader;
+        //this.decorators.Header = GameTreeBoardHeader;
 
         this.theme = clone(defaultTheme);
-        this.theme.tree.base.backgroundColor = 'white';
-        this.theme.tree.base.color = 'black';
-        this.theme.tree.node.subtree = '50px';
-        this.theme.tree.node.activeLink.background = '#A0A0A0';
+        console.log('this.theme: ');
+        console.log(this.theme);
+        this.theme.tree.node.header.title.color = '#FFA0A0';
+
+        // this.theme.tree.base.backgroundColor = 'white';
+        // this.theme.tree.base.color = 'black';
+        // this.theme.tree.node.subtree = '50px';
+        // this.theme.tree.node.activeLink.background = '#A0A0A0';
+        this.customStyles = { 
+            header: {
+                title: {
+                    color: 'red'
+                }
+            }
+        };
     }
     
     // The game tree will always be fully expanded.  Clicking on a node only
     // changes the active view.
     onToggle(node, toggled) {
-        const selectedNode = this.state.selectedNode;
-        if (selectedNode) {
-            selectedNode.active = false;
+        console.log('GTV.onToggle: Node ' + node.name + ' clicked');
+        
+        if (node.children) {
+            node.toggled = toggled;    
+            this.props.announceBoardToggled(node.data.board.serialNumber);
         }
-        node.active = true;
-        // if (node.children) {
-        //     node.toggled = toggled;
-        // }
-        this.setState({selectedNode: node});
-        if (this.props.changeActiveBoard) {
-            console.log('onToggle: selected node is...');
-            console.log(node);
-            this.props.changeActiveBoard(node.data.board.serialNumber);
-        }
+    }
+
+    onSelect(node) {
+        console.log('onSelect: new selected node is...');
+        console.log(node);
+        this.props.changeActiveBoard(node.data.board.serialNumber);
     }
 
     render() {
-        if (this.state.renderableTree) {
-            return (
-                <Treebeard
-                    data={this.state.renderableTree}
-                    onToggle={this.onToggle}
-                    decorators={this.decorators}
-                    style={this.theme}
-                />
+        console.assert(this.props.gameTree !== undefined, 
+            "GameTreeView: props.gameTree is undefined");
+        const renderableTree = prepareTreeForTreebeard(
+            this.props.gameTree,
+            this.props.activeBoardId,
+            this.props.expandedNodes
             );
-        } else {
-            return (
-                <div>Game tree not yet available.</div>
-                );
-        }
-    }
 
-    // The nontrivial thing about this component is that it stores
-    // state related to the Treebeard tree view in the data structure
-    // for the tree itself.  That's why we cloned the tree out of
-    // our props to put into our state.  It's unfortunate, but that's
-    // the way Treebeard works.
-    // 
-    // The effect of this is that we have to detect when the tree
-    // has been updated and then propagate the new state ourselves.
-    // We can detect the update by observing that tree.maxSerialNumber()
-    // is different between the tree currently in our props and the 
-    // tree currently in our state.
-    // 
-    // When we detect that, we will replace the tree in the state
-    // with the one in the props, but we will also copy over all of
-    // the Treebeard state related to which nodes are open/closed
-    // and which node is selected so the tree view doesn't reset
-    // itself. 
-     
-    componentDidUpdate(oldProps, oldState) {
-        console.log('GameTreeView: componentDidUpdate called');
-        let shouldUpdate = false;
+        return (
+            <Treebeard
+                data={renderableTree}
+                onToggle={this.onToggle}
+                onSelect={this.onSelect}
+                //decorators={this.decorators}
+                customStyles={this.customStyles}
+            />
+            );
+     }
 
-        if (!(this.state.renderableTree && this.props.tree)) {
-            // At least one of these is out of sync.
-            console.log('GameTreeView: Setting up new tree.  this.props.tree is ' + this.props.tree + ', this.state.renderableTree is ' + this.state.renderableTree);
-            shouldUpdate = true;
-        } else {
-            shouldUpdate = hasTreeSizeChanged(this.state.renderableTree, this.props.tree);
-        }
-
-        if (shouldUpdate === false) {
-            return;
-        } else {
-            if (this.state.renderableTree && this.props.tree) {
-                console.log('GameTreeView: Updating tree after node count changed from ' 
-                            + GameTree.treeSize(this.state.renderableTree) + ' to ' 
-                            + GameTree.treeSize(this.props.tree) + '.');
-            }
-                    
-            let ourNewTree = prepareTreeForTreebeard(this.props.tree);
-            // if (this.state.renderableTree) {
-            //     ourNewTree = overlayViewState(ourNewTree, this.state.renderableTree);
-            // }
-
-            console.log('GameTreeView: componentDidUpdate: ourNewTree is ' + ourNewTree);
-            let newSelectedNode = null;
-            if (this.state.selectedNode !== null) {
-                newSelectedNode = GameTree.findNodeById(ourNewTree, this.state.selectedNode.id);
-            }
-            this.setState({
-                selectedNode: newSelectedNode,
-                renderableTree: ourNewTree
-            });
-        }
-    }
 }
+
 
 
 
@@ -161,28 +120,91 @@ function hasTreeSizeChanged(oldTree, newTree) {
 // All nodes with children default to 'expanded'.  
 // 
 // Returns a new tree.  Arguments are not modified.
-function prepareTreeForTreebeard(sudokuTree) {
+function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
     const ourTree = clone(sudokuTree);
+    console.assert(sudokuTree !== undefined,
+        "prepareTreeForTreebeard: tree is undefined"
+        );
+
+    const expandedNodesPlusActiveNodeAncestry = new Set(expandedNodes);
+    const activeBoardAncestors = GameTree.findNodeAncestry(ourTree, activeNodeId);
+    console.assert(activeBoardAncestors.found === true,
+        "Couldn't find ancestors of active board");
+    for (const node of activeBoardAncestors.path) {
+        expandedNodesPlusActiveNodeAncestry.add(node.data.board.serialNumber);
+    }
+
 
     GameTree.walkTree(ourTree,
         (node) => {
-            node.name = 'Board ' + node.data.board.serialNumber;
-            node.active = false;
-            node.toggled = true;
+            if (node.data.board.backtrackingBoard) {
+                node.name = 'Backtrack: ' + node.data.board.serialNumber;
+            } else {
+                node.name = 'Action: ' + node.data.board.serialNumber;
+            }
+            if (node.data.board.serialNumber === activeNodeId) {
+                node.selected = true;
+                // might also need
+                // node.active = true;
+            } else {
+                node.selected = false;
+            }
+            node.toggled = expandedNodesPlusActiveNodeAncestry.has(node.data.board.serialNumber);
         });
+
+    // The root gets a distinguished name
+    ourTree.name = 'Starting Board';
     return ourTree;
 }
 
 const GameTreeBoardHeader = ({onSelect, style, customStyles, node}) => {
-    return (
-        <GameTreeBoard
-            board={node.data.board}
-        />
-    );
+    if (node.children === undefined
+        || node.children === null
+        || node.children.length === 0) {
+        
+        return (
+            <GameTreeBoard
+                board={node.data.board}
+            />
+            );
+    } else {
+        return (
+            Header.Header(onSelect, style, customStyles, node)
+        );
+    }
+}
+
+
+function prettyPrintNode(node) {
+    return node.name + ' (selected: ' + node.selected + ', toggled: ' + node.toggled + ', terminal: ' + nodeIsTerminal(node) + ')';
+}
+
+function prettyPrintTreeLevel(tree, indent) {
+   let outstring = indent + prettyPrintNode(tree) + '\n';
+   if (tree.children !== null &&
+       tree.children !== undefined) {
+     for (const child of tree.children) {
+        outstring += prettyPrintTreeLevel(child, indent + '  ');
+     }
+   } 
+   return outstring;
+}
+
+function prettyPrintTree(root) {
+    return prettyPrintTreeLevel(root, '');
+}
+
+function nodeIsTerminal(node) {
+    return (node.children === null ||
+            node.children === undefined ||
+            node.children.length === 0);
 }
 
 GameTreeBoardHeader.propTypes = {
-    onSelect: PropTypes.func,
+    activeBoardId: PropTypes.number.isRequired,
+    expandedNodes: PropTypes.object.isRequired,
+    changeActiveBoard: PropTypes.func.isRequired,
+    announceBoardToggled: PropTypes.func.isRequired,
     style: PropTypes.object,
     node: PropTypes.object,
     customStyle: PropTypes.object

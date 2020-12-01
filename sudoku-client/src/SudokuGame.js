@@ -39,14 +39,15 @@ class SudokuGame extends React.Component {
         super(props);
 
         this.state = {
+            activeBoardId: null,
             currentPuzzleIndex: null,
             gameTree: null,
-            activeBoardId: null,
-            selectedLogicalOperators: [],
+            gameTreeExpandedNodes: new Set(),
+            logicalOperatorsSelected: false,
             selectedBoardSquare: null,
+            selectedLogicalOperators: [],
             selectedValue: null,
             selectLogicalOperatorsUpFront: false,
-            logicalOperatorsSelected: false
         };
 
         if (this.props.initialBoard !== null && this.props.initialBoard !== undefined) {
@@ -66,10 +67,14 @@ class SudokuGame extends React.Component {
 
     initializeGameTree(rootBoard) {
         console.log('SudokuGame: Initializing game tree.');
-        const tree = GameTree.makeGameTreeNode(rootBoard);
+        const gameTree = GameTree.makeGameTreeNode(rootBoard);
+
+        // Set the root node to be selected and give it a distinguished name
+        gameTree.name = 'Starting Board';
+
         this.setState({
-            gameTree: tree,
-            activeBoardId: tree.id
+            gameTree: gameTree,
+            activeBoardId: gameTree.data.board.serialNumber
         });
     } 
 
@@ -80,17 +85,22 @@ class SudokuGame extends React.Component {
         });
     }
 
-    handleNewBoards(parentSerial, response) {
+    handleNewBoards(parentSerial, newBoards) {
+        
         this.setState({
             gameTree: GameTree.addBoards(
                 this.state.gameTree,
                 parentSerial,
-                response
+                newBoards
                 ),
         });
 
-        this.changeActiveBoard(response[0].serialNumber);
-
+        const newActiveSerial = findFirstNonBacktrackBoard(newBoards);
+        console.assert(
+            newActiveSerial !== null,
+            "Couldn't find non-backtrack message in new boards"
+            );
+        this.changeActiveBoard(newActiveSerial);
     }
 
     activeBoard() {
@@ -113,13 +123,74 @@ class SudokuGame extends React.Component {
         }    
     }
 
+    announceBoardToggled(boardSerial) {
+        const newExpandedNodes = new Set(this.state.gameTreeExpandedNodes);
+        if (newExpandedNodes.has(boardSerial)) {
+            newExpandedNodes.delete(boardSerial);
+        } else {
+            newExpandedNodes.add(boardSerial);
+        }
+        this.setState({
+            gameTreeExpandedNodes: newExpandedNodes
+        });
+    }
+
+    canCellActionsExecute() {
+        if (this.state.selectLogicalOperatorsUpFront === true 
+            && this.state.logicalOperatorsSelected === false) 
+        {
+            return false;
+        }
+
+        if (this.state.activeBoardId === null 
+            || this.state.activeBoardId === -1)
+        {
+            return false;
+        }
+
+        if (this.state.selectedValue === null)
+        {
+            return false;
+        }
+
+        if (this.isTerminalNode(this.state.activeBoardId) === false) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // These reasons are listed in descending order of priority.
+    cellActionsDisabledBecause() {
+        if (this.state.selectLogicalOperatorsUpFront === true 
+            && this.state.logicalOperatorsSelected === false) 
+        {
+            return 'Select Logical Operators First';
+        }
+
+        if (this.state.activeBoardId === null 
+            || this.state.activeBoardId === -1)
+        {
+            return 'Error: No Active Board';
+        }
+
+        if (this.isTerminalNode(this.state.activeBoardId) === false) {
+            return 'This board has already been acted upon';
+        }
+
+        if (this.state.selectedValue === null)
+        {
+            return 'You must select a square to operate upon';
+        }
+        
+        return 'ERROR: No reason given for disabled actions';
+    }
+
     render() {
         if (this.state.gameTree === null) {
             return (
                 <div>
-                   SudokuGame does not yet have a game tree.  This is OK; it means we don't
-                   have our initial board yet.  If this message doesn't go away immediately,
-                   make sure the server is running on localhost port 5000.
+                   Loading Game Tree...
                 </div>
             );
         } else if (this.state.gameTree.data.board === null
@@ -130,18 +201,21 @@ class SudokuGame extends React.Component {
                 </div>
             );
         } else {
+            console.assert(this.state.gameTree !== undefined,
+                "SudokuGame: this.state.gameTree is undefined");
+            console.log("Game tree:");
+            console.log(this.state.gameTree);
             const board = this.activeBoard();
-            console.log('render(): active board serial number: ' + board.serialNumber);
+            
             let defaultAction = null;
             if (this.props.cellActions !== null && this.props.cellActions.length > 0) {
                 // FIXME: make sure the default action is not disabled
                 defaultAction = this.props.cellActions[0];
             }
             const currentScore = this.computeScore();
-            const actionsEnabled = (
-                this.state.selectLogicalOperatorsUpFront === false
-                || this.state.logicalOperatorsSelected
-                );
+            const actionsEnabled = this.canCellActionsExecute();
+            const disabledReason = this.cellActionsDisabledBecause();
+
             const logicalOperatorsFrozen = (
                 this.state.selectLogicalOperatorsUpFront 
                 && this.state.logicalOperatorsSelected
@@ -158,6 +232,8 @@ class SudokuGame extends React.Component {
                                 selectedActionChanged={(newAction) => {this.handleCellActionSelection(newAction)}}
                                 executeAction={(action) => this.handleExecuteAction(action)}
                                 actionsEnabled={actionsEnabled}
+                                disabledReason={disabledReason}
+
                                 />
                         </Grid>
                         <Grid item xs={6}>
@@ -180,14 +256,19 @@ class SudokuGame extends React.Component {
                     </Grid>
                     <Grid container item id="gameTree" xs={6}>
                         <GameTreeView
-                            tree={this.state.gameTree}
+                            gameTree={this.state.gameTree}
+                            activeBoardId={this.state.activeBoardId}
+                            expandedNodes={this.state.gameTreeExpandedNodes}
                             changeActiveBoard={(serial) => {this.changeActiveBoard(serial);}}
+                            announceBoardToggled={(serial) => {this.announceBoardToggled(serial);}}
                             />
                     </Grid>
                     <Grid container item id="activeBoard" xs={6}>
                          <ActiveBoardView
                             board={board}
                             announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
+                            selectedSquare={this.state.selectedBoardSquare}
+                            selectedValue={this.state.selectedValue}
                             />
                     </Grid>
                     <Grid item xs={12} id="doneButtonContainer">
@@ -197,6 +278,12 @@ class SudokuGame extends React.Component {
                 );
         }
     } // end of render()
+
+    _makeStartingGameTreeViewState(boardId) {
+        return {
+   
+        }
+    }
 
     componentDidMount() {
         this.requestNextBoard()
@@ -305,8 +392,25 @@ class SudokuGame extends React.Component {
                 }
                 );
     }
+
+    isTerminalNode(boardId) {
+        const node = GameTree.findNodeById(this.state.gameTree, boardId);
+        console.log('isTerminalNode: Node is ');
+        console.log(node);
+        return (node.children === null 
+                || node.children.length === 0);
+    }
 }
 
+function findFirstNonBacktrackBoard(boardList) {
+    for (const board of boardList) {
+        if (board.backtrackingBoard === undefined
+            || board.backtracingBoard === false) {
+            return board.serialNumber;
+        }
+    }
+    return null;
+}
 
 SudokuGame.propTypes = {
     cellActions: PropTypes.array.isRequired,

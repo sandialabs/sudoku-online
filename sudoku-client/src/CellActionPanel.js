@@ -50,7 +50,7 @@ class CellActionPanel extends React.Component {
 		let radioButtons = this.makeRadioButtons();
 		let buttonText = "Execute Selected Action";
 		if (!this.props.actionsEnabled) {
-			buttonText = "Cell Actions Not Yet Available";
+			buttonText = this.props.disabledReason;
 		}
 		return (
 			<FormControl component="fieldset">
@@ -72,7 +72,6 @@ class CellActionPanel extends React.Component {
 	}
 
 	makeRadioButtons() {
-		console.log('permitted actions[0]: ' + this.props.permittedActions[0]);
 		return this.props.allActions.map(
 			(action) => this.makeMaterialRadioButton(action)
 			);
@@ -116,7 +115,6 @@ class CellActionPanel extends React.Component {
 	}
 
 	render() {
-		console.log('DEBUG: CellActionPanel: actionsEnabled == ' + this.props.actionsEnabled);
 		if (!this.actionsAvailable()) {
 			return (
 				<Paper>
@@ -146,8 +144,7 @@ class CellActionPanel extends React.Component {
 	}
 
 	handleExecuteAction() {
-		console.log('DEBUG: handleExecuteAction: Execute button pressed');
-		console.log('selectedAction is ' + this.state.selectedAction + ', defaultAction is ' + this.props.defaultAction);
+		console.log('DEBUG: handleExecuteAction: selectedAction is ' + this.state.selectedAction + ', defaultAction is ' + this.props.defaultAction);
 		if (this.props.executeAction) {
 			let action = this.state.selectedAction;
 			if (action === null) {
@@ -158,7 +155,6 @@ class CellActionPanel extends React.Component {
 	}
 
 	handleActionSelection(changeEvent) {
-		console.log('DEBUG: handleActionSelection: Selected action is ' + changeEvent.target.value);
 		if (this.state.selectedAction !== changeEvent.target.value) {
 			const action = this.findActionObject(changeEvent.target.value);
 			if (action !== null) {
@@ -179,6 +175,7 @@ CellActionPanel.propTypes = {
 	defaultAction: PropTypes.object,
 	executeAction: PropTypes.func.isRequired,
 	actionsEnabled: PropTypes.bool.isRequired,
+	disabledReason: PropTypes.string,
 };
 
 export { CellActionPanel };

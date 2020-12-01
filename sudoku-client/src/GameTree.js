@@ -65,6 +65,40 @@ function addBoards(tree, parentId, newBoards) {
     return myTree;
 }
 
+
+function findNodeAncestry(node, targetId) {
+    if (node.id === targetId) {
+        return { found: true, path: [] };
+    } else if (FunctionalTree.isLeaf(node)) {
+        return { found: false, path: null };
+    } else {
+        for (let i = 0; i < node.children.length; ++i) {
+            if (node.children[i].id === targetId) {
+                return {
+                    found: true,
+                    path: [node]
+                };
+            } else {
+                const {found, path} = findNodeAncestry(node.children[i], targetId);
+                if (found) {
+                    return {
+                        found: true,
+                        path: [node].concat(path)
+                    };
+                }
+            }
+        }
+    }
+    return { found: false, path: null };
+}
+
+function isTerminalNode(node) {
+    return (node.children === undefined
+            || node.children === null
+            || node.children.length === 0);
+}
+
+const findPathToNode = FunctionalTree.findPathToNode;
 const walkTree = FunctionalTree.walkTree;
 
 const GameTreeNamespace = {
@@ -72,15 +106,21 @@ const GameTreeNamespace = {
     addBoard: addBoard,
     addBoards: addBoards,
     findNodeById: findNodeById,
+    isTerminalNode: isTerminalNode,
     treeSize: treeSize,
-    walkTree: FunctionalTree.walkTree
+    walkTree: FunctionalTree.walkTree,
+    findPathToNode: FunctionalTree.findPathToNode,
+    findNodeAncestry: findNodeAncestry,
 };
 
 export default GameTreeNamespace;
 export { 
     makeGameTreeNode, 
     addChild, 
+    findNodeAncestry,
     findNodeById, 
+    findPathToNode,
+    isTerminalNode,
     treeSize, 
     addBoard, 
     walkTree
