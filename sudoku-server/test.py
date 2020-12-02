@@ -74,6 +74,7 @@ def test_sudoku(args):
                 sboard.config.log.printLogJSON()
             msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
             sboard.config.debug_print('final state', msg, None)
+            sboard.config.log.printCSV()
         else:
             msg = f'Final state of {name}: INSOLUBLE'
             config_data.defaultConfig.debug_print('final state', msg, None)

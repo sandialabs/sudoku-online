@@ -30,7 +30,9 @@ function isLeaf(node) {
 
 
 function findPathToNode(node, targetId) {
-	if (isLeaf(node)) {
+	if (node.id === targetId) {
+		return { found: true, path: [] };
+	} else if (isLeaf(node)) {
 		return { found: false, path: null };
 	} else {
 		for (let i = 0; i < node.children.length; ++i) {
@@ -149,10 +151,11 @@ const FunctionalTreeNamespace = {
 	addChild: addChild,
 	isLeaf: isLeaf,
 	findNodeById: findNodeById,
+	findPathToNode: findPathToNode,
 	treeSize: treeSize,
 	walkTree: walkTree
 };
 
 
 export default FunctionalTreeNamespace;
-export { makeTreeNode, addChild, isLeaf, findNodeById, treeSize, walkTree };
+export { makeTreeNode, addChild, isLeaf, findNodeById, treeSize, walkTree, findPathToNode };

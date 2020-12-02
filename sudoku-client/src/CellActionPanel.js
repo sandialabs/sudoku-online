@@ -37,6 +37,7 @@ import { Typography } from '@material-ui/core';
 
 import PropTypes from 'prop-types';
 
+
 class CellActionPanel extends React.Component {
 	constructor(props) {
 		super(props);
@@ -47,7 +48,10 @@ class CellActionPanel extends React.Component {
 
 	renderActionList() {
 		let radioButtons = this.makeRadioButtons();
-	
+		let buttonText = "Execute Selected Action";
+		if (!this.props.actionsEnabled) {
+			buttonText = this.props.disabledReason;
+		}
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
@@ -59,8 +63,9 @@ class CellActionPanel extends React.Component {
 				</RadioGroup>
 				<Button onClick={() => this.handleExecuteAction()}
 						variant="contained"
-						color="primary">
-					Execute Selected Action
+						color="primary"
+						disabled={!this.props.actionsEnabled}>
+					{buttonText}
 				</Button>
 			</FormControl>
 			);
@@ -75,7 +80,13 @@ class CellActionPanel extends React.Component {
 	makeMaterialRadioButton(action) {
 		const actionPermitted = (
 			this.props.permittedActions.length === 0
-            || this.props.permittedActions.indexOf(action.internal_name) !== -1);
+            || this.props.permittedActions.indexOf(action.internal_name) !== -1
+            || (
+            	// XXX This is a hack -- selectops is not working as expected
+            	this.props.actionsEnabled &&
+            	this.props.permittedActions.indexOf('selectops') !== -1
+            	)
+            	);
 		
 		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
 		const forbiddenText = 'This action is not permitted on this board.';
@@ -133,8 +144,7 @@ class CellActionPanel extends React.Component {
 	}
 
 	handleExecuteAction() {
-		console.log('DEBUG: handleExecuteAction: Execute button pressed');
-		console.log('selectedAction is ' + this.state.selectedAction + ', defaultAction is ' + this.props.defaultAction);
+		console.log('DEBUG: handleExecuteAction: selectedAction is ' + this.state.selectedAction + ', defaultAction is ' + this.props.defaultAction);
 		if (this.props.executeAction) {
 			let action = this.state.selectedAction;
 			if (action === null) {
@@ -145,7 +155,6 @@ class CellActionPanel extends React.Component {
 	}
 
 	handleActionSelection(changeEvent) {
-		console.log('DEBUG: handleActionSelection: Selected action is ' + changeEvent.target.value);
 		if (this.state.selectedAction !== changeEvent.target.value) {
 			const action = this.findActionObject(changeEvent.target.value);
 			if (action !== null) {
@@ -164,7 +173,9 @@ CellActionPanel.propTypes = {
 	permittedActions: PropTypes.array.isRequired,
 	selectedActionChanged: PropTypes.func,
 	defaultAction: PropTypes.object,
-	executeAction: PropTypes.func.isRequired
+	executeAction: PropTypes.func.isRequired,
+	actionsEnabled: PropTypes.bool.isRequired,
+	disabledReason: PropTypes.string,
 };
 
 export { CellActionPanel };
