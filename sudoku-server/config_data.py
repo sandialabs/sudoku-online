@@ -102,23 +102,39 @@ class ConfigurationData():
         if not self.log:
             return
         name = self.log.getName()
-        if name and '?select_ops_upfront' in name:
-            # If we are selecting logical operators up front, they can't be changed later in the game
-            self.rules['canChangeLogicalOperators'] = False
-        else:
-            # Otherwise they can be changed, and we have an additional action (applyops) to support that
+        if name:
+            self.display_name = name
+            parameters = name.split('?')
+            for param in parameters:
+                if 'select_ops_upfront' in param:
+                    # If we are selecting logical operators up front, they can't be changed later in the game
+                    self.rules['canChangeLogicalOperators'] = False
+                elif 'goal=' in param:
+                    # Get the part specifying the goal cell
+                    cell = param.split('goal=')[1]
+                    self.goal_cell_name = cell
+                elif 'costlyops=' in param:
+                    # Get the part specifying the costly operations
+                    operators_string = param.split('costlyops=')[1]
+                    operators_list = operators_string.split(',')
+                    self.rules['specializedCostlyOperations'] = True
+                    self.costly_operations = []
+                    for op in operators_list:
+                        # The op itself is verified later via self.verify
+                        self.costly_operations.append(op)
+                elif 'name=' in param:
+                    # MAL TODO This should perhaps be closely associated with the board instead, but we put it here for
+                    #   coding convenience right now
+                    self.display_name = param.split('name=')[1]
+
+        if 'select_ops_upfront' not in self.rules:
+            # They can be changed, and we have an additional action (applyops) to support that
             # Note that the apply_ops action is redundant with 'heuristics' in the request, but that's OK.
             # We could leave this as an assumption, but let's make it explicit
             self.rules['canChangeLogicalOperators'] = True
             if self.log.puzzle:
                 # We have a puzzle with no name, so we still need to add 'applyops' to the list of actions
                 self.actions.append('applyops')
-        if name and '?goal=' in name:
-            # Get the part specifying the goal cell
-            cell = name.split('?goal=')[1]
-            # And remove anything after the goal cell name if there is anything
-            cell = cell.split('?')[0] if '?' in cell else cell
-            self.goal_cell_name = cell
 
         self.verify()
 
@@ -137,8 +153,12 @@ class ConfigurationData():
             json_dict['availableActions'] = self.actions
         if self.rules:
             json_dict['rules'] = self.rules
+            if 'specializedCostlyOperations' in self.rules:
+                json_dict['costlyOperations'] = self.costly_operations
         if self.goal_cell_name:
             json_dict['goal'] = self.goal_cell_name
+        if self.display_name:
+            json_dict['displayName'] = self.display_name
         return json_dict
 
     def verify(self):

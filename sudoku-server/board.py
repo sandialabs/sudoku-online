@@ -472,7 +472,7 @@ class Board():
         return output
 
     def computeAccessibleCells(self):
-        """ If we have a goal cell, compute accessible cells. """
+        """ If we have a goal cell, compute accessible cells and store them in self.accessible_cells. """
         if self.config.goal_cell_name:
             offlimits = self.getAssociatedCells(self.config.goal_cell_name)
             offlimits.append(self.config.goal_cell_name)

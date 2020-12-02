@@ -110,5 +110,9 @@ games = {
     'test_game_ptgprs': {
         'puzzles': ['pointing_pair_test?goal=A9', 'pointing_pair_test?goal=E2', 'pointing_pair_test?goal=B1'],
         'config_alterations': ['select_ops_upfront']
+    },
+    'pilot_test_a_board': {
+        'puzzles' : ['test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board'],
+        'config_alterations': ['select_ops_upfront']
     }
 }

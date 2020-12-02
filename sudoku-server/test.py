@@ -20,6 +20,7 @@ import argparse
 import puzzles
 import operators
 import math
+import game
 
 
 def test_sudoku(args):
@@ -32,13 +33,23 @@ def test_sudoku(args):
     if args.parameterizeoperators:
         my_ops = args.parameterizeoperators
 
+    board_collection = []
     if not args.puzzles:
-        args.puzzles = puzzles.puzzles.keys()
-
+        args.puzzles = []
+        if not args.games:
+            args.puzzles = puzzles.puzzles.keys()
     for name in args.puzzles:
         layout = puzzles.puzzles[name]
         sboard = board.Board(layout, int(
             math.sqrt(math.sqrt(len(layout)))), name)
+        board_collection.append(sboard)
+    if args.games:
+        for name in args.games:
+            puzzle = None
+            sboard = game.get_initial_board({'name':name, 'degree':3})
+            board_collection.append(sboard)
+
+    for sboard in board_collection:
         msg = f'Initial state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
         sboard.config.debug_print('initial state', msg, None)
 
@@ -73,6 +84,8 @@ if __name__ == '__main__':
         description='Call sudoku solver, parameterized as desired')
     parser.add_argument('--puzzles', metavar='NAME', type=str, nargs='*',
                         help='puzzles to run through the solver; do not use argument to run all puzzles.')
+    parser.add_argument('--games', metavar='NAME', type=str, nargs='*',
+                        help='games to run through the solver; include configuration in game name as desired.')
     parser.add_argument('--verbosity', '-v', action='count', default=0)
     # parser.add_argument('--outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     parser.add_argument('--solver', nargs='?', choices=['logical', 'combined'],

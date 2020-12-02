@@ -102,7 +102,7 @@ def apply_logical_operator(op, sboard):
     """ Apply one logical operator.
     """
     prevValues = sboard.countUncertainValues()
-    (sboard, control) = apply_one_operator(op)(sboard)
+    (sboard, control) = apply_one_operator(op, sboard)
     sboard = apply_free_operators(sboard)
     if sboard.config.retry_logical_op_after_free_ops and control != BREAK and sboard.countUncertainValues() < prevValues:
         ## Continue to iterate on the single logical operator, including free operators

@@ -29,7 +29,7 @@ def get_initial_board():
     if content is None:
         content = dict()
 
-    return jsonify(game.get_initial_board(content))
+    return jsonify(game.get_initial_board(content).getSimpleJson())
 
     # TODO MAL add goalCell
     # TODO MAL add accessibleCells
