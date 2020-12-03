@@ -91,8 +91,15 @@ def get_boards_for_game(name):
         (name, game) = random.choice(list(puzzles.games.items()))
         config_data.defaultConfig.debug_print('select game', name, None)
 
-    game_names = __configure_games(
-        list.copy(game['puzzles']), list.copy(game['config_alterations']))
+    game_names = game['puzzles']
+    assert 'config_alterations' in game, "Must at least provide empty list for 'config_alterations' in game description."
+    if 'randomly_apply' in game['config_alterations']:
+        game_names = __configure_games(
+            list.copy(game['puzzles']), list.copy(game['config_alterations']['randomly_apply']))
+    if 'default_config' in game['config_alterations']:
+        default_config = game['config_alterations']['default_config']
+        if 'costly_ops' in default_config:
+            config_data.defaultConfig.costly_operations = default_config['costly_ops']
     config_data.defaultConfig.debug_print(
         'load game', f'name: {game_names}', None)
     return game_names

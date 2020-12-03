@@ -101,23 +101,24 @@ puzzles = {
 games = {
     'test_game1_6_operators_open': {
         'puzzles': ['test2-i24e40', 'easy1', 'xwing_test', 'hard4', 'underconstrained1', 'test7-i26e36hp10'],
-        'config_alterations': []
+        'config_alterations': {}
     },
     'test_game1_6': {
         'puzzles': ['test2-i24e40', 'easy1', 'xwing_test', 'hard4', 'underconstrained1', 'test7-i26e36hp10'],
-        'config_alterations': ['select_ops_upfront']
+        'config_alterations': {'randomly_apply':['select_ops_upfront']}
     },
     'test_game1_4': {
         'puzzles': ['test2-i24e40', 'xwing_test', 'hard4', 'underconstrained1'],
-        'config_alterations': ['select_ops_upfront']
+        'config_alterations': {'randomly_apply':['select_ops_upfront']}
     },
     'test_game_ptgprs': {
         'puzzles': ['pointing_pair_test?goal=A9', 'pointing_pair_test?goal=E2', 'pointing_pair_test?goal=B1'],
-        'config_alterations': ['select_ops_upfront']
+        'config_alterations': {'randomly_apply':['select_ops_upfront']}
     },
     'pilot_test_a_board': {
-        'puzzles' : ['test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board',
-                     'test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board?select_ops_upfront'],
-        'config_alterations': []
+        # 'test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board?select_ops_upfront'
+        'puzzles' : ['test7-i26e36hp10?goal=C6?name=Pilot Test Board',
+                     'test7-i26e36hp10?goal=C6?name=Pilot Test Board2?select_ops_upfront'],
+        'config_alterations': {'costly_ops' : ['inclusion', 'pointingpairs', 'nakedpairs', 'xwings']}
     }
 }

@@ -231,5 +231,20 @@ def do_tests():
         lambda: requests.post('http://localhost:5000/sudoku/request/heuristic',
                               json=log_req))
 
+    gamename = 'pilot_test_a_board'
+    boards = do_single_test(f'getting game {gamename}',
+                            lambda d_list: ((len(d_list) == 2)
+                                            and ('test7-i26e36hp10?goal=C6?name=Pilot Test Board' in d_list)),
+                            lambda: requests.get(
+                                f'http://localhost:5000/sudoku/request/boardsForGame/{gamename}'))
+
+    for b in boards:
+        msg = f'getting board {b} from {gamename} one at a time'
+        do_single_test(msg,
+                       lambda d_board: (('puzzleName' in d_board)
+                                        and (d_board['puzzleName'] == b)),
+                       lambda: requests.post('http://localhost:5000/sudoku/request/initialBoard',
+                                             json={"name": b,
+                                                   'degree': 3}))
 
 do_tests()
