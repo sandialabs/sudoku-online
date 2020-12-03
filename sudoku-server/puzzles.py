@@ -116,7 +116,8 @@ games = {
         'config_alterations': ['select_ops_upfront']
     },
     'pilot_test_a_board': {
-        'puzzles' : ['test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board'],
-        'config_alterations': ['select_ops_upfront']
+        'puzzles' : ['test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board',
+                     'test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board?select_ops_upfront'],
+        'config_alterations': []
     }
 }
