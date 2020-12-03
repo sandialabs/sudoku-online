@@ -127,7 +127,7 @@ class ConfigurationData():
                     #   coding convenience right now
                     self.display_name = param.split('name=')[1]
 
-        if 'select_ops_upfront' not in self.rules:
+        if 'canChangeLogicalOperators' not in self.rules:
             # They can be changed, and we have an additional action (applyops) to support that
             # Note that the apply_ops action is redundant with 'heuristics' in the request, but that's OK.
             # We could leave this as an assumption, but let's make it explicit
@@ -155,8 +155,6 @@ class ConfigurationData():
             json_dict['rules'] = self.rules
             if 'specializedCostlyOperations' in self.rules:
                 json_dict['costlyOperations'] = self.costly_operations
-        if self.goal_cell_name:
-            json_dict['goal'] = self.goal_cell_name
         if self.display_name:
             json_dict['displayName'] = self.display_name
         return json_dict

@@ -419,7 +419,6 @@ class Board():
         self._parent_id = None
         self._is_background = False
         self.accessible_cells = None
-        self.goal_cell = None
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
@@ -458,6 +457,7 @@ class Board():
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
+        self.goal_cell = self.config.goal_cell_name if self.config.goal_cell_name else None
         self.computeAccessibleCells()
 
     def __str__(self):
@@ -629,6 +629,9 @@ class Board():
         if self._is_background:
             brd['backtrackingBoard'] = True
         brd = self.config.add_config_mappings_to_dict(brd)
+        brd['goalCellName'] = self.goal_cell
+        if self.goal_cell:
+            brd['goalCell'] = list(type(self).getLocations(self.goal_cell, self.getDegree()))
         self.computeAccessibleCells()
         if self.accessible_cells:
             accessible_locs = [list(type(self).getLocations(
