@@ -59,6 +59,8 @@ def test_sudoku(args):
             sboard = solvers.logical_solve(sboard, my_ops)
         elif args.solver == 'combined':
             sboard = solvers.combined_solve(sboard, my_ops, cellselector)
+        elif args.solver == 'interactive':
+            sboard = solvers.interactive_solve(sboard, my_ops, cellselector)
 
         msg = None
         if sboard:
@@ -74,7 +76,7 @@ def test_sudoku(args):
                 sboard.config.log.printLogJSON()
             msg = f'Final state of {name}:\n{sboard.getStateStr()}\n{sboard.getSimpleJson()}'
             sboard.config.debug_print('final state', msg, None)
-            sboard.config.log.printCSV()
+            #sboard.config.log.printCSV()
         else:
             msg = f'Final state of {name}: INSOLUBLE'
             config_data.defaultConfig.debug_print('final state', msg, None)
@@ -89,7 +91,7 @@ if __name__ == '__main__':
                         help='games to run through the solver; include configuration in game name as desired.')
     parser.add_argument('--verbosity', '-v', action='count', default=0)
     # parser.add_argument('--outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
-    parser.add_argument('--solver', nargs='?', choices=['logical', 'combined'],
+    parser.add_argument('--solver', nargs='?', choices=['logical', 'combined', 'interactive'],
                         default='logical', help='solver to use')
     parser.add_argument('--cellselector', nargs='?',
                         choices=['random_cell_with_fewest_uncertain_values',
