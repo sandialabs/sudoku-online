@@ -152,7 +152,7 @@ class Cell():
         """ Return identifier for self. """
         return self._id
 
-    def getStateStr(self, uncertain=False):
+    def getStateStr(self, uncertain=False, goal_cell = None):
         """
         If uncertain is False, then return value if Cell is certain
                                otherwise return '.'
@@ -164,7 +164,9 @@ class Cell():
             s = [displays[val] for val in sorted(self.getValues())]
             if not s:
                 # Underconstrained: highlight a conflict
-                return str.center('!', width)
+                return str.center('X', width)
+            if goal_cell == self.getIdentifier():
+                s = ['*']+s+['*']
             return str.center(''.join(s), width)
         elif self.isCertain():
             return displays[self.getCertainValue()] + ' '
@@ -558,7 +560,7 @@ class Board():
         """
         return [cell for cell in self.getCells() if cell.isCertain()]
 
-    def getStateStr(self, uncertain=False, human_readable=True, sep='|'):
+    def getStateStr(self, uncertain=False, human_readable=True, sep='|', goal_cell = None):
         """
         Returns the board state as a string, with or without uncertainty information
         sep separates the cells in a non human-readable printing
@@ -593,9 +595,9 @@ class Board():
                         output += '+-'.join(['--' * degree] * degree) + '\n'
 
                 # Finally print the state string
-                output += self.getCell(identifier).getStateStr(uncertain)
+                output += self.getCell(identifier).getStateStr(uncertain, goal_cell = goal_cell)
             else:
-                output += (self.getCell(identifier).getStateStr(uncertain).strip() + sep)
+                output += (self.getCell(identifier).getStateStr(uncertain, goal_cell = goal_cell).strip() + sep)
 
         return output
 

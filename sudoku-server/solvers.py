@@ -464,15 +464,16 @@ def users_choice(cell_list):
 # LOGIC/SEARCH COMBINED PUZZLE SOLVERS
 # -----------------------------------------------------------------------------
 
-def board_select(boards):
-    print("What board would you like to work on, please answer with the board number")
+def board_select(boards, goalc):
+    print("What board would you like to work on, please answer with the board number \n")
     for b in range(len(boards)):
         print("Number", b)
-        print(boards[b].getStateStr())
+        print(boards[b].getStateStr(uncertain = True, goal_cell = goalc))
+        print("\n")
     selected = input()
     return boards[int(selected)]
 
-def perform_action(action,sboard,cellselector, logical_ops):
+def perform_action(action,sboard,cellselector, logical_ops, goalc):
     expansion = None
     if action == 'applyops':
         print("What operations would you like to use?(separate by a space) {}".format(logical_ops))
@@ -480,20 +481,22 @@ def perform_action(action,sboard,cellselector, logical_ops):
         ops = ops.split(" ")
         result = logical_solve(sboard,ops)
         print("New board after applied operations")
-        print(result.getStateStr())
+        print(result.getStateStr(uncertain = True, goal_cell = goalc))
+        print("\n")
         expansion = [result]
     else:
         cell = cellselector(sboard)
+        values = [cell.displayValue(value) for value in cell.getValues()]
         if action == 'pivot':
             expansion = expand_cell(sboard, cell.getIdentifier())
         elif action == 'assign':
-            print("What value do you want to assign? {}".format(cell.getValues()))
+            print("What value do you want to assign? {}".format(values))
             val = input()
-            expansion = expand_cell_with_assignment(sboard, (cell.getIdentifier(),int(val)))
+            expansion = expand_cell_with_assignment(sboard, (cell.getIdentifier(),int(val)-1))
         elif action == 'exclude':
-            print("What value do you want to exclude? {}".format(cell.getValues()))
+            print("What value do you want to exclude? {}".format(values))
             val = input()
-            expansion = expand_cell_with_exclusion(sboard, (cell.getIdentifier(),int(val)))
+            expansion = expand_cell_with_exclusion(sboard, (cell.getIdentifier(),int(val)-1))
     return expansion
 
 def interactive_solve(sboard, logical_ops=[], cellselector= select_by_user, expand_cell_action = expand_cell):
@@ -505,41 +508,46 @@ def interactive_solve(sboard, logical_ops=[], cellselector= select_by_user, expa
     ready = False
     question = "Will C6 have value 7?"
     answer = "no"
+    goalc = sboard.config.goal_cell_name
     #Goal is to answer question or run out of boards
-    print("Goal is to answer: ", question)
+    print("\n\n")
+    print("Goal is to answer: ", question,"Meaning can C6 have value 7 when the board is solved \n  HINT: you may not need to solve the whole board to answer this question.")
+    print("The Goal cell,", goalc, ", will be marked with astrics '*' on the board")
+    print("Any cell marked with an 'X' means there is a contradiction for that cell and the board can't be solved")
+    print("\n")
     while(not ready and len(active_boards)>0):
-        select_board = board_select(active_boards)
+        select_board = board_select(active_boards, goalc)
         active_boards.remove(select_board)
         result = apply_free_operators(select_board)
         if not result:
             contradicted_boards.append(result)
-            print(result.getStateStr())
+            print(result.getStateStr(uncertain = True, goal_cell = goalc))
             print("This board contains a contradiction. Please answer the question or select another board")
         elif result.isSolved():
             solved_boards.append(result)
-            print(result.getStateStr())
+            print(result.getStateStr(uncertain = True, goal_cell = goalc))
             print("This board is solved. Please answer the question or select another board")
         else:
             #ask what action
             print("What action do you want to perfom? {}".format(possible_acts))
             action = input()
             #Perform action
-            expansion = perform_action(action, result, cellselector, logical_ops)
+            expansion = perform_action(action, result, cellselector, logical_ops, goalc)
             while not expansion:
                 print("Please enter a valid action. {}".format(possible_acts))
                 action = input()
-                expansion = perform_action(action, result, cellselector, logical_ops)
+                expansion = perform_action(action, result, cellselector, logical_ops, goalc)
 
             #Apply free ops and check if contradiction or solved
             for brd in expansion:
                 n_brd = apply_free_operators(brd)
-                if not n_brd:
+                if not n_brd or n_brd.getStateStr(uncertain = True).find('X')>=0:
                     contradicted_boards.append(n_brd)
-                    print(n_brd.getStateStr())
+                    print(n_brd.getStateStr(uncertain = True, goal_cell = goalc))
                     print("Board contains a contradiction")
                 elif n_brd.isSolved():
                     solved_boards.append(n_brd)
-                    print(n_brd.getStateStr())
+                    print(n_brd.getStateStr(uncertain = True, goal_cell = goalc))
                     print("Board is solved")
                 else:
                     active_boards.append(n_brd)
