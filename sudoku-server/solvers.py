@@ -473,16 +473,13 @@ def board_select(boards, goalc):
     selected = input()
     return boards[int(selected)]
 
-def perform_action(action,sboard,cellselector, logical_ops, goalc):
+def perform_action(action,sboard,cellselector, logical_ops):
     expansion = None
     if action == 'applyops':
         print("What operations would you like to use?(separate by a space) {}".format(logical_ops))
         ops = input()
         ops = ops.split(" ")
         result = logical_solve(sboard,ops)
-        print("New board after applied operations")
-        print(result.getStateStr(uncertain = True, goal_cell = goalc))
-        print("\n")
         expansion = [result]
     else:
         cell = cellselector(sboard)
@@ -532,26 +529,26 @@ def interactive_solve(sboard, logical_ops=[], cellselector= select_by_user, expa
             print("What action do you want to perfom? {}".format(possible_acts))
             action = input()
             #Perform action
-            expansion = perform_action(action, result, cellselector, logical_ops, goalc)
+            expansion = perform_action(action, result, cellselector, logical_ops)
             while not expansion:
                 print("Please enter a valid action. {}".format(possible_acts))
                 action = input()
-                expansion = perform_action(action, result, cellselector, logical_ops, goalc)
+                expansion = perform_action(action, result, cellselector, logical_ops)
 
             #Apply free ops and check if contradiction or solved
             for brd in expansion:
                 n_brd = apply_free_operators(brd)
                 if not n_brd or n_brd.getStateStr(uncertain = True).find('X')>=0:
                     contradicted_boards.append(n_brd)
-                    print(n_brd.getStateStr(uncertain = True, goal_cell = goalc))
-                    print("Board contains a contradiction")
+                    print("\nBoard contains a contradiction")
                 elif n_brd.isSolved():
                     solved_boards.append(n_brd)
-                    print(n_brd.getStateStr(uncertain = True, goal_cell = goalc))
-                    print("Board is solved")
+                    print("\nBoard is solved")
                 else:
+                    print("\nResulted board after action")
                     active_boards.append(n_brd)
-        print("Would you like to answer the question? y/n (", question ,")")
+                print(n_brd.getStateStr(uncertain = True, goal_cell = goalc))
+        print("\nWould you like to answer the question? y/n (", question ,")")
         ans = input()
         if ans == 'y'or ans == 'yes':
             ready = True
