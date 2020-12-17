@@ -52,20 +52,31 @@ class GameTreeView extends Component {
         this.decorators = clone(defaultDecorators);
         //this.decorators.Header = GameTreeBoardHeader;
 
-        this.theme = clone(defaultTheme);
-        console.log('this.theme: ');
-        console.log(this.theme);
-        this.theme.tree.node.header.title.color = '#FFA0A0';
+        this.treebeardBaseTheme = clone(defaultTheme);
+        console.log('this.treebeardBaseTheme: ');
+        console.log(this.treebeardBaseTheme);
+        
+        this.treebeardBaseTheme.tree.node.header.title.color = '#404040';
+        this.treebeardBaseTheme.tree.base.backgroundColor = 'white';
+        this.treebeardBaseTheme.tree.base.color = 'yellow';
+        this.treebeardBaseTheme.tree.node.header.connector.borderBottom = 'solid 2px green';
+        this.treebeardBaseTheme.tree.node.header.connector.borderLeft = 'solid 2px blue';
 
-        // this.theme.tree.base.backgroundColor = 'white';
-        // this.theme.tree.base.color = 'black';
+        /*
+        this.theme.tree.node.header.base.backgroundColor = "yellow";
         // this.theme.tree.node.subtree = '50px';
         // this.theme.tree.node.activeLink.background = '#A0A0A0';
+        */
+       
         this.customStyles = { 
             header: {
                 title: {
+                    // This does in fact affect the title of the active tree node
                     color: 'red'
                 }
+            },
+            base: {
+                backgroundColor: 'white'
             }
         };
     }
@@ -102,6 +113,7 @@ class GameTreeView extends Component {
                 onToggle={this.onToggle}
                 onSelect={this.onSelect}
                 //decorators={this.decorators}
+                style={this.treebeardBaseTheme}
                 customStyles={this.customStyles}
             />
             );
@@ -132,7 +144,7 @@ function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
         "Couldn't find ancestors of active board");
     for (const node of activeBoardAncestors.path) {
         expandedNodesPlusActiveNodeAncestry.add(node.data.board.serialNumber);
-    }
+    }       
 
 
     GameTree.walkTree(ourTree,
