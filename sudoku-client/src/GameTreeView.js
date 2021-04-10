@@ -124,6 +124,31 @@ function hasTreeSizeChanged(oldTree, newTree) {
     return (GameTree.treeSize(oldTree) !== GameTree.treeSize(newTree));
 }
 
+
+function cellToString(cell) {
+    return '(' + cell[0] + ', ' + cell[1] + ')';
+}
+
+// Turn an action object into a human-readable name for the game tree.
+function actionToName(action, board) {
+    switch (action.action) {
+        case 'assign': {
+            return 'Assign: ' + cellToString(action.cell) + ' \u2190 ' + action.value; 
+        }
+        case 'exclude': {
+            return 'Exclude: ' + cellToString(action.cell) + ' \u2260 ' + action.value;
+        }
+        case 'pivot': {
+            return 'Pivot: ' + cellToString(action.cell) + ' \u2190 ' + board.assignments[action.cell[0]][action.cell[1]];
+        }
+        // TODO: Logical operators are not yet implemented here
+        default: {
+            return 'Label not implemented for action type: ' + action.action;
+        }
+    }
+}
+
+
 // Add properties that Treebeard needs to the nodes in the tree.
 // All nodes with children default to 'expanded'.  
 // 
@@ -146,9 +171,13 @@ function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
     GameTree.walkTree(ourTree,
         (node) => {
             if (node.data.board.backtrackingBoard) {
-                node.name = 'Backtrack: ' + node.data.board.serialNumber;
+                node.name = 'Backtrack to Parent (serial: ' + node.data.board.serialNumber + ')';
             } else {
-                node.name = 'Action: ' + node.data.board.serialNumber;
+                if (node.data.board.hasOwnProperty('action')) {
+                    node.name = actionToName(node.data.board.action, node.data.board) + ' (serial: ' + node.data.board.serialNumber + ')';
+                } else {
+                    node.name = 'UNIMPLEMENTED: ' + node.data.board.serialNumber;
+                }
             }
             if (node.data.board.serialNumber === activeNodeId) {
                 node.selected = true;

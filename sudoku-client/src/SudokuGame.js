@@ -93,6 +93,12 @@ class SudokuGame extends React.Component {
         console.log('handleNewBoards: reply: ');
         console.log(newBoards);
 
+        // Each new board needs to know about the action taken to produce it
+        // so that it can come up with a meaningful name.
+        for (const board of newBoards) {
+            board.action = request.action
+        }
+        
         this.setState({
             gameTree: GameTree.addBoards(
                 this.state.gameTree,
