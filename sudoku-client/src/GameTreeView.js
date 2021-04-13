@@ -17,6 +17,9 @@ import { GameTreeBoard } from './GameTreeBoard';
 import PropTypes from 'prop-types';
 import GameTree from './GameTree';
 
+
+import { Div as TreeBeardDiv } from './modified-react-treebeard/components/common';
+
 /*
  * Okay, here's the deal.
  *
@@ -44,34 +47,38 @@ class GameTreeView extends Component {
         this.onToggle = this.onToggle.bind(this);
         this.onSelect = this.onSelect.bind(this);
 
-        // this.state = {
-        //     renderableTree: prepareTreeForTreebeard(clone(this.props.tree)),
-        //     selectedNode: null
-        // };
-
         this.decorators = clone(defaultDecorators);
-        //this.decorators.Header = GameTreeBoardHeader;
+        this.decorators.Header = GameTreeBoardHeader;
 
-        this.theme = clone(defaultTheme);
-        console.log('this.theme: ');
-        console.log(this.theme);
-        this.theme.tree.node.header.title.color = '#FFA0A0';
+        this.treebeardBaseTheme = clone(defaultTheme);
+        console.log('this.treebeardBaseTheme: ');
+        console.log(this.treebeardBaseTheme);
+        
+        this.configureTreebeardTheme(this.treebeardBaseTheme);
 
-        // this.theme.tree.base.backgroundColor = 'white';
-        // this.theme.tree.base.color = 'black';
-        // this.theme.tree.node.subtree = '50px';
-        // this.theme.tree.node.activeLink.background = '#A0A0A0';
         this.customStyles = { 
             header: {
                 title: {
+                    // This does in fact affect the title of the active tree node
                     color: 'red'
                 }
+            },
+            base: {
+                backgroundColor: 'white'
             }
         };
     }
     
-    // The game tree will always be fully expanded.  Clicking on a node only
-    // changes the active view.
+    configureTreebeardTheme(theme) {
+        theme.tree.node.header.title.color = '#404040';
+        theme.tree.base.backgroundColor = 'white';
+        theme.tree.base.color = 'yellow';
+        theme.tree.node.header.connector.borderBottom = 'solid 2px green';
+        theme.tree.node.header.connector.borderLeft = 'solid 2px blue';
+
+
+    }
+
     onToggle(node, toggled) {
         console.log('GTV.onToggle: Node ' + node.name + ' clicked');
         
@@ -101,7 +108,8 @@ class GameTreeView extends Component {
                 data={renderableTree}
                 onToggle={this.onToggle}
                 onSelect={this.onSelect}
-                //decorators={this.decorators}
+                decorators={this.decorators}
+                style={this.treebeardBaseTheme}
                 customStyles={this.customStyles}
             />
             );
@@ -115,6 +123,31 @@ class GameTreeView extends Component {
 function hasTreeSizeChanged(oldTree, newTree) {
     return (GameTree.treeSize(oldTree) !== GameTree.treeSize(newTree));
 }
+
+
+function cellToString(cell) {
+    return '(' + cell[0] + ', ' + cell[1] + ')';
+}
+
+// Turn an action object into a human-readable name for the game tree.
+function actionToName(action, board) {
+    switch (action.action) {
+        case 'assign': {
+            return 'Assign: ' + cellToString(action.cell) + ' \u2190 ' + action.value; 
+        }
+        case 'exclude': {
+            return 'Exclude: ' + cellToString(action.cell) + ' \u2260 ' + action.value;
+        }
+        case 'pivot': {
+            return 'Pivot: ' + cellToString(action.cell) + ' \u2190 ' + board.assignments[action.cell[0]][action.cell[1]];
+        }
+        // TODO: Logical operators are not yet implemented here
+        default: {
+            return 'Label not implemented for action type: ' + action.action;
+        }
+    }
+}
+
 
 // Add properties that Treebeard needs to the nodes in the tree.
 // All nodes with children default to 'expanded'.  
@@ -132,15 +165,19 @@ function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
         "Couldn't find ancestors of active board");
     for (const node of activeBoardAncestors.path) {
         expandedNodesPlusActiveNodeAncestry.add(node.data.board.serialNumber);
-    }
+    }       
 
 
     GameTree.walkTree(ourTree,
         (node) => {
             if (node.data.board.backtrackingBoard) {
-                node.name = 'Backtrack: ' + node.data.board.serialNumber;
+                node.name = 'Backtrack to Parent (serial: ' + node.data.board.serialNumber + ')';
             } else {
-                node.name = 'Action: ' + node.data.board.serialNumber;
+                if (node.data.board.hasOwnProperty('action')) {
+                    node.name = actionToName(node.data.board.action, node.data.board) + ' (serial: ' + node.data.board.serialNumber + ')';
+                } else {
+                    node.name = 'UNIMPLEMENTED: ' + node.data.board.serialNumber;
+                }
             }
             if (node.data.board.serialNumber === activeNodeId) {
                 node.selected = true;
@@ -157,20 +194,34 @@ function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
     return ourTree;
 }
 
-const GameTreeBoardHeader = ({onSelect, style, customStyles, node}) => {
-    if (node.children === undefined
-        || node.children === null
-        || node.children.length === 0) {
-        
+const TreeBeardDefaultHeader = ({onSelect, node, style, customStyles}) => (
+    <div style={style.base} onClick={onSelect}>
+        <TreeBeardDiv style={node.selected ? {...style.title, ...customStyles.header.title} : style.title}>
+            {node.name}
+        </TreeBeardDiv>
+    </div>
+);
+
+const GameTreeBoardHeader = ({onSelect, node, style, customStyles}) => {
+    if (!nodeIsTerminal(node)) {
         return (
-            <GameTreeBoard
-                board={node.data.board}
-            />
-            );
+            <TreeBeardDefaultHeader
+                onSelect={onSelect}
+                style={style}
+                node={node}
+                customStyles={customStyles}
+             />
+             ); 
     } else {
         return (
-            Header.Header(onSelect, style, customStyles, node)
-        );
+            <div style={style.base} onClick={onSelect}>
+                <TreeBeardDiv
+                    style={node.selected ? {...style.title, ...customStyles.header.title} : style.title}
+                    >
+                    Terminal Node: {node.name}
+                </TreeBeardDiv>
+            </div>
+            );
     }
 }
 
@@ -201,10 +252,10 @@ function nodeIsTerminal(node) {
 }
 
 GameTreeBoardHeader.propTypes = {
-    activeBoardId: PropTypes.number.isRequired,
-    expandedNodes: PropTypes.object.isRequired,
-    changeActiveBoard: PropTypes.func.isRequired,
-    announceBoardToggled: PropTypes.func.isRequired,
+    //activeBoardId: PropTypes.number.isRequired,
+    //expandedNodes: PropTypes.object.isRequired,
+    //changeActiveBoard: PropTypes.func.isRequired,
+    //announceBoardToggled: PropTypes.func.isRequired,
     style: PropTypes.object,
     node: PropTypes.object,
     customStyle: PropTypes.object
