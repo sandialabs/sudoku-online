@@ -97,4 +97,9 @@ Example response:
 
 ### Submit Game Record
 
-To be determined.
+The client will pass the server a big json object with keys like game_id, session_id, and the full game tree.
+There may also be a key for aborted attempts.
+Given this big json blob, the server will save it somewhere.
+The server can assume that json blobs are unique. (This will be ensured by adding timestamp to identifier).
+We are expecting multiple clients per server, but the server is stateless, and client ids will ensure that there is no problem with overlap.
+The server will just add the json blob to a file that we can pull back down from AWS.

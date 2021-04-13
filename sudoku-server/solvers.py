@@ -465,7 +465,9 @@ def users_choice(cell_list):
 # -----------------------------------------------------------------------------
 
 def board_select(boards, goalc):
-    print("What board would you like to work on, please answer with the board number \n")
+    print("What board would you like to work on? Please answer with the board number:")
+    if len(boards) == 1:
+      print("(In this case there is only one board to choose.)")
     for b in range(len(boards)):
         print("Number", b)
         print(boards[b].getStateStr(uncertain = True, goal_cell = goalc))
@@ -503,14 +505,16 @@ def interactive_solve(sboard, logical_ops=[], cellselector= select_by_user, expa
     possible_acts = config_data.defaultConfig.actions
     possible_acts.append("applyops")
     ready = False
-    question = "Will C6 have value 7?"
+    question = "Can the marked cell (C6) have the value 7 in a completely-filled board?"
     answer = "no"
     goalc = sboard.config.goal_cell_name
     #Goal is to answer question or run out of boards
     print("\n\n")
-    print("Goal is to answer: ", question,"Meaning can C6 have value 7 when the board is solved \n  HINT: you may not need to solve the whole board to answer this question.")
-    print("The Goal cell,", goalc, ", will be marked with astrics '*' on the board")
-    print("Any cell marked with an 'X' means there is a contradiction for that cell and the board can't be solved")
+    print("Your goal is to answer the following question with a yes or no:")
+    print(question)
+    print("  HINT: you may not need to solve the whole board to answer this question.")
+    print("The Goal cell, {}, will be *marked* on the board with asterisks '*'.".format(goalc))
+    print("Any cell marked with an 'X' means there is a contradiction for that cell, so the board can't be solved.")
     print("\n")
     while(not ready and len(active_boards)>0):
         select_board = board_select(active_boards, goalc)
@@ -526,7 +530,7 @@ def interactive_solve(sboard, logical_ops=[], cellselector= select_by_user, expa
             print("This board is solved. Please answer the question or select another board")
         else:
             #ask what action
-            print("What action do you want to perfom? {}".format(possible_acts))
+            print("What action do you want to perform? {}".format(possible_acts))
             action = input()
             #Perform action
             expansion = perform_action(action, result, cellselector, logical_ops)

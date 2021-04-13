@@ -78,6 +78,7 @@ The example move lists are probably incorrect.  They're intended as examples of 
                  [ [4],[],     [],     [4, 3] ]
                ],
 
+    question: "Can cell B1 be a 1?",
     goalCell: [0, 2],
     accessibleCells: [ [3, 0], [3, 3] ],
     solved: True,
