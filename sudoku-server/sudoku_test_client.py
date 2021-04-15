@@ -93,25 +93,27 @@ def do_tests():
                                         'http://localhost:5000/sudoku/request/heuristic',
                                         json=new_req))
 
-    new_req2 = {'board': just_inclusion[0], 'action': {
-        'action': 'applyops', 'operators': ['inclusion']}}
-    inclusion_squared = do_single_test(f'applying inclusion to hard4 a second time',
-                                       lambda d_list: ((len(d_list) == 1)
-                                                       and ('assignments' in d_list[0])
-                                                       and (d_list[0]['assignments'] == just_inclusion[0]['assignments'])),
-                                       lambda: requests.post(
-                                           'http://localhost:5000/sudoku/request/heuristic',
-                                           json=new_req2))
+    if just_inclusion:
+        new_req2 = {'board': just_inclusion[0], 'action': {
+            'action': 'applyops', 'operators': ['inclusion']}}
+        inclusion_squared = do_single_test(f'applying inclusion to hard4 a second time',
+                                        lambda d_list: ((len(d_list) == 1)
+                                                        and ('assignments' in d_list[0])
+                                                        and (d_list[0]['assignments'] == just_inclusion[0]['assignments'])),
+                                        lambda: requests.post(
+                                            'http://localhost:5000/sudoku/request/heuristic',
+                                            json=new_req2))
 
-    new_req3 = {'board': inclusion_squared[0], 'action': {
-        'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
-    logical_ops = do_single_test(f'applying inclusion and pointing pairs to hard4 (after inclusion 2x)',
-                                 lambda d_list: ((len(d_list) == 1)
-                                                 and ('assignments' in d_list[0])
-                                                 and (d_list[0]['assignments'] == [[2, 3, 4, 5, 7, 8, 6, 0, 1], [8, 0, 6, 1, 2, 4, 3, 7, 5], [7, 1, 5, 3, 6, 0, 8, 2, 4], [5, 4, 8, 6, 3, 7, 0, 1, 2], [3, 2, 1, 8, 0, 5, 4, 6, 7], [0, 6, 7, 4, 1, 2, 5, 3, 8], [6, 5, 2, 7, 4, 3, 1, 8, 0], [4, 7, 3, 0, 8, 1, 2, 5, 6], [1, 8, 0, 2, 5, 6, 7, 4, 3]])),
-                                 lambda: requests.post(
-                                     'http://localhost:5000/sudoku/request/heuristic',
-                                     json=new_req3))
+    if inclusion_squared:
+        new_req3 = {'board': inclusion_squared[0], 'action': {
+            'action': 'applyops', 'operators': ['inclusion', 'pointingpairs']}}
+        logical_ops = do_single_test(f'applying inclusion and pointing pairs to hard4 (after inclusion 2x)',
+                                    lambda d_list: ((len(d_list) == 1)
+                                                    and ('assignments' in d_list[0])
+                                                    and (d_list[0]['assignments'] == [[2, 3, 4, 5, 7, 8, 6, 0, 1], [8, 0, 6, 1, 2, 4, 3, 7, 5], [7, 1, 5, 3, 6, 0, 8, 2, 4], [5, 4, 8, 6, 3, 7, 0, 1, 2], [3, 2, 1, 8, 0, 5, 4, 6, 7], [0, 6, 7, 4, 1, 2, 5, 3, 8], [6, 5, 2, 7, 4, 3, 1, 8, 0], [4, 7, 3, 0, 8, 1, 2, 5, 6], [1, 8, 0, 2, 5, 6, 7, 4, 3]])),
+                                    lambda: requests.post(
+                                        'http://localhost:5000/sudoku/request/heuristic',
+                                        json=new_req3))
 
     gamename = 'test_game1_4'
     do_single_test(f'getting game {gamename}',

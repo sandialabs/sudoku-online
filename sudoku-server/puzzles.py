@@ -117,8 +117,8 @@ games = {
     },
     'pilot_test_a_board': {
         # 'test7-i26e36hp10?goal=C6?costlyops=inclusion,pointingpairs,nakedpairs,xwings?name=Pilot Test Board?select_ops_upfront'
-        'puzzles' : ['test7-i26e36hp10?goal=C6?name=Pilot Test Board',
-                     'test7-i26e36hp10?goal=C6?name=Pilot Test Board2?select_ops_upfront'],
+        'puzzles' : ['test7-i26e36hp10?goal=C6?name=Pilot Test Board?question=Can C6 by a 7?',
+                     'test7-i26e36hp10?goal=C6?name=Pilot Test Board2?select_ops_upfront?question=Can C6 be odd?'],
         'config_alterations': {'costly_ops' : ['inclusion', 'pointingpairs', 'nakedpairs', 'xwings']}
     }
 }

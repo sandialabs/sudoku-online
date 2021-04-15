@@ -332,7 +332,7 @@ class Board():
 
     @ classmethod
     def getBoxID(cls, row, col, deg):
-        """ Returns box identifier given row and column identifier and puzzle degree. """
+        """ Returns box identifier given row ('rX') and column ('cY[Y]') identifier and puzzle degree. """
         r = row[1]
         c = col[1:]
         # 1. Convert r back to int past 0 ('A' is 1)
@@ -408,45 +408,90 @@ class Board():
         """
         Initialize a board for a puzzle of degree with the given state.
         State parameter can be a string, a json, or a Board to copy.
+
+        Locals:
+            _state (dict {str -> Cell}): a mapping from every cell identifier to the Cell encapsulating that Cell's state
+            _id (int): a unique identifier
+            _parent_id (int): identifier of this board's parent
+            _is_background (boolean): whether this board should be considered as lower priority than a sibling board
+            _name (str): the name, including embedded configuration data, of the puzzle;
+                embedded configuration data may include goal cell, logical operation selection criteria
+                (eg, upfront), and question, for example
+            _display_name (str): the pretty puzzle name to display in the user interface
+            _question (str): the question to ask about the goal cell
+            goal_cell (str): the name/id of the goal cell to answer the question about
+            accessible_cells (list[str]): the list of cell ids about which a user can take an action (eg, pivot, assign, exclude)
         """
         try:
             Board.unit_map[degree]
         except KeyError:
             Board.initialize(degree)
 
-        self._state = dict()
         # Generate a UID integer from uuid1.  These bits are largely dependent on clock
         # (though it's been pointed out that they might leak a little information about MAC address)
         self._id = uuid.uuid1().int >> 64
-        self._parent_id = None
         self._is_background = False
+        self._state = dict()
+        self._degree = degree
+        self._parent_id = None
+        self._name = name
+        self._display_name = None
+        self._question = None
+        self.goal_cell = None
         self.accessible_cells = None
+        self.config = None
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
             self._parent_id = state._id
+            self._name = state._name
+            self._display_name = state._display_name
+            self._question = state._question
+            self.goal_cell = state.goal_cell
+            self.accessible_cells = state.accessible_cells
             self.config = state.config.copy()
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
+            assert 'serialNumber' in state, "Expecting serialNumber in state provided."
+            self._id = state['serialNumber']
+
+            assert 'assignments' in state, "Expecting assignments in state provided."
+            assert 'availableMoves' in state, "Expecting availableMoves in state provided."
             assignments = [item
                            for row in state['assignments'] for item in row]
             options = [item for row in state['availableMoves'] for item in row]
-            self._id = state['serialNumber']
-            self._degree = state['degree']
-            if 'parentSerialNumber' in state:
-                self._parent_id = state['parentSerialNumber']
             # Initialize cell state
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
                 cell_state = assignments[i] if assignments[i] is not None else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
-            puzz_name = state['puzzleName'] if 'puzzleName' in state else None
+
+            # if 'degree' not in state: -> logger.warn
+            if 'degree' in state:
+                self._degree = state['degree']
+            if 'parentSerialNumber' in state:
+                self._parent_id = state['parentSerialNumber']
+            self._name = state['puzzleName'] if 'puzzleName' in state else None
+            self._display_name = state['displayName'] if 'displayName' in state else None
+            self._question = state['question'] if 'question' in state else None
+            if 'goalCell' in state:
+                goal = state['goalCell']
+                assert len(goal) == 2, "Expected exactly a row and column index for goal."
+                self.goal_cell = getCellIDFromArrayIndex(goal[0], goal[1])
+            if 'accessibleCells' in state:
+                self.accessible_cells = []
+                for accs in state['accessibleCells']:
+                    assert len(accs) == 2, "Expected exactly a row and column index for accessibleCell."
+                    self.accessible_cells.append(getCellIDFromArrayIndex(accs[0], accs[1]))
+            else:
+                self.computeAccessibleCells()
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), puzz_name)
+                False, False, ''), self._name)
+            # TODO MAL Should we validate that goal, name, and question in _name match here?
         elif isinstance(state, str):
             # State is a str; initialize it
             i = 0
@@ -454,13 +499,22 @@ class Board():
                 self._state[identifier] = Cell(identifier, state[i])
                 i += 1
             self._degree = degree
+
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), name)
+                False, False, ''), self._name)
+            parameters = config_data.parse_name_config(name)
+            if 'puzzleName' in parameters:
+                self._name = parameters['puzzleName']
+            elif 'name' in parameters:
+                self._display_name = parameters['name']
+            elif 'question' in parameters:
+                self._question = parameters['question']
+            elif 'goal' in parameters:
+                self.goal_cell = parameters['goal']
+            self.computeAccessibleCells()
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
-        self.goal_cell = self.config.goal_cell_name if self.config.goal_cell_name else None
-        self.computeAccessibleCells()
 
     def __str__(self):
         output = "Board " + str(self._id) \
@@ -626,18 +680,26 @@ class Board():
         if invalid_cells:
             # Get the locations in row, column form of the given cell id
             invalid_locs = [list(type(self).getLocations(
-                id, self.getDegree())) for id in invalid_cells]
+                ident, self.getDegree())) for ident in invalid_cells]
             brd['conflictingCells'] = invalid_locs
         if self._is_background:
             brd['backtrackingBoard'] = True
         brd = self.config.add_config_mappings_to_dict(brd)
+
+        if self._display_name:
+            brd['displayName'] = self._display_name
+        if self._name:
+            brd['puzzleName'] = self._name
+        if self._question:
+            brd['question'] = self._question
+
         brd['goalCellName'] = self.goal_cell
         if self.goal_cell:
             brd['goalCell'] = list(type(self).getLocations(self.goal_cell, self.getDegree()))
         self.computeAccessibleCells()
         if self.accessible_cells:
             accessible_locs = [list(type(self).getLocations(
-                id, self.getDegree())) for id in self.accessible_cells]
+                ident, self.getDegree())) for ident in self.accessible_cells]
             brd['accessibleCells'] = accessible_locs
         return brd
         # return json.dumps(brd)
