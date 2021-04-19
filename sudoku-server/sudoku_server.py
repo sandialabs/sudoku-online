@@ -16,9 +16,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from markupsafe import escape
 
-import logging
-logger = logging.getLogger(__name__)
-
 app = Flask(__name__)
 CORS(app)
 
@@ -32,9 +29,7 @@ def get_initial_board():
     if content is None:
         content = dict()
 
-    result = jsonify(game.get_initial_board(content).getSimpleJson())
-    logger.info("Returning from get_initial_board: %s", str(result))
-    return result
+    return jsonify(game.get_initial_board(content).getSimpleJson())
 
     # TODO MAL add goalCell
     # TODO MAL add accessibleCells
@@ -59,8 +54,7 @@ def get_boards_for_game(gamename):
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.
 
-    Possible actions can be obtained by calling list_cell_actions
-    (and list_logical_operators to get logical operators to apply).
+    Possible actions can be obtained by calling list_heuristics.
     """
     content = request.json
     if content is None:

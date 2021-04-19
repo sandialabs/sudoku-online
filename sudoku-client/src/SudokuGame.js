@@ -85,19 +85,7 @@ class SudokuGame extends React.Component {
         });
     }
 
-    handleNewBoards(parentSerial, newBoards, request) {
-        
-        console.log('handleNewBoards: parentSerial is ' + parentSerial);
-        console.log('handleNewBoards: request: ');
-        console.log(request);
-        console.log('handleNewBoards: reply: ');
-        console.log(newBoards);
-
-        // Each new board needs to know about the action taken to produce it
-        // so that it can come up with a meaningful name.
-        for (const board of newBoards) {
-            board.action = request.action
-        }
+    handleNewBoards(parentSerial, newBoards) {
         
         this.setState({
             gameTree: GameTree.addBoards(
@@ -332,7 +320,7 @@ class SudokuGame extends React.Component {
 
         console.log(request);
         this.props.issueActionRequest(request)
-            .then(response => this.handleNewBoards(this.activeBoard().serialNumber, response, request));
+            .then(response => this.handleNewBoards(this.activeBoard().serialNumber, response));
     }
 
     /* The score for a game is the sum of the 'cost' attribute for all of its nodes. */
@@ -407,6 +395,8 @@ class SudokuGame extends React.Component {
 
     isTerminalNode(boardId) {
         const node = GameTree.findNodeById(this.state.gameTree, boardId);
+        console.log('isTerminalNode: Node is ');
+        console.log(node);
         return (node.children === null 
                 || node.children.length === 0);
     }

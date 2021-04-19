@@ -96,13 +96,13 @@ class LogicalOperatorPanel extends React.Component {
 		} else {
 			const operatorListPanel = this.renderOperatorList();
 			if (this.props.selectLogicalOperatorsUpFront) {
-				let selectOperatorButtonText = "Confirm Operator Selection";
+				let selectOperatorButtonText = "Confirm Logical Operators";
 				if (this.props.logicalOperatorsFrozen) {
-					selectOperatorButtonText = "Specialized Operators Frozen";
+					selectOperatorButtonText = "Logical Operators Frozen";
 				}
 				return (
 					<Paper name='logicalOperators'>
-						<Typography variant="h5">Specialized Operations</Typography>
+						<Typography variant="h5">Logical Operators</Typography>
 						{operatorListPanel}
 						<Button onClick={() => this.props.confirmOperatorSelection()}
 							variant="contained"
