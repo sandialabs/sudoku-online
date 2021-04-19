@@ -14,6 +14,25 @@ import board_update_descriptions
 import traceback
 import sys
 
+def parse_name_config(name):
+    """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
+    parameters = name.split('...')
+    config_dict = {}
+    assert len(parameters) > 0, "Was unable to get any data from name."
+    config_dict['puzzleName'] = name
+    config_dict['displayName'] = parameters[0]
+    for param in parameters[1:]:
+        if '=' in param:
+            assigned = param.split('=')
+            assert(len(assigned) == 2), f"Assumed that the parameter would only have one '=': key=value, not {assigned}."
+            if ',' in assigned[1]:
+                value_list = assigned[1].split(',')
+                config_dict[assigned[0]] = value_list
+            else:
+                config_dict[assigned[0]] = assigned[1]
+        else:
+            config_dict[param] = True
+    return config_dict
 
 class ConfigurationData():
     """ Collect all the configuration data for a board and its logger and the solver.
@@ -92,7 +111,6 @@ class ConfigurationData():
         # self.verbosity = 0
 
         self.goal_cell_name = None
-        self.accessible_cells = []
 
         self.apply_config_from_name()
         self.verify()
@@ -103,29 +121,15 @@ class ConfigurationData():
             return
         name = self.log.getName()
         if name:
-            self.display_name = name
-            parameters = name.split('?')
-            for param in parameters:
-                if 'select_ops_upfront' in param:
-                    # If we are selecting logical operators up front, they can't be changed later in the game
-                    self.rules['canChangeLogicalOperators'] = False
-                elif 'goal=' in param:
-                    # Get the part specifying the goal cell
-                    cell = param.split('goal=')[1]
-                    self.goal_cell_name = cell
-                elif 'costlyops=' in param:
-                    # Get the part specifying the costly operations
-                    operators_string = param.split('costlyops=')[1]
-                    operators_list = operators_string.split(',')
-                    self.rules['specializedCostlyOperations'] = True
-                    self.costly_operations = []
-                    for op in operators_list:
-                        # The op itself is verified later via self.verify
-                        self.costly_operations.append(op)
-                elif 'name=' in param:
-                    # MAL TODO This should perhaps be closely associated with the board instead, but we put it here for
-                    #   coding convenience right now
-                    self.display_name = param.split('name=')[1]
+            parameters = parse_name_config(name)
+            if 'select_ops_upfront' in parameters:
+                # If we are selecting logical operators up front, they can't be changed later in the game
+                self.rules['canChangeLogicalOperators'] = False
+            if 'costlyops' in parameters:
+                # Get the part specifying the costly operations
+                self.rules['specializedCostlyOperations'] = True
+                # The ops themselves are verified later via self.verify
+                self.costly_operations = parameters['costlyops']
 
         if 'canChangeLogicalOperators' not in self.rules:
             # They can be changed, and we have an additional action (applyops) to support that
@@ -155,8 +159,6 @@ class ConfigurationData():
             json_dict['rules'] = self.rules
             if 'specializedCostlyOperations' in self.rules:
                 json_dict['costlyOperations'] = self.costly_operations
-        if self.display_name:
-            json_dict['displayName'] = self.display_name
         return json_dict
 
     def verify(self):
