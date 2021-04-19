@@ -23,40 +23,52 @@ import json
 import random
 import sys
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def get_initial_board(content):
     """
     Get an initial board of 'degree' given a dict request, randomly if 'name' is None, else by name.
     """
+    logger.debug("Calling get_initial_board with content %s.", str(content))
     puzzle = None
     assert isinstance(content, dict), \
         "Failed assumption that request for initial board is formatted as a dict"
-    name = content['name'] if 'name' in content else None
-    degree = content['degree'] if 'degree' in content else 3
+    name = content["name"] if "name" in content else None
+    logger.debug(f"Name is {name}")
+    degree = content["degree"] if "degree" in content else 3
 
     basename = None
     if name:
-        basename = name[0:name.index('?')] if '?' in name else name
-    if basename and basename in puzzles.puzzles:
-        print("Loading requested puzzle " + str(basename))
-        puzzle = puzzles.puzzles[basename]
+        parameters = config_data.parse_name_config(name)
+        assert "displayName" in parameters, f"Cannot find puzzle displayName in parameters ({str(paremeters)})."
+        basename = parameters["displayName"]
+        if basename and basename in puzzles.puzzles:
+            logger.info("Loading requested puzzle " + str(basename))
+            puzzle = puzzles.puzzles[basename]
+        else:
+            # Just warn, and return an empty result
+            logger.warn("Puzzle %s does not seem to exist.", str(basename))
+            return {"error": f"You must specify an existing puzzle (one of {puzzles.puzzles.keys()})."}
     else:
-        (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        config_data.defaultConfig.debug_print(
-            'select puzzle', name, None)
+        (basename, puzzle) = random.choice(list(puzzles.puzzles.items()))
+        name = basename
+        config_data.defaultConfig.debug_print("select puzzle", name, None)
     full_board = board.Board(puzzle, degree, name)
-    config_data.defaultConfig.debug_print('load puzzle', name, full_board)
-    print("Configured requested puzzle " + str(basename))
-    print(full_board.getSimpleJson())
-    if '?select_ops_upfront' in name:
+    config_data.defaultConfig.debug_print("load puzzle", name, full_board)
+    logger.info("Configured requested puzzle " + str(name))
+    logger.debug(full_board.getSimpleJson())
+    parameters = config_data.parse_name_config(name)
+    if "select_ops_upfront" in parameters:
         # For the initial board only, the only possible action is selectOps
         #   and the canChangeLogicalOperators is True
         #   so let's just overwrite them here.
-        full_board.config.actions = ['selectops']
-        full_board.config.rules['canChangeLogicalOperators'] = True
+        full_board.config.actions = ["selectops"]
+        full_board.config.rules["canChangeLogicalOperators"] = True
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
-    print("Simplified requested puzzle " + str(basename))
+    logger.info("Simplified requested puzzle " + str(basename))
     return full_board
 
 
@@ -72,7 +84,7 @@ def __configure_games(name_list, alternatives_list):
     # MAL TODO randomly reorder the name_list
 
     for i in range(int(len(name_list)/2)):
-        name_list[i] += f'?{alt}'
+        name_list[i] += f"...{alt}"
 
     return __configure_games(name_list, alternatives_list)
 
@@ -85,23 +97,23 @@ def get_boards_for_game(name):
     """
     game = {}
     if name and name in puzzles.games:
-        print("Loading requested game " + str(name))
+        logger.info("Loading requested game " + str(name))
         game = puzzles.games[name]
     else:
         (name, game) = random.choice(list(puzzles.games.items()))
-        config_data.defaultConfig.debug_print('select game', name, None)
+        config_data.defaultConfig.debug_print("select game", name, None)
 
-    game_names = game['puzzles']
-    assert 'config_alterations' in game, "Must at least provide empty list for 'config_alterations' in game description."
-    if 'randomly_apply' in game['config_alterations']:
+    game_names = game["puzzles"]
+    assert "config_alterations" in game, "Must at least provide empty list for 'config_alterations' in game description."
+    if "randomly_apply" in game["config_alterations"]:
         game_names = __configure_games(
-            list.copy(game['puzzles']), list.copy(game['config_alterations']['randomly_apply']))
-    if 'default_config' in game['config_alterations']:
-        default_config = game['config_alterations']['default_config']
-        if 'costly_ops' in default_config:
-            config_data.defaultConfig.costly_operations = default_config['costly_ops']
+            list.copy(game["puzzles"]), list.copy(game["config_alterations"]["randomly_apply"]))
+    if "default_config" in game["config_alterations"]:
+        default_config = game["config_alterations"]["default_config"]
+        if "costly_ops" in default_config:
+            config_data.defaultConfig.costly_operations = default_config["costly_ops"]
     config_data.defaultConfig.debug_print(
-        'load game', f'name: {game_names}', None)
+        "load game", f"name: {game_names}", None)
     return game_names
 
 
@@ -110,7 +122,7 @@ def __parse_cell_arg(cell_loc):
     assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
         "Must specify cell using [x,y] location notation."
     cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
-    #print(f'Found cell argument {cell_id}')
+    logger.debug(f"Found cell argument {cell_id}")
     return cell_id
 
 
@@ -118,7 +130,7 @@ def __parse_value_arg(value):
     """ Parse a value. """
     assert isinstance(value, int) and value >= 0, \
         "Assuming that all values are represented as non-negative ints. (offending value: {})".format(value)
-    #print(f'Found value argument {value}')
+    logger.debug(f"Found value argument {value}")
     return value
 
 
@@ -126,7 +138,7 @@ def __parse_operators_arg(ops_list):
     """ Parse a list of operators. """
     assert isinstance(ops_list, list), \
         "Must specify list of operators in applyLogicalOperators action"
-    #print(f'Found operators argument {ops_list}')
+    logger.debug(f"Found operators argument {ops_list}")
     return ops_list
 
 
@@ -134,15 +146,15 @@ def __collect_argument(arg_nm, action_dict):
     """ Collect the argument specified. """
     try:
         # Yes, it's insecure, but at least we're getting the thing we eval from ourselves
-        parser_function = eval(f'__parse_{arg_nm}_arg')
+        parser_function = eval(f"__parse_{arg_nm}_arg")
         raw_val = action_dict[arg_nm]
         return parser_function(raw_val)
     except AttributeError:
         raise Exception(
-            f'Can\'t extract argument {arg_nm} needed')
+            f"Can't extract argument {arg_nm} needed")
     except KeyError:
         raise Exception(
-            f'Can\'t find value for argument {arg_nm} needed')
+            f"Can't find value for argument {arg_nm} needed")
 
 
 def __collect_args(action, action_dict):
@@ -151,11 +163,11 @@ def __collect_args(action, action_dict):
     return a list of the parsed arguments needed for that action.
     """
     assert action in board_update_descriptions.actions_description, \
-        f'Cannot exercise action {action}'
+        f"Cannot exercise action {action}"
     try:
-        arg_names = board_update_descriptions.actions_description[action]['arguments']
+        arg_names = board_update_descriptions.actions_description[action]["arguments"]
     except KeyError:
-        raise Exception(f'Cannot find description for action {action}')
+        raise Exception(f"Cannot find description for action {action}")
 
     if len(arg_names) == 1:
         return __collect_argument(arg_names[0], action_dict)
@@ -164,7 +176,7 @@ def __collect_args(action, action_dict):
                 __collect_argument(arg_names[1], action_dict))
     else:
         raise Exception(
-            f'Haven\'t implemented parsing for arguments {arg_names}')
+            f"Haven't implemented parsing for arguments {arg_names}")
 
 
 def parse_and_apply_action(content):
@@ -180,39 +192,39 @@ def parse_and_apply_action(content):
     """
     assert isinstance(content, dict), \
         "Failed assumption that request for action on board is formatted as a dict"
-    if 'board' not in content:
-        return {'error': 'You must specify a board to act upon.'}
-    board_dict = content['board']
+    if "board" not in content:
+        return {"error": "You must specify a board to act upon."}
+    board_dict = content["board"]
     assert isinstance(
         board_dict, dict), "Failed assumption that the parsed board is a dict."
     board_object = board.Board(board_dict)
 
-    if 'action' not in content:
-        return {'error': 'You must specify an action to take on the given board.'}
-    action_dict = content['action']
+    if "action" not in content:
+        return {"error": "You must specify an action to take on the given board."}
+    action_dict = content["action"]
     assert isinstance(action_dict, dict), \
         "Failed assumption that the parsed action is a dict."
-    assert 'action' in action_dict, "Failed assumption that action request specified the action to take."
-    action_choice = action_dict['action']
+    assert "action" in action_dict, "Failed assumption that action request specified the action to take."
+    action_choice = action_dict["action"]
 
-    print("Action choice: {}".format(action_choice), file=sys.stderr)
+    logger.info("Action choice: {}".format(action_choice))
 
     try:
         args = __collect_args(action_choice, action_dict)
         collected = solvers.take_action(
             board.Board(board_object), action_choice, args)
         result = []
-        if 'heuristics' in content:
-            logicalops = content['heuristics']
+        if "heuristics" in content:
+            logicalops = content["heuristics"]
             assert isinstance(logicalops, list), \
                 "Failed assumption that the parsed action argument heuristics ia  list."
             for brd in collected:
-                result.extend(solvers.take_action(brd, 'applyops', logicalops))
+                result.extend(solvers.take_action(brd, "applyops", logicalops))
         else:
             result = collected
 
     except Exception as e:
-        return {'error': f'{e}'}
+        return {"error": f"{e}"}
 
     jsoned_result = []
     game_score = True
@@ -224,7 +236,7 @@ def parse_and_apply_action(content):
                 average_score = full_board.config.log.difficulty_score
             else:
                 assert average_score == full_board.config.log.difficulty_score, \
-                    'Can\'t average score when assuming that the scores are the same across child boards'
+                    "Can't average score when assuming that the scores are the same across child boards"
         else:
             game_score = False
     if game_score and (len(jsoned_result) > 0):
@@ -233,7 +245,7 @@ def parse_and_apply_action(content):
         #   and we want to amortize that cost across all children boards
         average_score /= len(jsoned_result)
         for full_board in jsoned_result:
-            full_board['cost'] = average_score
+            full_board["cost"] = average_score
 
     return jsoned_result
 
@@ -241,8 +253,8 @@ def parse_and_apply_action(content):
 def _jsonify_action(name, description_dict):
     """ Remove all the extra cruft and dispatch fields,
         and create one dict describing the named action / operator. """
-    short_description = {'internal_name': name}
-    for data in ['requested_arguments', 'cost', 'user_name', 'description', 'short_description']:
+    short_description = {"internal_name": name}
+    for data in ["requested_arguments", "cost", "user_name", "description", "short_description"]:
         if data in description_dict:
             short_description[data] = description_dict[data]
     return short_description
@@ -267,18 +279,18 @@ def get_cell_actions():
     for act in config_data.defaultConfig.actions:
         short_desc = _jsonify_action(
             act, board_update_descriptions.actions_description[act])
-        if act == 'applyops':
-            short_desc['operators'] = operators
+        if act == "applyops":
+            short_desc["operators"] = operators
         actions.append(short_desc)
 
     return actions
 
 def submit_game_tree(tree):
-    print("Saving game tree.", file=sys.stderr)
-    with open('latest-game.json', 'w') as outfile:
+    logger.info("Saving game tree.", file=sys.stderr)
+    with open("latest-game.json", "w") as outfile:
         outfile.write(json.dumps(tree))
     return {
-        'message': 'Game tree successfully saved.'
+        "message": "Game tree successfully saved."
     }
 
 class ActiveGameTreeState():
@@ -324,7 +336,7 @@ class ActiveGameTreeState():
             self._active_nodes.remove(active)
         else:
             active = self._active_nodes.pop()
-        print("DEBUG: Exploring board \n{}".format(
+        logger.info("Exploring board \n{}".format(
             active.board.getStateStr(True)))
         return active
 
@@ -358,15 +370,15 @@ class GameTreeNode():
        game_state: MAL TODO doing this incorrectly: a global game state that keeps the list of incomplete boards to explore from
     """
 
-    NodeType = enum.Enum('NodeType',
-                         'ROOT CHOICE SUCCESS FAILURE AUTO_MOVES SELECTED_MOVES CONDENSED',
+    NodeType = enum.Enum("NodeType",
+                         "ROOT CHOICE SUCCESS FAILURE AUTO_MOVES SELECTED_MOVES CONDENSED",
                          module=__name__,
-                         qualname='GameTreeNode.NodeType')
+                         qualname="GameTreeNode.NodeType")
 
-    SelectFrequency = enum.Enum('SelectFrequency',
-                                'START_ONLY ON_EACH_DECISION',
+    SelectFrequency = enum.Enum("SelectFrequency",
+                                "START_ONLY ON_EACH_DECISION",
                                 module=__name__,
-                                qualname='GameTreeNode.SelectFrequency')
+                                qualname="GameTreeNode.SelectFrequency")
 
     def __init__(self, board, parent=None, moves=None, success=False, node_type=None, game_state=None):
         self.board = board
@@ -480,8 +492,7 @@ class GameTreeNode():
 
         # Select a cell to pivot
         names = [cell.getIdentifier() for cell in options]
-        print(
-            "Which cell do you want to expand into all possible options? {}".format(names))
+        print("Which cell do you want to expand into all possible options? {}".format(names))
         selected = input()
         pivot = self.board.getCell(selected)
         new_boards = operators.expand_cell(self.board, pivot.getIdentifier())
@@ -503,8 +514,8 @@ class GameTreeNode():
         return children
 
     def _debug(self, message):
-        print("DEBUG: {}{}".format(
-            ''.join([' '] * self._depth),
+        logger.debug("{}{}".format(
+            "".join([" "] * self._depth),
             message))
 
 # -----------------------------------------------------
@@ -512,7 +523,7 @@ class GameTreeNode():
 
 def test_sudoku():
     # board.Board.initialize()
-    root = board.Board(puzzles.puzzles['underconstrained1'])
+    root = board.Board(puzzles.puzzles["underconstrained1"])
 
     # solver = Solver(board)
     # solver.setVerbosity(3)
@@ -524,5 +535,5 @@ def test_sudoku():
     # print("Solved?",root.isSolved())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_sudoku()
