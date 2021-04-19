@@ -8,11 +8,13 @@ December 12, 2019
 Sudoku Board and Cell data structures.
 """
 
-import logger
 # import json
 import uuid
 import config_data
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 class Cell():
     """
@@ -432,8 +434,11 @@ class Board():
         self._id = uuid.uuid1().int >> 64
         self._is_background = False
         self._state = dict()
+        assert isinstance(degree, int), "Degree must be an int."
+        assert 2 <= degree <= 4, "Degree must be between 2 and 4 for now."
         self._degree = degree
         self._parent_id = None
+        assert name is None or isinstance(name, str), f"Name must be a str, not {name} of type {type(name)}."
         self._name = name
         self._display_name = None
         self._question = None
@@ -442,6 +447,7 @@ class Board():
         self.config = None
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
+            logger.info("Initializing Board for Board %s.", str(Board))
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
@@ -455,6 +461,7 @@ class Board():
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
+            logger.info("Initializing Board for dict %s.", str(state))
             assert 'serialNumber' in state, "Expecting serialNumber in state provided."
             self._id = state['serialNumber']
 
@@ -470,9 +477,10 @@ class Board():
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
 
-            # if 'degree' not in state: -> logger.warn
             if 'degree' in state:
                 self._degree = state['degree']
+            else:
+                logger.warn("'degree' not specified in state: board initialization or use may fail unexpectedly.")
             if 'parentSerialNumber' in state:
                 self._parent_id = state['parentSerialNumber']
             self._name = state['puzzleName'] if 'puzzleName' in state else None
@@ -481,19 +489,19 @@ class Board():
             if 'goalCell' in state:
                 goal = state['goalCell']
                 assert len(goal) == 2, "Expected exactly a row and column index for goal."
-                self.goal_cell = getCellIDFromArrayIndex(goal[0], goal[1])
+                self.goal_cell = self.getCellIDFromArrayIndex(goal[0], goal[1])
             if 'accessibleCells' in state:
                 self.accessible_cells = []
                 for accs in state['accessibleCells']:
                     assert len(accs) == 2, "Expected exactly a row and column index for accessibleCell."
-                    self.accessible_cells.append(getCellIDFromArrayIndex(accs[0], accs[1]))
+                    self.accessible_cells.append(self.getCellIDFromArrayIndex(accs[0], accs[1]))
             else:
                 self.computeAccessibleCells()
             self.config = config_data.ConfigurationData(self.getStateStr(
                 False, False, ''), self._name)
             # TODO MAL Should we validate that goal, name, and question in _name match here?
         elif isinstance(state, str):
-            # State is a str; initialize it
+            logger.info("Initializing Board for string %s, name %s.", str(state), str(self._name))
             i = 0
             for identifier in sorted(Board.getAllCells(degree)):
                 self._state[identifier] = Cell(identifier, state[i])
@@ -502,16 +510,23 @@ class Board():
 
             self.config = config_data.ConfigurationData(self.getStateStr(
                 False, False, ''), self._name)
+            logger.debug("Crafted config to be %s.", str(self.config))
             parameters = config_data.parse_name_config(name)
+            logger.debug("Found name-based parameters %s.", str(parameters))
             if 'puzzleName' in parameters:
                 self._name = parameters['puzzleName']
-            elif 'name' in parameters:
-                self._display_name = parameters['name']
-            elif 'question' in parameters:
+                logger.debug("Found puzzleName %s.", str(self._name))
+            if 'displayName' in parameters:
+                self._display_name = parameters['displayName']
+                logger.debug("Found displayName %s.", str(self._display_name))
+            if 'question' in parameters:
                 self._question = parameters['question']
-            elif 'goal' in parameters:
+                logger.debug("Found question %s.", str(self._question))
+            if 'goal' in parameters:
                 self.goal_cell = parameters['goal']
+                logger.debug("Found goal %s.", str(self.goal_cell))
             self.computeAccessibleCells()
+            logger.debug("Calculated accessible cells as %s.", str(self.accessible_cells))
         else:
             raise TypeError('Can\'t initialize Board from input type ' + type(state)
                             + '. (Must be Board, dict, or str.)')
@@ -529,12 +544,12 @@ class Board():
 
     def computeAccessibleCells(self):
         """ If we have a goal cell, compute accessible cells and store them in self.accessible_cells. """
-        if self.config.goal_cell_name:
-            offlimits = self.getAssociatedCells(self.config.goal_cell_name)
-            offlimits.append(self.config.goal_cell_name)
+        if self.goal_cell:
+            offlimits = self.getAssociatedCells(self.goal_cell)
+            offlimits.append(self.goal_cell)
 
             def inlimits(cell):
-                if cell == self.config.goal_cell_name:
+                if cell == self.goal_cell:
                     return False
                 if self.getCell(cell).isCertain():
                     return False
@@ -548,7 +563,7 @@ class Board():
             if len(self.accessible_cells) == 0:
                 # Devolve to any uncertain cells except the goal cell
                 def inlimits2(cell):
-                    if cell == self.config.goal_cell_name:
+                    if cell == self.goal_cell:
                         return False
                     if self.getCell(cell).isCertain():
                         return False
@@ -656,7 +671,7 @@ class Board():
         return output
 
     def getSimpleJson(self):
-        """ Return simple json listing possible values across the board. """
+        """ Return simple json-compatible dictionary listing possible values across the board. """
         def sorted_row_cells(row):
             return sorted(Board.getUnitCells(row, self.getDegree()))
         brd = {
@@ -693,7 +708,7 @@ class Board():
         if self._question:
             brd['question'] = self._question
 
-        brd['goalCellName'] = self.goal_cell
+        logger.debug(f"Goal cell, accessible_cells: {self.goal_cell} and {self.accessible_cells}.")
         if self.goal_cell:
             brd['goalCell'] = list(type(self).getLocations(self.goal_cell, self.getDegree()))
         self.computeAccessibleCells()
@@ -702,7 +717,6 @@ class Board():
                 ident, self.getDegree())) for ident in self.accessible_cells]
             brd['accessibleCells'] = accessible_locs
         return brd
-        # return json.dumps(brd)
 
     def getUncertainCells(self):
         """

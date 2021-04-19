@@ -16,13 +16,14 @@ import sys
 
 def parse_name_config(name):
     """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
-    parameters = name.split('?')
+    parameters = name.split('...')
     config_dict = {}
     assert len(parameters) > 0, "Was unable to get any data from name."
-    config_dict['puzzleName'] = parameters[0]
+    config_dict['puzzleName'] = name
+    config_dict['displayName'] = parameters[0]
     for param in parameters[1:]:
         if '=' in param:
-            assigned = param.split('?')
+            assigned = param.split('=')
             assert(len(assigned) == 2), f"Assumed that the parameter would only have one '=': key=value, not {assigned}."
             if ',' in assigned[1]:
                 value_list = assigned[1].split(',')
@@ -124,7 +125,7 @@ class ConfigurationData():
             if 'select_ops_upfront' in parameters:
                 # If we are selecting logical operators up front, they can't be changed later in the game
                 self.rules['canChangeLogicalOperators'] = False
-            elif 'costlyops' in parameters:
+            if 'costlyops' in parameters:
                 # Get the part specifying the costly operations
                 self.rules['specializedCostlyOperations'] = True
                 # The ops themselves are verified later via self.verify
