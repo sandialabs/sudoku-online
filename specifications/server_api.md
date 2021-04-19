@@ -33,7 +33,7 @@ In SudokuOnline, this will be used to identify how far into the series of puzzle
 
 Do we need any other parameters for this request?
 
-### Evaluate Heuristic
+### Evaluate Cell Action
 
 *URL*: `/sudoku/request/evaluate_cell_action`
 
@@ -57,9 +57,9 @@ The caller is responsible for keeping track of where in the game tree the new bo
 
 For now, the caller is also responsible for keeping track of the heuristics selected up front and listing them in 'heuristics'.  This may need to change, in which case the solver will track the heuristics in the puzzle name.  *TODO* discuss between Shelley and Andy.
 
-### List Heuristics
+### List Logical Operators
 
-*URL*: `/sudoku/request/list_heuristics`
+*URL*: `/sudoku/request/list_logical_operators`
 
 *Body*: No body required.
 
@@ -76,7 +76,7 @@ Example response:
 ]
 ```
 
-### List Actions
+### List Cell Actions
 
 *URL*: `/sudoku/request/list_cell_actions`
 
