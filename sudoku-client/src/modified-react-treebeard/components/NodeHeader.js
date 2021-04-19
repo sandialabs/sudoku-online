@@ -28,7 +28,7 @@ class NodeHeader extends Component {
             animations, decorators, node, onClick, style, onSelect, customStyles
         } = this.props;
         const {active, children} = node;
-        const terminal = (children === undefined || children === null || children.length === 0);
+        const terminal = !children;
         let styles;
         if (active) {
             styles = Object.assign(style, {container: {...style.link, ...style.activeLink}});

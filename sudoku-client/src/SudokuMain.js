@@ -11,7 +11,7 @@
 import React from 'react';
 import SudokuGame from './SudokuGame';
 import { request } from './SudokuUtilities';
-import { ErrorBoundary } from './ErrorBoundary';
+
 
 
  
@@ -48,19 +48,17 @@ class SudokuMain extends React.Component {
 					    </ul>
 					</div>
 					<div key={6}>
-						<ErrorBoundary>
-							<SudokuGame 
-								degree={this.props.degree}
-								boards={this.state.boards}
-								gameConfiguration={this.state.gameConfiguration}
-								issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
-								cellActions={this.state.cellActions}
-								logicalOperators={this.state.logicalOperators}
-								issueActionRequest={this.sendActionRequestToServer}
-								submitFinishedGameTree={this.submitFinishedGameTree}
-								requestBoard={(boardInfo) => {return this.requestBoard(boardInfo);}}
-								/>
-						</ErrorBoundary>
+						<SudokuGame 
+							degree={this.props.degree}
+							boards={this.state.boards}
+							gameConfiguration={this.state.gameConfiguration}
+							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
+							cellActions={this.state.cellActions}
+							logicalOperators={this.state.logicalOperators}
+							issueActionRequest={this.sendActionRequestToServer}
+							submitFinishedGameTree={this.submitFinishedGameTree}
+							requestBoard={(boardInfo) => {return this.requestBoard(boardInfo);}}
+							/>
 					</div>
 				</div>
 			);
