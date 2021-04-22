@@ -118,39 +118,44 @@ button.sudoku-choice-grid {
     height: 19px;
 }
 
+span.occupied {
+    background-color: blue;
+}
+
 /*
  * Styles for the tables in the game tree view
  */
 
-table.game-tree-board {
+table.miniature-board {
     table-layout: fixed;
     border-collapse: collapse;
     margin: 0px;
     padding: 0px;
-    border: 2px solid gray;
+    border: 1px solid gray;
+    font-size: xx-small;
 }
 
-tr.game-tree-board {
+tr.miniature-board {
     border-bottom: 1px solid gray;
     margin: 0;
     padding: 0;
 }
 
-tr.game-tree-board.degree-3:nth-child(3n+3) {
-    border-bottom: 2px solid gray;
+tr.miniature-board.degree-3:nth-child(3n+3) {
+    border-bottom: 1px solid gray;
     margin: 0;
     padding: 0;
 }
 
-td.game-tree-board {
+td.miniature-board {
     border-right: 1px solid gray;
-    width: 18px;
-    height: 18px;
+    width: 4px;
+    height: 4px;
     text-align: center;
 }
 
-td.game-tree-board.degree-3:nth-child(3n+3) {
-    border-right: 2px solid gray;
+td.miniature-board.degree-3:nth-child(3n+3) {
+    border-right: 1px solid gray;
     margin: 0;
     padding: 0;
 }

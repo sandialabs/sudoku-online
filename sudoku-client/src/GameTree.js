@@ -59,7 +59,8 @@ function addBoards(tree, parentId, newBoards) {
         + ', newBoards are ' + newBoards);
 
     for (const board of newBoards) {
-        console.log('inside addBoards: about to add board ' + board);
+        // console.log('inside addBoards: about to add board ' + board);
+        // console.log(board);
         myTree = addBoard(myTree, parentId, board);
     }
     return myTree;

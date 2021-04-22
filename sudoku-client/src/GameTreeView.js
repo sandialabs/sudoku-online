@@ -171,10 +171,10 @@ function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
     GameTree.walkTree(ourTree,
         (node) => {
             if (node.data.board.backtrackingBoard) {
-                node.name = 'Backtrack to Parent (serial: ' + node.data.board.serialNumber + ')';
+                node.name = 'Backtrack to Parent';
             } else {
                 if (node.data.board.hasOwnProperty('action')) {
-                    node.name = actionToName(node.data.board.action, node.data.board) + ' (serial: ' + node.data.board.serialNumber + ')';
+                    node.name = actionToName(node.data.board.action, node.data.board);
                 } else {
                     node.name = 'UNIMPLEMENTED: ' + node.data.board.serialNumber;
                 }
@@ -218,7 +218,7 @@ const GameTreeBoardHeader = ({onSelect, node, style, customStyles}) => {
                 <TreeBeardDiv
                     style={node.selected ? {...style.title, ...customStyles.header.title} : style.title}
                     >
-                    Terminal Node: {node.name}
+                    <GameTreeBoard board={node.data.board} name={node.name} />
                 </TreeBeardDiv>
             </div>
             );
