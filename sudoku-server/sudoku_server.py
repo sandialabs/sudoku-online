@@ -36,9 +36,6 @@ def get_initial_board():
     logger.info("Returning from get_initial_board: %s", str(result))
     return result
 
-    # TODO MAL add goalCell
-    # TODO MAL add accessibleCells
-
 
 @app.route('/sudoku/request/boardsForGame/<gamename>')
 def get_boards_for_game(gamename):
@@ -50,11 +47,11 @@ def get_boards_for_game(gamename):
     # MAL TODO is there a way to let the app.route say if you ask for something without a gamename then we can make it None?
     if name == 'get_me_something_random':
         name = None
-    board_names = game.get_boards_for_game(name)
-    return jsonify(board_names)
+    boards = game.get_boards_for_game(name)
+    json_boards = [b.getSimpleJson() for b in boards]
+    return jsonify(json_boards)
 
 
-# MAL TODO talk to Andy about changing this to a different name
 @app.route('/sudoku/request/evaluate_cell_action', methods=['POST'])
 def take_given_action():
     """ Returns the sets of boards created by taking a particular action.
@@ -64,7 +61,7 @@ def take_given_action():
     """
     content = request.json
     if content is None:
-        print("Cannot apply action without context content (board, action, and parameters)")
+        logger.warn("Cannot apply action without context content (board, action, and parameters)")
         return jsonify(None)
 
     return jsonify(game.parse_and_apply_action(content))
@@ -74,7 +71,7 @@ def take_given_action():
 def list_possible_operators():
     """ Returns the possible logical operators that could be applied.
 
-    Possible actions include selectValueForCell (cell_id, value) and pivotOnCell (cell_id)
+    Possible operators are described in board_update_descriptions.py.
     """
     return jsonify(game.get_possible_operators())
 
@@ -83,10 +80,10 @@ def list_possible_operators():
 def list_possible_actions():
     """ Returns the possible actions that could be applied.
 
-    Possible actions include selectValueForCell (cell_id, value), pivotOnCell (cell_id),
-    and applyLogicalOperators (list of logical operators to apply)
+    Possible actions are described in board_update_descriptions.py.
     """
     return jsonify(game.get_cell_actions())
+
 
 @app.route('/sudoku/request/submit_game_tree', methods=['POST'])
 def submit_game_tree():
@@ -95,10 +92,9 @@ def submit_game_tree():
     This is a placeholder method.  We may wind up doing this entirely
     on the client side, sending it from there to S3.
     """
-
     content = request.json
     if content is None:
-        print("Cannot save game tree without a tree to save")
+        logger.warn("Cannot save game tree without a tree to save")
         return jsonify(None)
 
     return jsonify(game.submit_game_tree(content))

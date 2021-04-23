@@ -68,7 +68,7 @@ operators_description = {
                   + 'that have only one possible cell and make that assignment.'},
     'pointingpairs': {'function': 'find_pointing_pairs',
                       'cost': 250,
-                      'user_name': 'Pointing pairs',
+                      'user_name': 'Pointing Pairs',
                       'short_description': 'Remove aligned value pairs from other units.',
                       'description': 'If any one value is present only two or three times in just one unit, '
                       + 'then we can remove that number from the intersection of a number unit. '
@@ -83,12 +83,12 @@ operators_description = {
                       + 'value can be removed from the rest of the box.'},
     'nakedpairs': {'function': 'find_naked_pairs',
                    'cost': 500,
-                   'user_name': 'Naked pairs',
+                   'user_name': 'Naked Pairs',
                    'short_description': 'Remove exclusive value pairs from other cells in a unit.',
                    'description': 'A Naked Pair is two cells in the same unit with the same two values remaining.'},
     'hiddenpairs': {'function': 'find_hidden_pairs',
                     'cost': 1200,
-                    'user_name': 'Hidden pairs',
+                    'user_name': 'Hidden Pairs',
                     'short_description': 'Given exclusive value pairs, remove all other values from the two cells.',
                     'description': 'The cells in a hidden set contain values amongst them '
                     + 'that have been exlcuded from the rest of the cells in '
@@ -96,7 +96,7 @@ operators_description = {
                     + 'all other values from the cells in the set.'},
     'pointingtriples': {'function': 'find_pointing_triples',
                         'cost': 1300,
-                        'user_name': 'Pointing triples',
+                        'user_name': 'Pointing Triples',
                         'short_description': 'Remove aligned value triples from other units.',
                         'description': 'If any one value is present only two or three times in just one unit, '
                         + 'then we can remove that number from the intersection of a number unit. '
@@ -111,7 +111,7 @@ operators_description = {
                         + 'value can be removed from the rest of the box.'},
     'nakedtriples': {'function': 'find_naked_triples',
                      'cost': 1400,
-                     'user_name': 'Naked triples',
+                     'user_name': 'Naked Triples',
                      'short_description': 'Remove exclusive value triples from other cells in a unit.',
                      'description': 'A Naked Triple is any group of three cells in the same unit that contain '
                      + 'IN TOTAL 3 values. The combinations of candidates for a Naked Triple will be '
@@ -122,7 +122,7 @@ operators_description = {
                      + '(12)(23)(13) - {2/2/2}'},
     'hiddentriples': {'function': 'find_hidden_triples',
                       'cost': 1600,
-                      'user_name': 'Hidden triples',
+                      'user_name': 'Hidden Triples',
                       'short_description': 'Given exclusive value triples, remove all other values from the three cells.',
                       'description': 'The cells in a hidden set contain values amongst them '
                       + 'that have been exlcuded from the rest of the cells in '
@@ -156,14 +156,14 @@ operators_description = {
                  + 'and 4, D9 has 1 and 2, and F1 has 1 and 4, we can eliminate 1 from F7.'},
     'nakedquads': {'function': 'find_naked_quads',
                    'cost': 4000,
-                   'user_name': 'Naked quads',
+                   'user_name': 'Naked Quads',
                    'short_description': 'Remove exclusive value quads from other cells in a unit.',
                    'description': 'A Naked Quad is any group of four cells in the same unit '
                    + 'that contain IN TOTAL 4 values.  Therefore we can exclude '
                    + 'these four values from all other cells in the unit.'},
     'hiddenquads': {'function': 'find_hidden_quads',
                     'cost': 5000,
-                    'user_name': 'Hidden quads',
+                    'user_name': 'Hidden Quads',
                     'short_description': 'Given exclusive value quads, remove all other values from the four cells.',
                     'description': 'The cells in a hidden set contain values amongst them '
                     + 'that have been exlcuded from the rest of the cells in '

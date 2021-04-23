@@ -27,6 +27,7 @@ def do_single_test(dbg_message, success_func, req_func):
         print(f"PASSED TEST {dbg_message}.")
     else:
         print(f"Failed succes check for {dbg_message}.")
+        print(f"Results are {result}.")
     print(json.dumps(result))
     return result
 
@@ -66,7 +67,7 @@ def do_tests():
                    lambda: requests.post(
                        "http://localhost:5000/sudoku/request/evaluate_cell_action", json=action))
 
-    do_single_test(f"list logical operators / evaluate_cell_actions",
+    do_single_test(f"list logical operators",
                    lambda d_list: (len(d_list) == len(
                        board_update_descriptions.operators_description.keys()) - 1),
                    lambda: requests.get("http://localhost:5000/sudoku/request/list_logical_operators"))
@@ -121,18 +122,21 @@ def do_tests():
     gamename = "test_game1_4"
     boards = do_single_test(f"getting game {gamename}",
                    lambda d_list: ((len(d_list) == 4)
-                                   and ("hard4" in d_list)),
+                                    and ("displayName" in d_list[2])
+                                    and (d_list[2]["displayName"] == "hard4")),
                    lambda: requests.get(
                        f"http://localhost:5000/sudoku/request/boardsForGame/{gamename}"))
 
     for b in boards:
-        msg = f"getting board {b} from {gamename} one at a time"
+        msg = f"applying inclusion from selected {gamename} one at a time on board {b}"
         do_single_test(msg,
-                       lambda d_board: (("puzzleName" in d_board)
-                                        and (d_board["puzzleName"] == b)),
-                       lambda: requests.post("http://localhost:5000/sudoku/request/initialBoard",
-                                             json={"name": b,
-                                                   "degree": 3}))
+                       lambda d_boards: ((len(d_boards) > 0)
+                                        and ("puzzleName" in d_boards[0])
+                                        and ("puzzleName" in b)
+                                        and (d_boards[0]["puzzleName"] == b["puzzleName"])),
+                       lambda: requests.post("http://localhost:5000/sudoku/request/evaluate_cell_action",
+                                             json={"board": b, "action": {
+                                                   "action": "applyops", "operators": ["inclusion"]}}))
 
     boards = do_single_test(f"getting random game",
                             lambda d_list: (len(d_list) > 0),
@@ -140,13 +144,15 @@ def do_tests():
                                 "http://localhost:5000/sudoku/request/boardsForGame/get_me_something_random"))
 
     for b in boards:
-        msg = f"getting board {b} from random game one at a time"
+        msg = f"applying inclusion from random game one at a time on board {b} "
         do_single_test(msg,
-                       lambda d_board: (("puzzleName" in d_board)
-                                        and (d_board["puzzleName"] == b)),
-                       lambda: requests.post("http://localhost:5000/sudoku/request/initialBoard",
-                                             json={"name": b,
-                                                   "degree": 3}))
+                       lambda d_boards: ((len(d_boards) > 0)
+                                        and ("puzzleName" in d_boards[0])
+                                        and ("puzzleName" in b)
+                                        and (d_boards[0]["puzzleName"] == b["puzzleName"])),
+                       lambda: requests.post("http://localhost:5000/sudoku/request/evaluate_cell_action",
+                                             json={"board": b, "action": {
+                                                   "action": "applyops", "operators": ["inclusion"]}}))
 
     boardname = "pointing_pair_test...select_ops_upfront"
     result_logical_ops_upfront = do_single_test(
@@ -214,18 +220,21 @@ def do_tests():
     gamename = "test_game_ptgprs"
     boards = do_single_test(f"getting game {gamename}",
                             lambda d_list: ((len(d_list) == 3)
-                                            and ("pointing_pair_test...goal=B1" in d_list)),
+                                            and ("puzzleName" in d_list[2])
+                                            and (d_list[2]["puzzleName"] == "pointing_pair_test...goal=B1")),
                             lambda: requests.get(
                                 f"http://localhost:5000/sudoku/request/boardsForGame/{gamename}"))
 
     for b in boards:
-        msg = f"getting board {b} from {gamename} one at a time"
+        msg = f"applying inclusion from {gamename} one at a time to board {b}"
         do_single_test(msg,
-                       lambda d_board: (("puzzleName" in d_board)
-                                        and (d_board["puzzleName"] == b)),
-                       lambda: requests.post("http://localhost:5000/sudoku/request/initialBoard",
-                                             json={"name": b,
-                                                   "degree": 3}))
+                       lambda d_boards: ((len(d_boards) > 0)
+                                        and ("puzzleName" in d_boards[0])
+                                        and ("puzzleName" in b)
+                                        and (d_boards[0]["puzzleName"] == b["puzzleName"])),
+                       lambda: requests.post("http://localhost:5000/sudoku/request/evaluate_cell_action",
+                                             json={"board": b, "action": {
+                                                   "action": "applyops", "operators": ["inclusion"]}}))
 
     boardname = "pointing_pair_test...goal=B1"
     accessible_cells = do_single_test(
@@ -258,7 +267,8 @@ def do_tests():
         "evaluate_cell_actions": ["inclusion", "pointingpairs"]}
     do_single_test(
         f"tried to pivot on valid cell",
-        lambda d_boards: (("puzzleName" in d_boards[0])
+        lambda d_boards: ((len(d_boards) == 4)
+                          and ("puzzleName" in d_boards[0])
                           and (d_boards[0]["puzzleName"] == boardname)
                           and ("accessibleCells" in d_boards[0])
                           and ([1, 0] not in d_boards[0]["accessibleCells"])),
@@ -268,17 +278,20 @@ def do_tests():
     gamename = "pilot_test_a_board"
     boards = do_single_test(f"getting game {gamename}",
                             lambda d_list: ((len(d_list) == 2)
-                                            and ("test7-i26e36hp10...goal=C6...name=Pilot Test Board...question=Can C6 be a 7?" in d_list)),
+                                            and ("puzzleName" in d_list[0])
+                                            and (d_list[0]["puzzleName"] == "test7-i26e36hp10...goal=C6...name=Pilot Test Board...question=Can C6 be a 7?")),
                             lambda: requests.get(
                                 f"http://localhost:5000/sudoku/request/boardsForGame/{gamename}"))
 
     for b in boards:
-        msg = f"getting board {b} from {gamename} one at a time"
+        msg = f"getting from {gamename} one at a time; board {b}"
         do_single_test(msg,
-                       lambda d_board: (("puzzleName" in d_board)
-                                        and (d_board["puzzleName"] == b)),
-                       lambda: requests.post("http://localhost:5000/sudoku/request/initialBoard",
-                                             json={"name": b,
-                                                   "degree": 3}))
+                       lambda d_boards: ((len(d_boards) > 0)
+                                        and ("puzzleName" in d_boards[0])
+                                        and ("puzzleName" in b)
+                                        and (d_boards[0]["puzzleName"] == b["puzzleName"])),
+                       lambda: requests.post("http://localhost:5000/sudoku/request/evaluate_cell_action",
+                                             json={"board": b, "action": {
+                                                   "action": "applyops", "operators": ["inclusion"]}}))
 
 do_tests()
