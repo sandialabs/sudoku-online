@@ -33,6 +33,8 @@ import { CellActionPanel } from './CellActionPanel';
 import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
 
+import { DebugInfoPanel } from './DebugInfoPanel';
+
 
 class SudokuGame extends React.Component {
     constructor(props) {
@@ -121,6 +123,14 @@ class SudokuGame extends React.Component {
         } else {
             const node = GameTree.findNodeById(this.state.gameTree, this.state.activeBoardId);
             return node.data.board;
+        }
+    }
+
+    rootBoard() {
+        if (!this.state.gameTree) {
+            throw new Error('ERROR: rootBoard() called before we have a root board.');
+        } else {
+            return this.state.gameTree.data.board;
         }
     }
 
@@ -224,10 +234,13 @@ class SudokuGame extends React.Component {
                 // FIXME: make sure the default action is not disabled
                 defaultAction = this.props.cellActions[0];
             }
+            const rootBoard = this.rootBoard();
             const currentScore = this.computeScore();
             const actionsEnabled = this.canCellActionsExecute();
             const disabledReason = this.cellActionsDisabledBecause();
-
+            const startingBoard = this.state.gameTree.data.board;
+            const analysisQuestion = "How is a raven like a writing desk?";
+            
             const logicalOperatorsFrozen = (
                 this.state.selectLogicalOperatorsUpFront 
                 && this.state.logicalOperatorsSelected
@@ -260,9 +273,14 @@ class SudokuGame extends React.Component {
                                 }}
                                 />
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid item xs={6}>
                             <Paper>
-                                <Typography variant="h4">Current Score: {currentScore}</Typography>
+                                <Typography variant="h6">Current Puzzle: {startingBoard.displayName}</Typography>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={6}>
+                            <Paper>
+                                <Typography variant="h6">Current Score: {currentScore}</Typography>
                             </Paper>
                         </Grid>
                     </Grid>
@@ -283,8 +301,37 @@ class SudokuGame extends React.Component {
                             selectedValue={this.state.selectedValue}
                             />
                     </Grid>
+                    <Grid container id="questionPanel">
+                        <Grid item xs={12}>
+                            <Paper>
+                                <Typography variant="h6">The Question</Typography>
+                                <Typography>{analysisQuestion}</Typography>
+                            </Paper>
+                        </Grid>
+                        <Grid container>
+                            <Grid item xs={6}>
+                                <Paper>
+                                    <Typography>Your Answer:</Typography>
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Paper>
+                                    <Typography>
+                                        (radio buttons go here)
+                                    </Typography>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+                    </Grid>
                     <Grid item xs={12} id="doneButtonContainer">
                         <Button variant="contained" color="primary" onClick={() => this.handleFinish()}>Finish This Board</Button>
+                    </Grid>
+                    <Grid container id="debugInfo">
+                       <DebugInfoPanel 
+                            gameConfiguration={this.props.gameConfiguration}
+                            puzzleInfo={rootBoard}
+                            boards={this.props.boards}
+                            />
                     </Grid>
                 </Grid>
                 );
@@ -429,7 +476,8 @@ SudokuGame.propTypes = {
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
     requestBoard: PropTypes.func.isRequired,
-    boards: PropTypes.array
+    boards: PropTypes.array,
+    gameName: PropTypes.string
 }
 export default SudokuGame;
 

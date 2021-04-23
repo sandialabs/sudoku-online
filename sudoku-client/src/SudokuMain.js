@@ -29,8 +29,8 @@ class SudokuMain extends React.Component {
 
         // Change the next line to determine which game gets requested
         //this.state.gameName = 'test_game1_6_operators_open';
-        this.state.gameName = 'test_game1_6';
-
+        //this.state.gameName = 'test_game1_6';
+        this.state.gameName = 'pilot_test_a_board';
 		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
 		this.submitFinishedGameTree = this.submitFinishedGameTree.bind(this);
 	}
@@ -52,7 +52,7 @@ class SudokuMain extends React.Component {
 							<SudokuGame 
 								degree={this.props.degree}
 								boards={this.state.boards}
-								gameConfiguration={this.state.gameConfiguration}
+								gameName={this.state.gameName}
 								issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 								cellActions={this.state.cellActions}
 								logicalOperators={this.state.logicalOperators}
