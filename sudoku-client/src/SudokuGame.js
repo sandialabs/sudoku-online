@@ -26,6 +26,7 @@ import { Typography } from '@material-ui/core';
 
 
 import { ActiveBoardView } from './ActiveBoardView';
+import { AnalysisQuestionPanel } from './AnalysisQuestionPanel';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
@@ -302,26 +303,9 @@ class SudokuGame extends React.Component {
                             />
                     </Grid>
                     <Grid container id="questionPanel">
-                        <Grid item xs={12}>
-                            <Paper>
-                                <Typography variant="h6">The Question</Typography>
-                                <Typography>{analysisQuestion}</Typography>
-                            </Paper>
-                        </Grid>
-                        <Grid container>
-                            <Grid item xs={6}>
-                                <Paper>
-                                    <Typography>Your Answer:</Typography>
-                                </Paper>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Paper>
-                                    <Typography>
-                                        (radio buttons go here)
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                        </Grid>
+                        <AnalysisQuestionPanel
+                            question={rootBoard.question}
+                        />
                     </Grid>
                     <Grid item xs={12} id="doneButtonContainer">
                         <Button variant="contained" color="primary" onClick={() => this.handleFinish()}>Finish This Board</Button>
