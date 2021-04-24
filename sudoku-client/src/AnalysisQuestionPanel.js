@@ -31,46 +31,44 @@ class AnalysisQuestionPanel extends React.Component {
         }
 
 
-        let question = "How is a raven like a writing desk?";
-        if (this.props.question) {
-            question = this.props.question;
-        }
+        const question = this.props.question || "(question undefined)";
+
+        const questionLabel = "The Question: \u00a0\u00a0";
 
         return (
-            <Grid container key={1} id="analysisQuestionPanel">
-                <Grid container>
-                    <Grid item xs={2}>
-                        <Typography 
-                            key="question_label"
-                            display="inline"
-                            color="secondary"
-                            >
-                            The Question:
-                        </Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                        <Typography 
-                            key="question_text"
-                            display="inline"
-                            color="primary"
-                            align="right"
-                            >
-                            {question}
-                        </Typography>
-                    </Grid>
+            <Grid container 
+                  alignItems="center"
+                  key={1} 
+                  id="analysisQuestionPanel" 
+                  justify="flex-start"
+                  alignItems="stretch"
+                  spacing={1} >
+                <Grid item xs={3}>
+                    <Paper> 
+                    <Typography 
+                        key="question_label"
+                        display="inline"
+                        >
+                        {questionLabel}
+                    </Typography>
+                    <Typography 
+                        key="question_text"
+                        display="inline"
+                        color="primary"
+                        >
+                        {question}
+                    </Typography>
+                    </Paper>
                 </Grid>
-                <Grid container>
-                    <Grid item xs={2}>
+                <Grid item xs={6}>
+                    <Paper>
                         <Typography
                             key="answer_label"
-                            display="inline"
-                            color="secondary"
-                            align="right"
+                            display="block"
                             >
                             Your Answer:
                         </Typography>
-                    </Grid>
-                    <Grid item xs={8}>
+
                         <FormControl component="fieldset">
                             <RadioGroup 
                                 row
@@ -81,7 +79,7 @@ class AnalysisQuestionPanel extends React.Component {
                                 {radioButtons}
                             </RadioGroup>
                         </FormControl>
-                    </Grid>
+                    </Paper>
                 </Grid>
             </Grid>
             );
@@ -89,8 +87,8 @@ class AnalysisQuestionPanel extends React.Component {
 }
 
 AnalysisQuestionPanel.defaultProps = {
-    question: "How is a raven like a writing desk?",
-    answers: [ "Not at all", "Somewhat" ]
+    question: "Are these the droids you're looking for?",
+    answers: [ "Yes", "No" ]
 }
 
 AnalysisQuestionPanel.propTypes = {
