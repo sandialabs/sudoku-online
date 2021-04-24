@@ -42,6 +42,7 @@ class SudokuGame extends React.Component {
         super(props);
 
         this.state = {
+            abandonedGameTrees: [],
             activeBoardId: null,
             currentPuzzleIndex: null,
             gameTree: null,
@@ -345,7 +346,11 @@ class SudokuGame extends React.Component {
 
     handleFinish() {
         console.log('Finishing board and submitting result.');
-        this.props.submitFinishedGameTree(this.state.gameTree);
+        this.props.submitFinishedGameTree(
+            this.state.gameTree,
+            this.state.abandonedGameTrees,
+            this.state.analysisAnswer
+            );
     }
 
     handleLogicalOperatorSelection(operators) {
@@ -394,11 +399,6 @@ class SudokuGame extends React.Component {
     }
 
     configureNewBoard(board) {
-        // XXX YOU ARE HERE
-        // Check to see if 'selectOps' is in this board's permitted actions.
-        // If so, set flags that will tell render() to display the info dialog,
-        // the logical ops panel to display its "Confirm Selection" button,
-        // and disable the cell actions until that's done.
         if (board.puzzleName.indexOf("select_ops_upfront") !== -1) {
             this.setState({
                 selectLogicalOperatorsUpFront: true,
@@ -476,16 +476,3 @@ SudokuGame.propTypes = {
 }
 export default SudokuGame;
 
-// YOU ARE HERE: 
-// After that, set a flag in this.state that talks about whether or not we need to set the operators up front.
-// 
-// If we do, add a "Confirm Operator Selection" button to the logical operator panel.  Have it pop up a yes/no
-// modal dialog box: "The N logical operators you have chosen will cost X points per move.  Select Confirm to
-// make your selection or Cancel to go back and change your choices.  Once you confirm your choices, you will
-// not be able to modify them until you start another board."
-// 
-// After confirmation, enable all the cell actions and proceed as normal.
-// 
-// Alternately, pop up that dialog as soon as the board is displayed and explain that for this game you have
-// to select operators up front.  That's probably the better idea because it doesn't require the user to 
-// guess at anything.

@@ -111,14 +111,18 @@ class SudokuMain extends React.Component {
 		return request(myRequest);
 	}
 
-	submitFinishedGameTree(tree) {
+	submitFinishedGameTree(finishedTree, abandonedTrees, answer) {
 		const myRequest = {
 			method: 'POST',
 			url: this.state.serverAddress + '/sudoku/request/submit_game_tree',
 			headers: {
 				'Content-Type': 'application/json; utf-8'
 			},
-			body: JSON.stringify(tree)
+			body: JSON.stringify({
+				finishedTree: finishedTree,
+				abandonedTrees: abandonedTrees,
+				answer: answer
+			});
 		}
 		return request(myRequest);
 	}
