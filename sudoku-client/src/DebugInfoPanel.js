@@ -20,7 +20,7 @@ class DebugInfoPanel extends React.Component {
         }
 
         if (this.props.puzzleInfo !== undefined) {
-            puzzleInfo = JSON.stringify(this.props.puzzleInfo, null, 4);
+            puzzleInfo = JSON.stringify(this.props.puzzleInfo, condenseBoardArrays, 4);
         }
 
         if (this.props.boards !== undefined) {
@@ -28,7 +28,7 @@ class DebugInfoPanel extends React.Component {
             let count = 0;
             this.props.boards.forEach(
                 function(board) {
-                    const boardAsString = JSON.stringify(board, null, 2); 
+                    const boardAsString = JSON.stringify(board, condenseBoardArrays, 2); 
                     boards.push(
                             <pre key={count}>{boardAsString}</pre>
                         );
@@ -56,6 +56,16 @@ class DebugInfoPanel extends React.Component {
     }
 }
 
+function condenseBoardArrays(key, value) {
+    if (key === "accessibleCells"
+        || key === "assignments"
+        || key === "availableMoves"
+        ) {
+        return "[Array: " + value.length + " values]";
+    } else {
+        return value;
+    } 
+}
 
 DebugInfoPanel.propTypes = {
     gameConfiguration: PropTypes.object,
