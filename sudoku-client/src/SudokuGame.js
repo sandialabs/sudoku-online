@@ -51,6 +51,7 @@ class SudokuGame extends React.Component {
             selectedLogicalOperators: [],
             selectedValue: null,
             selectLogicalOperatorsUpFront: false,
+            analysisAnswer: "(no answer specified)"
         };
 
         if (this.props.initialBoard !== null && this.props.initialBoard !== undefined) {
@@ -305,6 +306,7 @@ class SudokuGame extends React.Component {
                     <Grid container id="questionPanel">
                         <AnalysisQuestionPanel
                             question={rootBoard.question}
+                            handleAnswerChanged={(answer) => {this.handleAnalysisAnswerChanged(answer)}}
                         />
                     </Grid>
                     <Grid item xs={12} id="doneButtonContainer">
@@ -315,6 +317,7 @@ class SudokuGame extends React.Component {
                             gameConfiguration={this.props.gameConfiguration}
                             puzzleInfo={rootBoard}
                             boards={this.props.boards}
+                            answer={this.state.analysisAnswer}
                             />
                     </Grid>
                 </Grid>
@@ -330,6 +333,14 @@ class SudokuGame extends React.Component {
 
     componentDidMount() {
         this.requestNextBoard()
+    }
+
+    handleAnalysisAnswerChanged(newAnswer) {
+        console.log("User's answer to analysis question changed to '"
+                    + newAnswer + "'.");
+        this.setState({
+            analysisAnswer: newAnswer
+        });
     }
 
     handleFinish() {

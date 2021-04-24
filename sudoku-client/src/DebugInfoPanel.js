@@ -46,6 +46,7 @@ class DebugInfoPanel extends React.Component {
                 <Paper elevation={3}>
                     <h3>Puzzle Information</h3>
                     <pre>{puzzleInfo}</pre>
+                    <div>Answer to analysis question: {this.props.answer}</div>
                 </Paper>
                 <Paper elevation={3}>
                     <h3>Game Boards</h3>
@@ -70,7 +71,8 @@ function condenseBoardArrays(key, value) {
 DebugInfoPanel.propTypes = {
     gameConfiguration: PropTypes.object,
     puzzleInfo: PropTypes.object,
-    boards: PropTypes.array
+    boards: PropTypes.array,
+    answer: PropTypes.string
 }
 
 export default DebugInfoPanel;

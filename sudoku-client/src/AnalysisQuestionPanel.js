@@ -27,7 +27,11 @@ class AnalysisQuestionPanel extends React.Component {
         console.log(radioButtons);
 
         const handleChange = (event) => {
-            console.log("UNIMPLEMENTED: handleChange");
+            if (this.props.handleAnswerChanged) {
+                this.props.handleAnswerChanged(event.target.value);
+            } else {
+                console.log('AnalysisQuestionPanel: No answer handler');
+            }
         }
 
 
@@ -94,7 +98,7 @@ AnalysisQuestionPanel.defaultProps = {
 AnalysisQuestionPanel.propTypes = {
     question: PropTypes.string,
     answers: PropTypes.array,
-    answerChanged: PropTypes.func
+    handleAnswerChanged: PropTypes.func
 };
 
 export default AnalysisQuestionPanel;
