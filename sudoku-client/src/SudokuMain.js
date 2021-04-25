@@ -51,7 +51,7 @@ class SudokuMain extends React.Component {
 						<ErrorBoundary>
 							<SudokuGame 
 								degree={this.props.degree}
-								boards={this.state.boards}
+								puzzles={this.state.boards}
 								gameName={this.state.gameName}
 								issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 								cellActions={this.state.cellActions}
@@ -122,7 +122,7 @@ class SudokuMain extends React.Component {
 				finishedTree: finishedTree,
 				abandonedTrees: abandonedTrees,
 				answer: answer
-			});
+			})
 		}
 		return request(myRequest);
 	}
@@ -159,9 +159,11 @@ class SudokuMain extends React.Component {
 		
 		this.requestGameConfiguration().then(
 			(boardList) => {
-				console.log('Board list received:');
-				console.log(boardList);
-				this.setState({boards: JSON.parse(boardList)});
+				const boardObjects = JSON.parse(boardList);
+				console.log('Board list received containing '
+					+ boardObjects.length + ' elements:');
+				console.log(boardObjects);
+				this.setState({boards: boardObjects});
 			}).catch(
 				(failure) => {console.log('ERROR requesting game information: ' + failure);}
 			);

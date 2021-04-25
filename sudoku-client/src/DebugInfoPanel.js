@@ -13,7 +13,7 @@ class DebugInfoPanel extends React.Component {
     render() {
         let gameConfiguration = "(no game specified)";
         let puzzleInfo = "(no puzzle specified)"
-        let boards = "(no boards available)"
+        let puzzleBoards = "(no puzzles available)"
 
         if (this.props.gameConfiguration !== undefined) {
             gameConfiguration = JSON.stringify(this.props.gameConfiguration, null, 4);
@@ -23,13 +23,13 @@ class DebugInfoPanel extends React.Component {
             puzzleInfo = JSON.stringify(this.props.puzzleInfo, condenseBoardArrays, 4);
         }
 
-        if (this.props.boards !== undefined) {
-            boards = [];
+        if (this.props.puzzles !== undefined) {
+            puzzleBoards = [];
             let count = 0;
-            this.props.boards.forEach(
+            this.props.puzzles.forEach(
                 function(board) {
                     const boardAsString = JSON.stringify(board, condenseBoardArrays, 2); 
-                    boards.push(
+                    puzzleBoards.push(
                             <pre key={count}>{boardAsString}</pre>
                         );
                     count += 1;
@@ -50,7 +50,7 @@ class DebugInfoPanel extends React.Component {
                 </Paper>
                 <Paper elevation={3}>
                     <h3>Game Boards</h3>
-                    <div>{boards}</div>
+                    <div>{puzzleBoards}</div>
                 </Paper>
             </div>
             );
@@ -71,7 +71,7 @@ function condenseBoardArrays(key, value) {
 DebugInfoPanel.propTypes = {
     gameConfiguration: PropTypes.object,
     puzzleInfo: PropTypes.object,
-    boards: PropTypes.array,
+    puzzles: PropTypes.array,
     answer: PropTypes.string
 }
 

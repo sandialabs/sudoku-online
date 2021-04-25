@@ -54,20 +54,6 @@ class SudokuGame extends React.Component {
             selectLogicalOperatorsUpFront: false,
             analysisAnswer: "(no answer specified)"
         };
-
-        if (this.props.initialBoard !== null && this.props.initialBoard !== undefined) {
-            console.log('SudokuGame: Non-null initial board supplied with props for constructor.');
-            const ourBoard = clone(this.props.initialBoard);
-            if ((!('serialNumber' in ourBoard)) 
-                || ourBoard.serialNumber === undefined
-                || ourBoard.serialNumber === null)
-            {
-                ourBoard.serialNumber = newSerialNumber('board');
-                console.log('WARNING: SudokuGame: Assigning serial number ' + ourBoard.serialNumber + ' to initial board.');
-            }
-            this.state.gameTree = GameTree.makeGameTreeNode(ourBoard);
-            this.state.activeBoardId = this.state.gameTree.data.board.serialNumber;
-        }
     }
 
     initializeGameTree(rootBoard) {
@@ -88,6 +74,14 @@ class SudokuGame extends React.Component {
             selectedBoardSquare: cell,
             selectedValue: choice
         });
+    }
+
+    puzzleDisplayName() {
+        if (this.state.currentPuzzleIndex === null) {
+            return "(no current puzzle)";
+        } else {
+            return this.state.gameTree.data.board.displayName;
+        }
     }
 
     handleNewBoards(parentSerial, newBoards, request) {
@@ -317,7 +311,7 @@ class SudokuGame extends React.Component {
                        <DebugInfoPanel 
                             gameConfiguration={this.props.gameConfiguration}
                             puzzleInfo={rootBoard}
-                            boards={this.props.boards}
+                            puzzles={this.props.puzzles}
                             answer={this.state.analysisAnswer}
                             />
                     </Grid>
@@ -326,14 +320,8 @@ class SudokuGame extends React.Component {
         }
     } // end of render()
 
-    _makeStartingGameTreeViewState(boardId) {
-        return {
-   
-        }
-    }
-
     componentDidMount() {
-        this.requestNextBoard()
+        this.displayNextBoard()
     }
 
     handleAnalysisAnswerChanged(newAnswer) {
@@ -413,38 +401,78 @@ class SudokuGame extends React.Component {
         this.initializeGameTree(board);
     }
 
-    requestNextBoard() {
-        if (this.props.boards === null || this.props.boards.length === 0) {
-            console.log('ERROR: Can\'t request next board when there are no boards!');
-            return;
+    displayNextBoard() {
+        if (this.props.puzzles === null 
+            || this.props.puzzles.length === 0) {
+            throw new Error("ERROR: No boards present.  Can't display next board.");
         }
 
         let nextBoardIndex = 0;
-
         if (this.state.currentPuzzleIndex !== null) {
             nextBoardIndex = this.state.currentPuzzleIndex + 1;
-            if (nextBoardIndex === this.props.puzzles.length) {
-                console.log('ERROR: Can\'t advance past the last board.');
-                return;
-            }
+        } 
+
+        if (nextBoardIndex === this.props.puzzles.length) {
+            throw new Error("ERROR: Can't advance past the last board");
         }
 
-        const boardName = this.props.boards[nextBoardIndex];
-        this.props.requestBoard({name: boardName})
-            .then(
-                (boardAsString) => {
-                    this.setState({
-                        currentPuzzleIndex: nextBoardIndex
-                    });
-                    this.configureNewBoard(JSON.parse(boardAsString));
-                }
-                )
-            .catch(
-                (errorResponse) => {
-                    console.log('ERROR fetching board ' + nextBoardIndex + ' (' + boardName + '): '
-                        + errorResponse);
-                }
-                );
+        // Reset state:
+        //
+        // - Display name for puzzle
+        //
+        // - selectLogicalOperatorsUpFront from board
+        // - logicalOperatorsSelected <- false
+        // - clear out cell actions
+        //    - this is in selectedCellAction
+        // - clear out logical operators
+        //    - this is in selectedLogicalOperators
+        // - clear out game tree
+        // - clear out analysis answer
+
+
+        this.resetState();
+        this.setState({
+            currentPuzzleIndex: nextBoardIndex
+        });
+
+        const nextPuzzle = this.props.puzzles[nextBoardIndex];
+        const selectUpFront = !nextPuzzle.rules.canChangeLogicalOperators;
+        this.setState({
+            selectLogicalOperatorsUpFront: selectUpFront,
+        })
+
+        this.initializeGameTree(nextPuzzle);
+
+        // this.props.requestBoard({name: boardName})
+        //     .then(
+        //         (boardAsString) => {
+        //             this.setState({
+        //                 currentPuzzleIndex: nextBoardIndex
+        //             });
+        //             this.configureNewBoard(JSON.parse(boardAsString));
+        //         }
+        //         )
+        //     .catch(
+        //         (errorResponse) => {
+        //             console.log('ERROR fetching board ' + nextBoardIndex + ' (' + boardName + '): '
+        //                 + errorResponse);
+        //         }
+        //         );
+    }
+
+
+    resetState() {
+        this.setState({
+            selectLogicalOperatorsUpFront: false,
+            logicalOperatorsSelected: false,
+            selectedCellAction: null,
+            selectedLogicalOperators: [],
+            gameTree: null,
+            gameTreeExpandedNodes: new Set(),
+            selectedBoardSquare: null,
+            selectedValue: null,
+            analysisAnswer: "(no answer specified)"
+        });
     }
 
     isTerminalNode(boardId) {
@@ -467,11 +495,9 @@ function findFirstNonBacktrackBoard(boardList) {
 SudokuGame.propTypes = {
     cellActions: PropTypes.array.isRequired,
     logicalOperators: PropTypes.array.isRequired,    
-    initialBoard: PropTypes.object,
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
-    requestBoard: PropTypes.func.isRequired,
-    boards: PropTypes.array,
+    puzzles: PropTypes.array,
     gameName: PropTypes.string
 }
 export default SudokuGame;
