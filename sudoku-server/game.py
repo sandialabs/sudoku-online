@@ -91,7 +91,7 @@ def __configure_games(name_list, alternatives_list):
 
 def get_boards_for_game(name):
     """
-    Return a list of boards associated with a game, randomly if 'name' is None, else by name.
+    Return a list of initial Boards associated with a game, randomly if 'name' is None, else by name.
 
     Associates appropriate configuration with each puzzle as indicated by the request.
     """
@@ -114,7 +114,11 @@ def get_boards_for_game(name):
             config_data.defaultConfig.costly_operations = default_config["costly_ops"]
     config_data.defaultConfig.debug_print(
         "load game", f"name: {game_names}", None)
-    return game_names
+
+    game_boards = []
+    for name in game_names:
+        game_boards.append(get_initial_board({"name" : name}))
+    return game_boards
 
 
 def __parse_cell_arg(cell_loc):
@@ -254,7 +258,7 @@ def _jsonify_action(name, description_dict):
     """ Remove all the extra cruft and dispatch fields,
         and create one dict describing the named action / operator. """
     short_description = {"internal_name": name}
-    for data in ["requested_arguments", "cost", "user_name", "description", "short_description"]:
+    for data in ["arguments", "cost", "user_name", "description", "short_description"]:
         if data in description_dict:
             short_description[data] = description_dict[data]
     return short_description

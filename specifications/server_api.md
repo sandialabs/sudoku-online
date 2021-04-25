@@ -2,10 +2,20 @@
 
 This file specifies the URLs that correspond to functions that the server will evaluate.
 
-THIS IS JUST A DRAFT.  Shelley and Andy will fill this out as they discuss what the interface will look like.
-
 To run the server, set FLASK_APP=sudoku-server/sudoku_server.py,
 then `flask run`.
+
+### Request Initial Board
+
+*URL*: `/sudoku/request/initialBoard`
+
+*Body*: `{ 'degree': N, 'name': <string_name> }` (N is an integer, probably 2 or 3),
+and the optional parameter name specifies which puzzle to pull and may specify cofiguration information
+by separating configuration options with `...`
+(e.g., `test7-i26e36hp10...goal=C6...name=Pilot Test Board2...select_ops_upfront...question=Can C6 be odd?`).
+In SudokuOnline, this will be used to identify how far into the series of puzzles a player is.
+
+*Response*: Single board represented as JSON
 
 ### Request Game Boards
 
@@ -14,34 +24,24 @@ then `flask run`.
 Example request:
 /sudoku/request/boardsForGame/test_game1_6
 
-*Response* : List of board names to request in order to make up the game requested by <gamename>
+*Response* : Ordered list of inital boards (rerpesented as JSON) that make up the game <gamename>
 
 Example Response:
 ```json
-['test2-i24e40?select_ops_upfront', 'easy1?select_ops_upfront', 'xwing_test?select_ops_upfront', 'hard4', 'underconstrained1', 'test7-i26e36hp10']
+[ <JSON representation of board - see board.md>, <JSON representation of board - see board.md>, ... ]
 ```
 
-### Request Initial Board
-
-*URL*: `/sudoku/request/initialBoard`
-
-*Body*: `{ 'degree': N, 'name': <string_name> }` (N is an integer, probably 2 or 3),
-and the optional parameter name specifies which puzzle to pull.
-In SudokuOnline, this will be used to identify how far into the series of puzzles a player is.
-
-*Response*: Single board represented as JSON
-
-Do we need any other parameters for this request?
+Defaults are set to select a random puzzle from puzzles.puzzles and to simplify with exclusion.
 
 ### Evaluate Cell Action
 
 *URL*: `/sudoku/request/evaluate_cell_action`
 
-*Body*:
+*Body*: No body required.
 
 ```json
 {
-    'board': <JSON representation of board - see board.md>
+    'board': <JSON representation of board - see board.md>,
     'action': {
         'action': 'assign',
         'cell': [0,4],
@@ -55,7 +55,7 @@ Do we need any other parameters for this request?
 
 The caller is responsible for keeping track of where in the game tree the new boards should be added.
 
-For now, the caller is also responsible for keeping track of the heuristics selected up front and listing them in 'heuristics'.  This may need to change, in which case the solver will track the heuristics in the puzzle name.  *TODO* discuss between Shelley and Andy.
+For now, the caller is also responsible for keeping track of the heuristics selected up front and listing them in 'heuristics'.  This may need to change.
 
 ### List Logical Operators
 
@@ -66,13 +66,18 @@ For now, the caller is also responsible for keeping track of the heuristics sele
 *Response*: List of logical operators with both internal name and user-visible name and cost.
 
 Example response:
-
 ```json
 [
-    { 'internal_name': 'inclusion', 'user_name': 'Inclusion', 'short_description': 'Assign values that have only one possible cell.', 'cost': 100,
-    'description': 'Search board units for values that have only one possible cell and make that assignment.'},
-    { 'internal_name': 'pointingpairs', 'user_name': 'Pointing pairs: remove aligned value pairs from other units.', 'cost': 250,
-    'description': 'If any one value is present only two or three times in just one unit, then we can remove that number from the intersection of a number unit. There are four types of intersections: 1. A pair or triple in a box - if they are aligned on a row, the value can be removed from the rest of the row. 2. A pair or triple in a box, if they are aligned on a column, the value can be removed from the rest of the column. 3. A pair or triple on a row - if they are all in the same box, the value can be removed from the rest of the box. 4. A pair or triple on a column - if they are all in the same box, the value can be removed from the rest of the box.' }
+    {   'internal_name': 'inclusion',
+        'cost': 100,
+        'user_name': 'Inclusion',
+        'short_description': 'Assign values that have only one possible cell.',
+        'description': 'Search board units for values that have only one possible cell and make that assignment.'},
+    {   'internal_name': 'pointingpairs',
+        'cost': 250,
+        'user_name': 'Pointing pairs',
+        'short_description': 'Remove aligned value pairs from other units.',
+        'description': 'If any one value is present only two or three times in just one unit, then we can remove that number from the intersection of a number unit. There are four types of intersections: 1. A pair or triple in a box - if they are aligned on a row, the value can be removed from the rest of the row. 2. A pair or triple in a box, if they are aligned on a column, the value can be removed from the rest of the column. 3. A pair or triple on a row - if they are all in the same box, the value can be removed from the rest of the box. 4. A pair or triple on a column - if they are all in the same box, the value can be removed from the rest of the box.'}
 ]
 ```
 
@@ -88,10 +93,18 @@ Example response:
 
 ```json
 [
-    { 'internal_name': 'pivot', 'user_name': 'Pivot: expand all choices for cell.', 'cost': 500,
-    'description':'Return a separate board for each possible value in cell.' },
-    { 'internal_name': 'assign', 'user_name': 'Assign: assign given value to cell.', 'cost': 100,
-    'description': 'Return one board with the assignment and another (backup) with the exclusion.' }
+    {   'internal_name': 'pivot',
+        'arguments': ['cell'],
+        'cost': 500,
+        'user_name': 'Pivot',
+        'short_description': 'Expand all choices for cell.',
+        'description': 'Return a separate board for each possible value in cell.'},
+    {   'internal_name': 'assign',
+        'arguments': ['cell', 'value'],
+        'cost': 100,
+        'user_name': 'Assign',
+        'short_description': 'Assign given value to cell.',
+        'description': 'Return one board with the assignment and another (backup) with the exclusion.'},
 ]
 ```
 
