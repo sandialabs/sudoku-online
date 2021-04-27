@@ -309,7 +309,7 @@ class SudokuGame extends React.Component {
                     <Grid container id="finishOrResetButtonContainer">
                         <Grid item xs={3}>
                             <ButtonWithAlertDialog
-                                buttonText={"Finish This Board"}
+                                buttonText={"Finish This Puzzle"}
                                 dialogTitle={"Sudoku: Please Confirm"}
                                 dialogText={"Are you sure you want to finish this puzzle and move on to the next one?"}
                                 handleConfirmation={() => this.handleFinishButton()}
@@ -318,7 +318,7 @@ class SudokuGame extends React.Component {
                         <Grid item xs={3}>
                             <ButtonWithAlertDialog
                                 buttonColor="secondary"
-                                buttonText={"Reset This Board"}
+                                buttonText={"Reset This Puzzle"}
                                 dialogTitle={"Sudoku: Please Confirm"}
                                 dialogText={"Are you sure you want to discard your work and start this puzzle over?"}
                                 handleConfirmation={() => this.handleResetButton()}
@@ -360,6 +360,7 @@ class SudokuGame extends React.Component {
             this.state.abandonedGameTrees,
             this.state.analysisAnswer
             );
+        this.displayNextBoard();
     }
 
     handleResetButton() {
