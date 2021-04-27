@@ -118,6 +118,18 @@ button.sudoku-choice-grid {
     height: 19px;
 }
 
+button.sudoku-choice-grid.inaccessible 
+{
+    color: lightgrey;
+    background-color: transparent;
+    text-align: center;
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: 19px;
+    height: 19px;
+}
+
 span.occupied {
     background-color: blue;
 }
