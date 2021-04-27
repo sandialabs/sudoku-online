@@ -41,7 +41,6 @@ class AnalysisQuestionPanel extends React.Component {
 
         return (
             <Grid container 
-                  alignItems="center"
                   key={1} 
                   id="analysisQuestionPanel" 
                   justify="flex-start"
