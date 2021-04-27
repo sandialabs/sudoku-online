@@ -20,6 +20,7 @@ import React from 'react';
 import { clone } from 'ramda';
 
 import { Button } from '@material-ui/core';
+
 import { Grid } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
@@ -27,6 +28,7 @@ import { Typography } from '@material-ui/core';
 
 import { ActiveBoardView } from './ActiveBoardView';
 import { AnalysisQuestionPanel } from './AnalysisQuestionPanel';
+import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
@@ -304,9 +306,27 @@ class SudokuGame extends React.Component {
                             handleAnswerChanged={(answer) => {this.handleAnalysisAnswerChanged(answer)}}
                         />
                     </Grid>
-                    <Grid item xs={12} id="doneButtonContainer">
-                        <Button variant="contained" color="primary" onClick={() => this.handleFinish()}>Finish This Board</Button>
+                    <Grid container id="finishOrResetButtonContainer">
+                        <Grid item xs={3}>
+                            <ButtonWithAlertDialog
+                                buttonText={"Finish This Board"}
+                                dialogTitle={"Sudoku: Please Confirm"}
+                                dialogText={"Are you sure you want to finish this puzzle and move on to the next one?"}
+                                handleConfirmation={() => this.handleFinishButton()}
+                                />
+                        </Grid>
+                        <Grid item xs={3}>
+                            <ButtonWithAlertDialog
+                                buttonColor="secondary"
+                                buttonText={"Reset This Board"}
+                                dialogTitle={"Sudoku: Please Confirm"}
+                                dialogText={"Are you sure you want to discard your work and start this puzzle over?"}
+                                handleConfirmation={() => this.handleResetButton()}
+                                />
+
+                        </Grid>
                     </Grid>
+
                     <Grid container id="debugInfo">
                        <DebugInfoPanel 
                             gameConfiguration={this.props.gameConfiguration}
@@ -316,6 +336,7 @@ class SudokuGame extends React.Component {
                             />
                     </Grid>
                 </Grid>
+
                 );
         }
     } // end of render()
@@ -332,13 +353,17 @@ class SudokuGame extends React.Component {
         });
     }
 
-    handleFinish() {
+    handleFinishButton() {
         console.log('Finishing board and submitting result.');
         this.props.submitFinishedGameTree(
             this.state.gameTree,
             this.state.abandonedGameTrees,
             this.state.analysisAnswer
             );
+    }
+
+    handleResetButton() {
+        console.log('UNIMPLEMENTED: handleResetButton');
     }
 
     handleLogicalOperatorSelection(operators) {
