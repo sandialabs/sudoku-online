@@ -101,23 +101,35 @@ class ActiveBoardView extends React.Component {
 			cellStyleName += ' selected-square';
 		}
 
-		const allCellStyleNames = cellStyleName;
+		let allCellStyleNames = cellStyleName;
 		const cellKey = row.toString() + column.toString();
-		const cellAccessible = (accessibleCellKeys.indexOf(cellKey) != -1);
-		if (cellAccessible) {
-			cellStyleName += ' accessible';
+		const cellIsAccessible = (accessibleCellKeys.indexOf(cellKey) != -1);
+		if (cellIsAccessible) {
+			allCellStyleNames += ' accessible';
 		} else {
-			cellStyleName += ' inaccessible';
+			allCellStyleNames += ' inaccessible';
 		}
 		
 		const selectIfAccessible = () => {
-			if (cellAccessible) {
+			if (cellIsAccessible) {
 				return this.selectCell(row, column);
 			} else {
 				console.log('Cell ' + cellKey + ' is inaccessible in '
 					        + 'this puzzle.  Ignoring selection.');
 			}
 		}
+
+		const cellIsGoal = (
+			this.props.board.goalCell !== undefined 
+			&& this.props.board.goalCell !== null 
+			&& row === this.props.board.goalCell[0]
+			&& column === this.props.board.goalCell[1]
+			);
+
+		if (cellIsGoal) {
+			allCellStyleNames += ' goal-cell';
+		}
+
 		if (assignments[row][column] !== null) {
 			return (
 				<td className={allCellStyleNames} key={column}>

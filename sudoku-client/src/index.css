@@ -70,6 +70,14 @@ td.active-board.square.selected-square {
     height: 27px;
 }
 
+td.active-board.square.goal-cell {
+    border: 5px solid #B3B300;
+    margin: 0;
+    padding: 0;
+    width: 27px;
+    height: 27px;
+}
+
 /*
  * Styles for the choice grid within the unassigned cells in the 
  * active board
