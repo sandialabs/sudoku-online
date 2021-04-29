@@ -8,11 +8,14 @@ July 12, 2020
 Scoring and dispatch system configuration data for sudoku game actions.
 """
 
-import logger
+import sudoku_logger
 import copy
 import board_update_descriptions
 import traceback
 import sys
+
+import logging
+logger = logging.getLogger(__name__)
 
 def parse_name_config(name):
     """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
@@ -35,13 +38,13 @@ def parse_name_config(name):
     return config_dict
 
 class ConfigurationData():
-    """ Collect all the configuration data for a board and its logger and the solver.
+    """ Collect all the configuration data for a board and its SudokuLogger and the solver.
     """
 
     def __init__(self, puzzle=None, name=None):
         if name:
             name = name.strip()
-        self.log = logger.SudokuLogger(puzzle, name)
+        self.log = sudoku_logger.SudokuLogger(puzzle, name)
 
         # Keep track of any special rules for the board (see apply_config_from_name below)
         self.rules = {}
@@ -110,16 +113,14 @@ class ConfigurationData():
         # TODO MAL move configuration in here
         # self.verbosity = 0
 
-        self.goal_cell_name = None
-
         self.apply_config_from_name()
         self.verify()
 
     def apply_config_from_name(self):
-        """ Parsing the puzzle name from the logger, apply required configuration. """
+        """ Parsing the puzzle name from the SudokuLogger, apply required configuration. """
         if not self.log:
             return
-        name = self.log.getName()
+        name = self.log.name
         if name:
             parameters = parse_name_config(name)
             if 'select_ops_upfront' in parameters:
@@ -150,9 +151,6 @@ class ConfigurationData():
     def add_config_mappings_to_dict(self, json_dict):
         """ Add the config mappings that ought to be shared with the client to the board dictionary
             that will be sent via json. """
-        logger_dict = self.log.get_simple_json_repr()
-        for k in logger_dict.keys():
-            json_dict[k] = logger_dict[k]
         if self.actions:
             json_dict['availableActions'] = self.actions
         if self.rules:
@@ -195,25 +193,25 @@ class ConfigurationData():
             Returns:
                 False (unneeded, but to indicate that the operator should not terminate).
         """
-        self.log.logOperator(op, msg2, board, False, False)
-        # traceback.print_stack(file=sys.stdout)
+        board_string = board.getStateStr(True, False) if board else None
+        logger.debug("Logging: %s %s on %s", str(op), str(msg2), str(board_string))
         return False
 
     def match_set_operation(self, op, msg2, board):
-        """ Use the logger that adds the cost if we need to increase our cost every matching set.
+        """ Use the SudokuLogger that adds the cost if we need to increase our cost every matching set.
         This function is only called when a set has been matched (internally) and the logical operation triggered successfully.
 
         Args:
-            op: the internal string name of the operator called, to be printed at verbosity level 1
-            msg2: a string message to be printed at verbosity 2
-            board: a Board to use to print the state string at verbosity level 3
+            op: the internal string name of the operator called
+            msg2: a string message
+            board: the Board resulting after the op
         Returns:
             True if the operator should terminate after this operation.
         """
         # Cost it if we are costing per matching set AND it's not a free operation
         cost_it = False if op in self.free_operations else True
         self.log.logOperator(
-            op, f'successful application per matching set. {msg2}', board,
+            op, "single_match", f"successful application per matching set. {msg2}", board,
             self.count_per_matching_set,
             cost_it & self.cost_per_matching_set)
 
@@ -225,54 +223,69 @@ class ConfigurationData():
         This function is called when an operation is attempted, whether or not it modified the board.
 
         Args:
-            op: the internal string name of the operator called, to be printed at verbosity level 1
-            msg2: a string message to be printed at verbosity 2
-            board: a Board to use to print the state string at verbosity level 3
+            op: the internal string name of the operator called
+            msg2: a string message
+            board: the Board resulting after the op
             affected_board: a boolean that describes whether the operation affected the Board
         Returns:
             affected_board (unneeded, but to indicate whether the operator should terminate).
         """
         # Cost it if it's not a free operation
         cost_it = False if op in self.free_operations else True
-        # Cost on completion if costing any application of a logical operator
-        self.log.logOperator(
-            op, f'attempted application. {msg2}', board,
-            self.count_per_attempted_application,
-            cost_it & self.cost_per_attempted_application)
         if affected_board:
             # Cost on successful application
             self.log.logOperator(
-                op, f'successful application. {msg2}', board,
+                op, "applied", f"successful application. {msg2}", board,
                 self.count_per_matching_use,
                 cost_it & self.cost_per_matching_use)
+        else:
+            # Cost on completion if costing any application of a logical operator
+            self.log.logOperator(
+                op, "application_attempt", f"attempted application. {msg2}", board,
+                self.count_per_attempted_application,
+                cost_it & self.cost_per_attempted_application)
 
         return affected_board
 
-    def log_operation_request(self, ops, msg2, board):
+    def start_operation(self, op, board):
+        """ This operatio never costs, but it logs when an operation starts.
+        This function is called when an operation is attempted, whether or not it modified the board.
+
+        Args:
+            op: the internal string name of the operator called
+            board: the Board as passed in
+        Returns:
+            None
+        """
+        self.log.logOperator(op, "call", f"attempted application.", board, False, False)
+
+        return None
+
+    def log_operations_request(self, ops, msg2, board):
         """ Use the logger that adds the cost if we need to increase our cost every request.
         This function is called after a logical_solve.
 
         Args:
-            ops: the list of internal string names of the operators called, to be printed at verbosity level 1
-            msg2: a string message to be printed at verbosity 2
-            board: a Board to use to print the state string at verbosity level 3
-                We replace this argument with
+            op: the internal string name of the operator called
+            msg2: a string message
+            board: the Board resulting after the op
         Returns:
             True (unneeded, but to indicate that the operator should terminate).
         """
         for op in ops:
             cost_it = False if op in self.free_operations else True
             self.log.logOperator(
-                op, f'requested application. {msg2}', board,
+                op, "request", f"requested application. {msg2}", board,
                 self.count_per_requested_application,
                 cost_it & self.cost_per_requested_application)
             # traceback.print_stack(file=sys.stdout)
         return self.terminate_on_successful_operation
 
     def debug_print(self, msg1, msg2, board):
-        """ Over-use a convenient function to do level 1, 2, 3 verbosity printing.
+        """ Over-use a convenient function to do logging.
         """
-        self.log.logOperator(msg1, msg2, board, False, False)
+        board_string = board.getStateStr(True, False) if board else None
+        logger.debug("Logging: %s %s on %s", str(msg1), str(msg2), str(board_string))
 
 
 defaultConfig = ConfigurationData()

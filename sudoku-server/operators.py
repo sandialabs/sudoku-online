@@ -32,6 +32,7 @@ def logical_exclusion(sboard):
     Iterate until there are no new single-value cells.
     See comments below for additional algorithmic details.
     """
+    sboard.config.start_operation('exclusion', sboard)
 
     # get the list of cells with singleton value set
     num_exclusions = 0
@@ -115,6 +116,8 @@ def logical_inclusion(sboard):
     assignments should have their exclusions propagated (not done by this
     function).
     """
+    sboard.config.start_operation('inclusion', sboard)
+
     num_inclusions = 0
     # for each unit of the board
     units_to_check = board.Board.getAllUnits(sboard.getDegree())
@@ -235,6 +238,8 @@ def find_hidden_pairs(sboard):
     rest of the cells in the unit.  Therefore we exclude all
     other values from the cells in the pair.
     """
+    sboard.config.start_operation('hiddenpairs', sboard)
+
     num_hidden_pairs = 0
     # repeat until we don't get any new information
     #   (apply the operator as much as possible)
@@ -283,6 +288,8 @@ def find_hidden_triples(sboard):
     rest of the cells in the unit.  Therefore we exclude all
     other values from the cells in the triple.
     """
+    sboard.config.start_operation('hiddentriples', sboard)
+
     num_hidden_triples = 0
     # repeat until we don't get any new information
     #   (apply the operator as much as possible)
@@ -368,6 +375,8 @@ def find_hidden_quads(sboard):
     rest of the cells in the unit.  Therefore we exclude all
     other values from the cells in the quad.
     """
+    sboard.config.start_operation('hiddenquads', sboard)
+
     num_hidden_quads = 0
     # repeat until we don't get any new information
     #   (apply the operator as much as possible)
@@ -478,7 +487,7 @@ def __find_hidden_candidate_cells(sboard, current_cell):
 
     current_cell_name = current_cell.getIdentifier()
     current_value_set = current_cell.getValueSet()
-    current_associated_cells = sboard.getAssociatedCells(current_cell_name)
+    current_associated_cells = sboard.getAssociatedCellIds(current_cell_name)
     candidate_cells = []
     # iterate through list of current cells too find possible hidden candidates
     for candidate_cell_name in current_associated_cells:
@@ -531,6 +540,8 @@ def find_naked_pairs(sboard):
     values remaining. Remove these two values from all
     cells associated with the pair.
     """
+    sboard.config.start_operation('nakedpairs', sboard)
+
     num_naked_pairs = 0
     # repeat until we don't get any new information
     #   (apply the operator as much as possible)
@@ -590,6 +601,7 @@ def find_naked_triples(sboard):
         (123) (12) (23) - {3/2/2}
         (12) (23) (13) - {2/2/2}
     """
+    sboard.config.start_operation('nakedtriples', sboard)
 
     num_naked_triples = 0
     # repeat until we don't get any new information
@@ -662,6 +674,8 @@ def find_naked_quads(sboard):
     that contain IN TOTAL 4 values.  Therefore we can exclude
     these four values from all other cells in the unit.
     """
+    sboard.config.start_operation('nakedquads', sboard)
+
     num_naked_quads = 0
     # repeat until we don't get any new information
     #   (apply the operator as much as possible)
@@ -754,7 +768,7 @@ def __find_naked_candidate_cells(sboard, current_cell):
     current_cell_name = current_cell.getIdentifier()
     current_value_set = current_cell.getValueSet()
     # the list of cells associated with the current cell
-    current_associated_cells = sboard.getAssociatedCells(current_cell_name)
+    current_associated_cells = sboard.getAssociatedCellIds(current_cell_name)
 
     # iterate through list of current's associated cells
     candidate_cells = []
@@ -782,7 +796,7 @@ def __find_pointing_candidate_cells(sboard, current_cell):
 
     current_cell_name = current_cell.getIdentifier()
     current_value_set = current_cell.getValueSet()
-    current_associated_cells = sboard.getAssociatedCells(current_cell_name)
+    current_associated_cells = sboard.getAssociatedCellIds(current_cell_name)
     candidate_cells = []
     # iterate through list of current cells too find possible hidden candidates
     for candidate_cell_name in current_associated_cells:
@@ -892,6 +906,7 @@ def find_pointing_pairs(sboard):
         4. A value in a pair in a column in the same box as each other
             can be removed from the rest of the box.
     """
+    sboard.config.start_operation('pointingpairs', sboard)
     return __find_pointing_candidates(sboard, "pairs")
 
 
@@ -918,6 +933,7 @@ def find_pointing_triples(sboard):
         4. A value in a triple in a column in the same box as each other
             can be removed from the rest of the box.
     """
+    sboard.config.start_operation('pointingtriples', sboard)
     return __find_pointing_candidates(sboard, "triples")
 
 
@@ -1036,6 +1052,8 @@ def find_xwings(sboard):
     2 different units of the same kind and these candidates also lie on 2 other units
     of the same kind.  Then we can exclude this value from the latter two units.
     """
+    sboard.config.start_operation('xwings', sboard)
+
     units_and_twice_occurring_values = []
     num_xwings = 0
 
@@ -1127,14 +1145,14 @@ def find_xwings(sboard):
     return sboard
 
 
-def __find_candidates(sboard, current_cell_name, num_values, num_intersection_values):
+def __find_yzwing_candidates(sboard, current_cell_name, num_values, num_intersection_values):
     """
     A support method to find candidate cells to be ywing or xyzwing pincers.
     """
     candidates = []
     current_cell = sboard.getCell(current_cell_name)
     current_value_set = current_cell.getValueSet()
-    associated_cells = sboard.getAssociatedCells(current_cell_name)
+    associated_cells = sboard.getAssociatedCellIds(current_cell_name)
 
     for associated_cell_name in associated_cells:
         associated_cell = sboard.getCell(associated_cell_name)
@@ -1155,6 +1173,8 @@ def find_ywings(sboard):
     can elminate the value 3 from B5 or any other cell that is associated
     with B2 and A5.
     """
+    sboard.config.start_operation('ywings', sboard)
+
     num_ywings = 0
 
     # repeat until we don't get any new information
@@ -1174,7 +1194,7 @@ def find_ywings(sboard):
             if len(current_value_set) == 2:
                 # We look for cells associated with the
                 # hinge that have only two values left
-                pincer_candidates = __find_candidates(sboard, current_cell_name,
+                pincer_candidates = __find_yzwing_candidates(sboard, current_cell_name,
                                                       num_values=2,
                                                       num_intersection_values=0)
 
@@ -1188,9 +1208,9 @@ def find_ywings(sboard):
 
                         second_pincer_value_set = second_pincer_candidate.getValueSet()
 
-                        first_pincer_associated_cells = sboard.getAssociatedCells(
+                        first_pincer_associated_cells = sboard.getAssociatedCellIds(
                             first_pincer_candidate)
-                        second_pincer_associated_cells = sboard.getAssociatedCells(
+                        second_pincer_associated_cells = sboard.getAssociatedCellIds(
                             second_pincer_candidate)
 
                         # find the values that the two pincers have in common
@@ -1258,6 +1278,8 @@ def find_xyzwings(sboard):
     all three numbers as candidates.  For example, if F9 has the values 1, 2,
     and 4, D9 has 1 and 2, and F1 has 1 and 4, we can eliminate 1 from F7.
     """
+    sboard.config.start_operation('xyzwings', sboard)
+
     num_xyzwings = 0
 
     # repeat until we don't get any new information
@@ -1275,7 +1297,7 @@ def find_xyzwings(sboard):
             # the hinge can only have three values.
             if len(current_value_set) == 3:
                 # the pincers can only have 2 values each.
-                pincer_candidates = __find_candidates(sboard, current_cell_name,
+                pincer_candidates = __find_yzwing_candidates(sboard, current_cell_name,
                                                       num_values=2,
                                                       num_intersection_values=0)
             # iterate through the pincer candidates

@@ -9,7 +9,7 @@ July 2, 2020
 Lightweight sudoku server for sudoku online.
 """
 
-import game
+import translate
 import board
 
 from flask import Flask, request, jsonify
