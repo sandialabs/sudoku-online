@@ -123,7 +123,7 @@ class Cell():
         """
         assert value in self._values, \
             "Cannot assign %s to Cell %s" % (
-                str(value), str(self.getIdentifier))
+                str(value), str(self.getIdentifier()))
         if len(self._values) > 1:
             self._values = [value]
             return True
@@ -162,12 +162,17 @@ class Cell():
         displays = Cell.getValueDisplays(self._degree)
         width = sum([len(x) for x in displays]) + 1
         if(uncertain):
-            s = [displays[val] for val in sorted(self.getValues())]
+            s = [displays[val] for val in self.getValues()]
             if not s:
                 # Underconstrained: highlight a conflict
                 return str.center('X', width)
+            s = str(s)
             if goal_cell == self.getIdentifier():
-                s = ['*']+s+['*']
+                # Highlight the goal cell
+                s = '*' + s + '*'
+            elif goal_cell and goal_cell[1] == self.getIdentifier()[1]:
+                # Save space to match with the goal cell
+                s = ' ' + s + ' '
             return str.center(''.join(s), width)
         elif self.isCertain():
             return displays[self.getCertainValue()] + ' '
@@ -176,7 +181,7 @@ class Cell():
 
     def getValues(self):
         """ Return ordered list of current possible values. """
-        return self._values
+        return sorted(self._values)
 
     def getValueSet(self):
         """ Return set of current possible values. """
@@ -264,18 +269,20 @@ class Board():
             return 'Invalid Input'
 
     @ classmethod
-    def getAssociatedCells(cls, cell_id):
+    def getAssociatedCellIds(cls, cell_id):
         """
-        Get all cells in units associated with
+        Get all cell IDs in units associated with
         target cell, without repeats.
+        Return empty list if no cell_id is given
         """
-        associated_units = cls.getCellUnits(cell_id)
         associated_cells = []
-        for unit_id in associated_units:
-            unit_cells = cls.getUnitCells(unit_id)
-            for unit_cell in unit_cells:
-                if unit_cell not in associated_cells and unit_cell != cell_id:
-                    associated_cells.append(unit_cell)
+        if cell_id:
+            associated_units = cls.getCellUnits(cell_id)
+            for unit_id in associated_units:
+                unit_cells = cls.getUnitCells(unit_id)
+                for unit_cell in unit_cells:
+                    if unit_cell not in associated_cells and unit_cell != cell_id:
+                        associated_cells.append(unit_cell)
         return associated_cells
 
     @ classmethod
@@ -284,11 +291,11 @@ class Board():
         Get list of all cells jointly associated
         to all cells in the list
         """
-        common_cell_set = set(cls.getAssociatedCells(cell_id_list[0]))
+        common_cell_set = set(cls.getAssociatedCellIds(cell_id_list[0]))
 
         for cell_id in cell_id_list:
             common_cell_set = common_cell_set & set(
-                cls.getAssociatedCells(cell_id))
+                cls.getAssociatedCellIds(cell_id))
 
         return list(common_cell_set)
 
@@ -446,7 +453,8 @@ class Board():
         self.config = None
         if isinstance(state, Board):
             # State is a Board; copy it, but keep the new identifier
-            logger.info("Initializing Board for Board %s.", str(Board))
+            logger.info("Initializing Board for Board %s (from %s).", str(state.getIdentifier()), str(state.getPuzzleName()))
+            logger.debug("Incoming Board is %s.", str(state))
             for cell in state.getCells():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
@@ -510,7 +518,7 @@ class Board():
             self.config = config_data.ConfigurationData(self.getStateStr(
                 False, False, ''), self._name)
             logger.debug("Crafted config to be %s.", str(self.config))
-            parameters = config_data.parse_name_config(name)
+            parameters = config_data.parse_name_config(name) if name else {}
             logger.debug("Found name-based parameters %s.", str(parameters))
             if 'puzzleName' in parameters:
                 self._name = parameters['puzzleName']
@@ -542,34 +550,36 @@ class Board():
         return output
 
     def computeAccessibleCells(self):
-        """ If we have a goal cell, compute accessible cells and store them in self.accessible_cells. """
+        """ If we have a goal cell, compute accessible cells and store them in self.accessible_cells.
+            If we don't have a goal cell, return all remaining uncertain cells. """
+        offlimits = self.getAssociatedCellIds(self.goal_cell)
         if self.goal_cell:
-            offlimits = self.getAssociatedCells(self.goal_cell)
             offlimits.append(self.goal_cell)
 
-            def inlimits(cell):
+        def inlimits(cell):
+            if cell == self.goal_cell:
+                return False
+            if self.getCell(cell).isCertain():
+                return False
+            if cell in offlimits:
+                return False
+            return True
+
+        self.accessible_cells = \
+            [cell for cell in filter(inlimits,
+                                        self.getAllCells())]
+        if len(self.accessible_cells) == 0:
+            # Devolve to any uncertain cells except the goal cell
+            def inlimits2(cell):
                 if cell == self.goal_cell:
                     return False
                 if self.getCell(cell).isCertain():
                     return False
-                if cell in offlimits:
-                    return False
                 return True
-
             self.accessible_cells = \
-                [cell for cell in filter(inlimits,
-                                         self.getAllCells())]
-            if len(self.accessible_cells) == 0:
-                # Devolve to any uncertain cells except the goal cell
-                def inlimits2(cell):
-                    if cell == self.goal_cell:
-                        return False
-                    if self.getCell(cell).isCertain():
-                        return False
-                    return True
-                self.accessible_cells = \
-                    [cell for cell in filter(inlimits2,
-                                             self.getAllCells())]
+                [cell for cell in filter(inlimits2,
+                                            self.getAllCells())]
+        return self.accessible_cells
 
     def setToBackground(self):
         """ Sets this board to indicate whether it should be considered a background board.
@@ -587,17 +597,31 @@ class Board():
         """ Returns the identifier of this puzzle board. """
         return self._id
 
+    def getDisplayName(self):
+        """ Returns the simple display name of this puzzle board. """
+        return self._display_name
+
+    def getPuzzleName(self):
+        """ Returns the fully qualified puzzle name of this puzzle board. """
+        return self._name
+
     def countUncertainValues(self):
         """ Counts the number of uncertain values summed across all uncertain cells.
         """
-        # Alternate implementation:
-        # uncertain_cells = filter(lambda c: not c.isCertain(), self.getCells())
-        # n = sum([len(cell.getValues()) for cell in uncertain_cells])
-        n = 0
-        for cell in self.getCells():
-            if(not cell.isCertain()):
-                n += len(cell.getValues())
+        uncertain_cells = filter(lambda c: not c.isCertain(), self.getCells())
+        n = sum([len(cell.getValues()) for cell in uncertain_cells])
+        return n
 
+    def countAssociatedUncertainValuesGivenUncertainCell(self, cell):
+        """ Counts the number of uncertain values summed across all uncertain cells associated with cell,
+            if cell is uncertain.
+            I.e.,  counts the number of uncertain values across cells in the row, column, and box of cell.
+        """
+        if cell.isCertain():
+            return 0
+        associations = [self.getCell(c) for c in self.getAssociatedCellIds(cell)]
+        uncertain_cells = [c for c in filter(lambda c: not c.isCertain(), associations)]
+        n = sum([len(cell.getValues()) for cell in uncertain_cells])
         return n
 
     def getValueCountAndCells(self, unit_name, value):
@@ -628,7 +652,7 @@ class Board():
         """
         return [cell for cell in self.getCells() if cell.isCertain()]
 
-    def getStateStr(self, uncertain=False, human_readable=True, sep='|', goal_cell = None):
+    def getStateStr(self, uncertain=False, human_readable=True, sep='|'):
         """
         Returns the board state as a string, with or without uncertainty information
         sep separates the cells in a non human-readable printing
@@ -663,9 +687,9 @@ class Board():
                         output += '+-'.join(['--' * degree] * degree) + '\n'
 
                 # Finally print the state string
-                output += self.getCell(identifier).getStateStr(uncertain, goal_cell = goal_cell)
+                output += self.getCell(identifier).getStateStr(uncertain, self.goal_cell)
             else:
-                output += (self.getCell(identifier).getStateStr(uncertain, goal_cell = goal_cell).strip() + sep)
+                output += (self.getCell(identifier).getStateStr(uncertain, self.goal_cell).strip() + sep)
 
         return output
 

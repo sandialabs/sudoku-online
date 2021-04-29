@@ -8,7 +8,6 @@ July 2, 2020
 
 Lightweight sudoku client for sudoku online testing.
 """
-import game
 import requests
 import json
 from flask import jsonify
