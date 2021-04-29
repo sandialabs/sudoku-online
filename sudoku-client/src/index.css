@@ -78,6 +78,12 @@ td.active-board.square.goal-cell {
     height: 27px;
 }
 
+td.active-board.square.degree-3.goal-cell:nth-child(3n+3) {
+    border-right: 5px solid #B3B300;
+    margin: 0;
+    padding: 0;
+}
+
 /*
  * Styles for the choice grid within the unassigned cells in the 
  * active board
@@ -134,6 +140,7 @@ td.sudoku-choice-grid.selected-square.selected-value {
 button.sudoku-choice-grid {
     background-color: transparent;
 	text-align: center;
+    text-weight: bolder;
     border: none;
     margin: 0;
     padding: 0;
@@ -143,7 +150,7 @@ button.sudoku-choice-grid {
 
 button.sudoku-choice-grid.inaccessible 
 {
-    color: #999999;
+    color: #808080;
     background-color: transparent;
     text-align: center;
     border: none;
