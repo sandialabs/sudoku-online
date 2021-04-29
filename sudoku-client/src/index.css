@@ -87,12 +87,27 @@ tr.sudoku-choice-grid {
     padding: 0;
 }
 
+tr.sudoku-choice-grid.inaccessible {
+    border-bottom: 1px solid lightgrey;
+    margin: 0;
+    padding: 0;
+}
+
 tr.sudoku-choice-grid:last-child {
     border-bottom: none;
 }
 
 td.sudoku-choice-grid {
     border-right: 1px solid blue;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+}
+
+td.sudoku-choice-grid.inaccessible {
+    border-right: 1px solid lightgrey;
     background-color: transparent;
     margin: 0;
     padding: 0;
@@ -120,7 +135,7 @@ button.sudoku-choice-grid {
 
 button.sudoku-choice-grid.inaccessible 
 {
-    color: lightgrey;
+    color: #999999;
     background-color: transparent;
     text-align: center;
     border: none;

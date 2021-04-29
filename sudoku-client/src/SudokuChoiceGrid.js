@@ -59,21 +59,25 @@ class SudokuChoiceGrid extends React.Component {
 	makeChoiceGridContents() {
 		const D = this.props.degree;
 		const rows = [];
+		let rowClass = 'sudoku-choice-grid';
 
+		if (!this.props.accessible) {
+			rowClass += ' inaccessible';
+		}
 		for (let row = 0; row < D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D; ++col) {
 				const value = row*D + col;
 				if (this.props.moveList.includes(value)) {
 					squaresInRow.push(
-						this.makeChoiceButton(row, col, value,
-							                  this.props.accessible));
+						this.makeChoiceButton(row, col, value)
+						);
 				} else {
 					squaresInRow.push(this.makeBlankSquare(col));
 				}
 			}
 			rows.push(
-				<tr key={row} className='sudoku-choice-grid'>{squaresInRow}</tr>
+				<tr key={row} className={rowClass}>{squaresInRow}</tr>
 				);
 		}
 		return (
@@ -81,10 +85,10 @@ class SudokuChoiceGrid extends React.Component {
 			);
 	}
 
-	makeChoiceButton(row, col, value, accessible) {
+	makeChoiceButton(row, col, value) {
 
 		const onClick = (event) => {
-			if (accessible) {
+			if (this.props.accessible) {
 				this.handleClick(event);
 			} 
 		}
@@ -97,18 +101,11 @@ class SudokuChoiceGrid extends React.Component {
 			}
 		}
 
-		if (accessible) {
-			cellClasses += ' accessible';
-		} else {
-			cellClasses += ' inaccessible';
-		}
-
 		let buttonClasses = 'sudoku-choice-grid';
-		if (accessible) {
-			buttonClasses += ' accessible';
-		} else {
+		if (!this.props.accessible) {
 			buttonClasses += ' inaccessible';
-		}
+			cellClasses += ' inaccessible';
+		} 
 		return (
 			<td className={cellClasses} key={col}>
 				<button className={buttonClasses}
@@ -127,6 +124,9 @@ class SudokuChoiceGrid extends React.Component {
 		let classes = 'sudoku-choice-grid unavailable';
 		if (this.props.boardSquareIsSelected) {
 			classes += ' selected-square';
+		}
+		if (!this.props.accessible) {
+			classes += ' inaccessible';
 		}
 		return (
 			<td className={classes} key={key}>

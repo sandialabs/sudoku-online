@@ -104,6 +104,12 @@ class ActiveBoardView extends React.Component {
 		const allCellStyleNames = cellStyleName;
 		const cellKey = row.toString() + column.toString();
 		const cellAccessible = (accessibleCellKeys.indexOf(cellKey) != -1);
+		if (cellAccessible) {
+			cellStyleName += ' accessible';
+		} else {
+			cellStyleName += ' inaccessible';
+		}
+		
 		const selectIfAccessible = () => {
 			if (cellAccessible) {
 				return this.selectCell(row, column);
