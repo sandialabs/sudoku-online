@@ -118,7 +118,10 @@ def get_boards_for_game(name):
 
     game_boards = []
     for name in game_names:
-        game_boards.append(get_initial_board({"name" : name}))
+        gbrd = get_initial_board({"name" : name})
+        if isinstance(gbrd, board.Board):
+            # MAL TODO warn
+            game_boards.append(gbrd)
     return game_boards
 
 
