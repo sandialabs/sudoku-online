@@ -364,7 +364,11 @@ class SudokuGame extends React.Component {
     }
 
     handleResetButton() {
-        console.log('UNIMPLEMENTED: handleResetButton');
+        this.resetState();
+        this.initializeGameTree(
+            this.props.puzzles[
+                this.state.currentPuzzleIndex
+                ]);
     }
 
     handleLogicalOperatorSelection(operators) {
@@ -441,20 +445,6 @@ class SudokuGame extends React.Component {
         if (nextBoardIndex === this.props.puzzles.length) {
             throw new Error("ERROR: Can't advance past the last board");
         }
-
-        // Reset state:
-        //
-        // - Display name for puzzle
-        //
-        // - selectLogicalOperatorsUpFront from board
-        // - logicalOperatorsSelected <- false
-        // - clear out cell actions
-        //    - this is in selectedCellAction
-        // - clear out logical operators
-        //    - this is in selectedLogicalOperators
-        // - clear out game tree
-        // - clear out analysis answer
-
 
         this.resetState();
         this.setState({
