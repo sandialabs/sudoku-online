@@ -54,7 +54,8 @@ class SudokuGame extends React.Component {
             selectedLogicalOperators: [],
             selectedValue: null,
             selectLogicalOperatorsUpFront: false,
-            analysisAnswer: "(no answer specified)"
+            analysisAnswer: "(no answer specified)",
+            resetCount: 0
         };
     }
 
@@ -257,6 +258,7 @@ class SudokuGame extends React.Component {
                                 executeAction={(action) => this.handleExecuteAction(action)}
                                 actionsEnabled={actionsEnabled}
                                 disabledReason={disabledReason}
+                                key={this.state.resetCount}
 
                                 />
                         </Grid>
@@ -270,6 +272,7 @@ class SudokuGame extends React.Component {
                                     console.log("SudokuGame: Confirming logical operator selection.");
                                     this.setState({logicalOperatorsSelected: true});
                                 }}
+                                key={this.state.resetCount}
                                 />
                         </Grid>
                         <Grid item xs={6}>
@@ -369,6 +372,9 @@ class SudokuGame extends React.Component {
             this.props.puzzles[
                 this.state.currentPuzzleIndex
                 ]);
+        this.setState({
+            resetCount: this.state.resetCount + 1
+        });
     }
 
     handleLogicalOperatorSelection(operators) {
