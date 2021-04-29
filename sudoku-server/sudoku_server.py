@@ -9,7 +9,7 @@ July 2, 2020
 Lightweight sudoku server for sudoku online.
 """
 
-import game
+import translate
 import board
 
 from flask import Flask, request, jsonify
@@ -32,7 +32,7 @@ def get_initial_board():
     if content is None:
         content = dict()
 
-    result = jsonify(game.get_initial_board(content).getSimpleJson())
+    result = jsonify(translate.get_initial_board(content).getSimpleJson())
     logger.info("Returning from get_initial_board: %s", str(result))
     return result
 
@@ -47,7 +47,7 @@ def get_boards_for_game(gamename):
     # MAL TODO is there a way to let the app.route say if you ask for something without a gamename then we can make it None?
     if name == 'get_me_something_random':
         name = None
-    boards = game.get_boards_for_game(name)
+    boards = translate.get_boards_for_game(name)
     json_boards = [b.getSimpleJson() for b in boards]
     return jsonify(json_boards)
 
@@ -64,7 +64,7 @@ def take_given_action():
         logger.warn("Cannot apply action without context content (board, action, and parameters)")
         return jsonify(None)
 
-    return jsonify(game.parse_and_apply_action(content))
+    return jsonify(translate.parse_and_apply_action(content))
 
 
 @app.route('/sudoku/request/list_logical_operators', methods=['GET'])
@@ -73,7 +73,7 @@ def list_possible_operators():
 
     Possible operators are described in board_update_descriptions.py.
     """
-    return jsonify(game.get_possible_operators())
+    return jsonify(translate.get_possible_operators())
 
 
 @app.route('/sudoku/request/list_cell_actions', methods=['GET'])
@@ -82,7 +82,7 @@ def list_possible_actions():
 
     Possible actions are described in board_update_descriptions.py.
     """
-    return jsonify(game.get_cell_actions())
+    return jsonify(translate.get_cell_actions())
 
 
 @app.route('/sudoku/request/submit_game_tree', methods=['POST'])
@@ -97,7 +97,7 @@ def submit_game_tree():
         logger.warn("Cannot save game tree without a tree to save")
         return jsonify(None)
 
-    return jsonify(game.submit_game_tree(content))
+    return jsonify(translate.submit_game_tree(content))
 
 
 if __name__ == '__main__':
