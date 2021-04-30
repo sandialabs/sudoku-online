@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 
 import { Typography, Grid, Paper } from '@material-ui/core';
 
-import { FormControl, FormControlLabel, FormLabel } from '@material-ui/core';
+import { FormControl, FormControlLabel } from '@material-ui/core';
 import { Radio, RadioGroup } from '@material-ui/core';
 
 class AnalysisQuestionPanel extends React.Component {
@@ -22,9 +22,6 @@ class AnalysisQuestionPanel extends React.Component {
                             label={answer}
                             />)
             );
-
-        console.log('AnalysisQuestionPanel: radio button array:');
-        console.log(radioButtons);
 
         const handleChange = (event) => {
             if (this.props.handleAnswerChanged) {
