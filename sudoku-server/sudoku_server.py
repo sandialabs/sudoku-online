@@ -18,6 +18,7 @@ from markupsafe import escape
 
 import logging
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 CORS(app)
@@ -94,7 +95,7 @@ def submit_game_tree():
     """
     content = request.json
     if content is None:
-        logger.warn("Cannot save game tree without a tree to save")
+        logger.warn("Cannot save game tree without a tree to save.")
         return jsonify(None)
 
     return jsonify(translate.submit_game_tree(content))
