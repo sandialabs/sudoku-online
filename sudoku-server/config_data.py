@@ -19,8 +19,13 @@ logger = logging.getLogger(__name__)
 
 def parse_name_config(name, initial_config = None):
     """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
-    parameters = name.split('...')
     config_dict = initial_config if initial_config is not None else {}
+    if 'cost' not in config_dict:
+        config_dict['cost'] = 0
+    if not name:
+        return config_dict
+
+    parameters = name.split('...')
     assert len(parameters) > 0, "Was unable to get any data from name."
     config_dict['puzzleName'] = name
     config_dict['displayName'] = parameters[0]
@@ -209,6 +214,19 @@ class ConfigurationData():
         logger.debug("Logging: %s %s on %s", str(op), str(msg2), str(board_string))
         return False
 
+    def adjust_cost(self, op):
+        """ Alter the cost associated with this board by the incoming cost.
+        """
+        logger.info("Calling adjust_cost given op %s", str(op))
+        if op in self.free_operations:
+            return
+
+        # Cost it if it's not a free operation
+        if not "cost" in self.parameters:
+            self.parameters["cost"] = 0
+        cost = board_update_descriptions.board_update_options[op]["cost"]
+        self.parameters["cost"] = self.parameters["cost"] + cost
+
     def match_set_operation(self, op, msg2, board):
         """ Use the SudokuLogger that adds the cost if we need to increase our cost every matching set.
         This function is only called when a set has been matched (internally) and the logical operation triggered successfully.
@@ -220,12 +238,11 @@ class ConfigurationData():
         Returns:
             True if the operator should terminate after this operation.
         """
-        # Cost it if we are costing per matching set AND it's not a free operation
-        cost_it = False if op in self.free_operations else True
         self.log.logOperator(
             op, "single_match", f"successful application per matching set. {msg2}", board,
-            self.count_per_matching_set,
-            cost_it & self.cost_per_matching_set)
+            self.count_per_matching_set)
+        if self.cost_per_matching_set:
+            self.adjust_cost(op)
 
         return self.terminate_on_successful_operation
 
@@ -242,20 +259,20 @@ class ConfigurationData():
         Returns:
             affected_board (unneeded, but to indicate whether the operator should terminate).
         """
-        # Cost it if it's not a free operation
-        cost_it = False if op in self.free_operations else True
         if affected_board:
             # Cost on successful application
             self.log.logOperator(
                 op, "applied", f"successful application. {msg2}", board,
-                self.count_per_matching_use,
-                cost_it & self.cost_per_matching_use)
+                self.count_per_matching_use)
+            if self.cost_per_matching_use:
+                self.adjust_cost(op)
         else:
             # Cost on completion if costing any application of a logical operator
             self.log.logOperator(
                 op, "application_attempt", f"attempted application. {msg2}", board,
-                self.count_per_attempted_application,
-                cost_it & self.cost_per_attempted_application)
+                self.count_per_attempted_application)
+            if self.cost_per_attempted_application:
+                self.adjust_cost(op)
 
         return affected_board
 
@@ -269,7 +286,7 @@ class ConfigurationData():
         Returns:
             None
         """
-        self.log.logOperator(op, "call", f"attempted application.", board, False, False)
+        self.log.logOperator(op, "call", f"attempted application.", board, False)
 
         return None
 
@@ -288,8 +305,9 @@ class ConfigurationData():
             cost_it = False if op in self.free_operations else True
             self.log.logOperator(
                 op, "request", f"requested application. {msg2}", board,
-                self.count_per_requested_application,
-                cost_it & self.cost_per_requested_application)
+                self.count_per_requested_application)
+            if self.cost_per_requested_application:
+                self.adjust_cost(op)
             # traceback.print_stack(file=sys.stdout)
         return self.terminate_on_successful_operation
 

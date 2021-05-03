@@ -44,7 +44,7 @@ class SudokuLogger():
             self.operators_use_count[action] = 0
             self.operators_called_count[action] = 0
 
-    def logOperator(self, operator, phase, msg_str=None, board=None, count_operator=True, cost_operator=True):
+    def logOperator(self, operator, phase, msg_str=None, board=None, count_operator=True):
         """ Log an application of an operator to a board state, increasing the cost of the operator ot be incurred.
 
             Args:
@@ -52,14 +52,12 @@ class SudokuLogger():
                 msg_str: a string message to be logged
                 board: a Board to use to print the state string for the log
                 count_operator: a boolean that describes whether the operation should be counted
-                cost_operator: a boolean that describes whether the operation should be costed
         """
         state = {}
         state["operator"] = str(operator)
         state["phase"] = str(phase)
         state["board"] = board.getStateStr(True, False)
         state["increment_operator_count"] = count_operator
-        state["increase_cost"] = cost_operator
         state["total_uncertainty"] = board.countUncertainValues()
         state["cellbased_associated_uncertainty"] = {}
         state["max_uncertain_cell"] = None
@@ -73,13 +71,10 @@ class SudokuLogger():
 
         if phase == "call":
             # Count every called operator
-            self.operators_called_count[operator] +=1
+            self.operators_called_count[operator] += 1
         if count_operator:
             # Only count the operator if we're told to (essentially, at the set level)
             self.operators_use_count[operator] += 1
-        if cost_operator:
-            # Update the cost if we're told to (essentially, if the operator is not free)
-            self.difficulty_score += board_update_descriptions.board_update_options[operator]["cost"]
 
         logger.debug("operator %s (phase %s) Message %s Board %s", str(operator), str(phase), str(msg_str), str(board.getStateStr(True, False)))
 
