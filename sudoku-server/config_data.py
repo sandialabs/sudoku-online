@@ -17,10 +17,15 @@ import sys
 import logging
 logger = logging.getLogger(__name__)
 
-def parse_name_config(name):
+def parse_name_config(name, initial_config = None):
     """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
+    config_dict = initial_config if initial_config is not None else {}
+    if 'cost' not in config_dict:
+        config_dict['cost'] = 0
+    if not name:
+        return config_dict
+
     parameters = name.split('...')
-    config_dict = {}
     assert len(parameters) > 0, "Was unable to get any data from name."
     config_dict['puzzleName'] = name
     config_dict['displayName'] = parameters[0]
@@ -33,15 +38,20 @@ def parse_name_config(name):
                 config_dict[assigned[0]] = value_list
             else:
                 config_dict[assigned[0]] = assigned[1]
+            logger.debug("Found %s to set to %s (from %s).", str(assigned[0]),
+                str(config_dict[assigned[0]]), str(param))
         else:
             config_dict[param] = True
+            logger.debug("Found %s to set to %s (from %s).", str(param),
+                str(config_dict[param]), str(param))
+    logger.info("Final config dict is %s (from %s)", str(config_dict), str(name))
     return config_dict
 
 class ConfigurationData():
     """ Collect all the configuration data for a board and its SudokuLogger and the solver.
     """
 
-    def __init__(self, puzzle=None, name=None):
+    def __init__(self, puzzle=None, name=None, initial_config : dict = None):
         if name:
             name = name.strip()
         self.log = sudoku_logger.SudokuLogger(puzzle, name)
@@ -49,9 +59,12 @@ class ConfigurationData():
         # Keep track of any special rules for the board (see apply_config_from_name below)
         self.rules = {}
 
+        # Keep track of parameters associated with the board
+        self.parameters = initial_config if initial_config is not None else {}
+
         # Keep track of available actions and operators and how to cost them
         self.actions = [
-            k for k in board_update_descriptions.basic_actions_description.keys()]
+            k for k in board_update_descriptions.actions_description.keys()]
         self.free_operations = ['exclusion']
         self.costly_operations = [op for op in
                                   filter(lambda op: op not in self.free_operations,
@@ -116,31 +129,33 @@ class ConfigurationData():
         self.apply_config_from_name()
         self.verify()
 
+    def setParam(self, key, value):
+        """ Add the mapping to our parameters storage. """
+        if key in self.parameters and self.parameters[key] != value:
+            logger.info("Overwriting config parameters %s (which was %s) with %s",
+                str(key), str(self.parameters[key]), str(value))
+        self.parameters[key] = value
+
+    def getParam(self, key):
+        """ Add the mapping to our parameters storage. """
+        if key not in self.parameters:
+            logger.info("Returning None from non-existent config parameter %s",
+                str(key))
+            return None
+        return self.parameters[key]
+
     def apply_config_from_name(self):
         """ Parsing the puzzle name from the SudokuLogger, apply required configuration. """
         if not self.log:
             return
         name = self.log.name
         if name:
-            parameters = parse_name_config(name)
-            if 'select_ops_upfront' in parameters:
-                # If we are selecting logical operators up front, they can't be changed later in the game
-                self.rules['canChangeLogicalOperators'] = False
-            if 'costlyops' in parameters:
+            self.parameters = parse_name_config(name, self.parameters)
+            if 'costlyops' in self.parameters:
                 # Get the part specifying the costly operations
                 self.rules['specializedCostlyOperations'] = True
                 # The ops themselves are verified later via self.verify
-                self.costly_operations = parameters['costlyops']
-
-        if 'canChangeLogicalOperators' not in self.rules:
-            # They can be changed, and we have an additional action (applyops) to support that
-            # Note that the apply_ops action is redundant with 'heuristics' in the request, but that's OK.
-            # We could leave this as an assumption, but let's make it explicit
-            self.rules['canChangeLogicalOperators'] = True
-            if self.log.puzzle:
-                # We have a puzzle with no name, so we still need to add 'applyops' to the list of actions
-                self.actions.append('applyops')
-
+                self.costly_operations = self.parameters['costlyops']
         self.verify()
 
     def copy(self):
@@ -157,6 +172,8 @@ class ConfigurationData():
             json_dict['rules'] = self.rules
             if 'specializedCostlyOperations' in self.rules:
                 json_dict['costlyOperations'] = self.costly_operations
+        for key in self.parameters.keys():
+            json_dict[key] = self.parameters[key]
         return json_dict
 
     def verify(self):
@@ -197,6 +214,19 @@ class ConfigurationData():
         logger.debug("Logging: %s %s on %s", str(op), str(msg2), str(board_string))
         return False
 
+    def adjust_cost(self, op):
+        """ Alter the cost associated with this board by the incoming cost.
+        """
+        logger.info("Calling adjust_cost given op %s", str(op))
+        if op in self.free_operations:
+            return
+
+        # Cost it if it's not a free operation
+        if not "cost" in self.parameters:
+            self.parameters["cost"] = 0
+        cost = board_update_descriptions.board_update_options[op]["cost"]
+        self.parameters["cost"] = self.parameters["cost"] + cost
+
     def match_set_operation(self, op, msg2, board):
         """ Use the SudokuLogger that adds the cost if we need to increase our cost every matching set.
         This function is only called when a set has been matched (internally) and the logical operation triggered successfully.
@@ -208,12 +238,11 @@ class ConfigurationData():
         Returns:
             True if the operator should terminate after this operation.
         """
-        # Cost it if we are costing per matching set AND it's not a free operation
-        cost_it = False if op in self.free_operations else True
         self.log.logOperator(
             op, "single_match", f"successful application per matching set. {msg2}", board,
-            self.count_per_matching_set,
-            cost_it & self.cost_per_matching_set)
+            self.count_per_matching_set)
+        if self.cost_per_matching_set:
+            self.adjust_cost(op)
 
         return self.terminate_on_successful_operation
 
@@ -230,20 +259,20 @@ class ConfigurationData():
         Returns:
             affected_board (unneeded, but to indicate whether the operator should terminate).
         """
-        # Cost it if it's not a free operation
-        cost_it = False if op in self.free_operations else True
         if affected_board:
             # Cost on successful application
             self.log.logOperator(
                 op, "applied", f"successful application. {msg2}", board,
-                self.count_per_matching_use,
-                cost_it & self.cost_per_matching_use)
+                self.count_per_matching_use)
+            if self.cost_per_matching_use:
+                self.adjust_cost(op)
         else:
             # Cost on completion if costing any application of a logical operator
             self.log.logOperator(
                 op, "application_attempt", f"attempted application. {msg2}", board,
-                self.count_per_attempted_application,
-                cost_it & self.cost_per_attempted_application)
+                self.count_per_attempted_application)
+            if self.cost_per_attempted_application:
+                self.adjust_cost(op)
 
         return affected_board
 
@@ -257,7 +286,7 @@ class ConfigurationData():
         Returns:
             None
         """
-        self.log.logOperator(op, "call", f"attempted application.", board, False, False)
+        self.log.logOperator(op, "call", f"attempted application.", board, False)
 
         return None
 
@@ -276,8 +305,9 @@ class ConfigurationData():
             cost_it = False if op in self.free_operations else True
             self.log.logOperator(
                 op, "request", f"requested application. {msg2}", board,
-                self.count_per_requested_application,
-                cost_it & self.cost_per_requested_application)
+                self.count_per_requested_application)
+            if self.cost_per_requested_application:
+                self.adjust_cost(op)
             # traceback.print_stack(file=sys.stdout)
         return self.terminate_on_successful_operation
 

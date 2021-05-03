@@ -209,13 +209,13 @@ class GameTreeNode():
         In the future, we could select new rules, new solvers, backtrack, etc.
         """
         print("Your goal is to answer the following question:")
-        print(self.board._question)
+        print(self.board.getQuestion())
         print("  HINT: you may not need to solve the whole board to answer this question.")
-        print("The Goal cell, {}, will be *marked* on the board with asterisks '*'.".format(self.board.goal_cell))
+        print("The Goal cell, {}, will be *marked* on the board with asterisks '*'.".format(self.board.getGoalCell()))
         print("\n")
 
         # MAL TODO Allow for asking questions
-        # print("\nWould you like to answer the question? y/n (", self.board._question ,")")
+        # print("\nWould you like to answer the question? y/n (", self.board.getQuestion() ,")")
         # ans = input()
         # if ans == 'y'or ans == 'yes':
         #     print(question, "Please answer yes or no")

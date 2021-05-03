@@ -8,7 +8,7 @@ July 12, 2020
 Scoring and dispatch description data.
 """
 
-basic_actions_description = {
+actions_description = {
     'assign': {'function': 'expand_cell_with_assignment',
                'arguments': ['cell', 'value'],
                'cost': 100,
@@ -29,9 +29,7 @@ basic_actions_description = {
               'user_name': 'Pivot',
               'short_description': 'Expand all choices for cell.',
               'description': 'Return a separate board for each possible value '
-              + 'in cell.'}
-}
-operators_actions_description = {
+              + 'in cell.'},
     'applyops': {'function': 'logical_solve_action',
                  'arguments': ['operators'],
                  'cost': None,
@@ -39,18 +37,7 @@ operators_actions_description = {
                  'short_description': 'Apply all selected logical operators.',
                  'description': 'Return a single board with the logical operators '
                  + 'and free operators applied.'},
-    'selectops': {'function': 'logical_solve_action',
-                  'arguments': ['operators'],
-                  'cost': None,
-                  'user_name': 'Select and Apply Operators',
-                  'short_description': 'Choose and then apply logical operators. (XXX need clarification)',
-                  'description': 'Return a single board with the logical operators '
-                  + 'selected and applied.'}
 }
-
-# Merge the two dictionaries above into a single place for doing lookup and costing
-actions_description = {**basic_actions_description,
-                       **operators_actions_description}
 
 operators_description = {
     'exclusion': {'function': 'logical_exclusion',

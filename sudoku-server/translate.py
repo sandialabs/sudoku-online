@@ -64,13 +64,6 @@ def get_initial_board(content):
     logger.info("load puzzle %s %s", name, full_board.getStateStr(True, False))
     logger.debug("Configured requested puzzle " + str(name))
     logger.debug(full_board.getSimpleJson())
-    parameters = config_data.parse_name_config(name)
-    if "select_ops_upfront" in parameters:
-        # For the initial board only, the only possible action is selectOps
-        #   and the canChangeLogicalOperators is True
-        #   so let's just overwrite them here.
-        full_board.config.actions = ["selectops"]
-        full_board.config.rules["canChangeLogicalOperators"] = True
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     logger.info("Simplified requested puzzle " + str(basename))
@@ -123,10 +116,12 @@ def get_boards_for_game(name):
 
     game_boards = []
     for name in game_names:
+        logger.info("Getting initial board for puzzle %s", name)
         gbrd = get_initial_board({"name" : name})
         if isinstance(gbrd, board.Board):
             # MAL TODO warn
             game_boards.append(gbrd)
+    logger.info("Returning game boards %s", str(game_boards))
     return game_boards
 
 

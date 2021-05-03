@@ -31,8 +31,8 @@ def do_single_test(dbg_message, success_func, req_func):
         print(f"PASSED TEST {dbg_message}.")
     else:
         print(f"Failed succes check for {dbg_message}.")
-        print(f"Results are {result}.")
-    print(json.dumps(result))
+        logger.info("Results are %s", json.dumps(result))
+    logger.debug("Results are %s", json.dumps(result))
     return result
 
 
@@ -78,7 +78,7 @@ def do_tests():
 
     do_single_test(f"list cell actions",
                    lambda d_list: (len(d_list) == len(
-                       board_update_descriptions.basic_actions_description.keys())),
+                       board_update_descriptions.actions_description.keys())),
                    lambda: requests.get("http://localhost:5000/sudoku/request/list_cell_actions"))
 
     hard4_board = do_single_test(f"getting hard4 board for future tests",
@@ -163,26 +163,23 @@ def do_tests():
         f"get board for logical ops upfront selection",
         lambda d_board: (("puzzleName" in d_board)
                          and (d_board["puzzleName"] == boardname)
-                         and ("availableActions" in d_board and d_board["availableActions"] == ["selectops"])
-                         and ("rules" in d_board and "canChangeLogicalOperators" in d_board["rules"])
-                         and (d_board["rules"]["canChangeLogicalOperators"] == True)
+                         and ("availableActions" in d_board and "applyops" in d_board["availableActions"])
+                         and ("select_ops_upfront" in d_board and d_board["select_ops_upfront"] == True)
                          ),
         lambda: requests.post("http://localhost:5000/sudoku/request/initialBoard",
-                              json={"name": "pointing_pair_test...select_ops_upfront",
+                              json={"name": boardname,
                                     "degree": 3}))
 
     log_req = {"board": result_logical_ops_upfront, "action": {
-        "action": "selectops", "operators": ["inclusion", "pointingpairs"]}}
+        "action": "applyops", "operators": ["inclusion", "pointingpairs"]}}
     result_applying_ops_upfront_noywings = do_single_test(
-        f"apply inclusion, pointing pairs to board for logical ops upfront test, and ensure logicalops no longer selectable",
+        f"apply inclusion, pointing pairs to board for logical ops upfront test, (client ensures logicalops no longer selectable)",
         lambda d_boards: ((len(d_boards) == 1)
                           and ("puzzleName" in d_boards[0])
                           and (d_boards[0]["puzzleName"] == boardname)
-                          and ("rules" in d_boards[0])
-                          and ("canChangeLogicalOperators" in d_boards[0]["rules"])
-                          and (d_boards[0]["rules"]["canChangeLogicalOperators"] == False)
+                          and ("select_ops_upfront" in d_boards[0] and d_boards[0]["select_ops_upfront"] == True)
                           and ("availableActions" in d_boards[0])
-                          and (set(d_boards[0]["availableActions"]) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and (set(d_boards[0]["availableActions"]) == set(board_update_descriptions.actions_description.keys()))
                           and ("assignments" in d_boards[0])
                           and (d_boards[0]["assignments"] != [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
         lambda: requests.post(
@@ -190,14 +187,14 @@ def do_tests():
             json=log_req))
 
     log_req = {"board": result_logical_ops_upfront, "action": {
-        "action": "selectops", "operators": ["inclusion", "pointingpairs", "ywings"]}}
+        "action": "applyops", "operators": ["inclusion", "pointingpairs", "ywings"]}}
     result_applying_ops_upfront_with_ywings = do_single_test(
         f"apply inclusion, pointing pairs, ywings to board for logical ops upfront test",
         lambda d_boards: ((len(d_boards) == 1)
                           and ("puzzleName" in d_boards[0])
                           and (d_boards[0]["puzzleName"] == boardname)
                           and ("availableActions" in d_boards[0])
-                          and (set(d_boards[0]["availableActions"]) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and (set(d_boards[0]["availableActions"]) == set(board_update_descriptions.actions_description.keys()))
                           and ("assignments" in d_boards[0])
                           and (d_boards[0]["assignments"] == [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
         lambda: requests.post(
@@ -214,7 +211,7 @@ def do_tests():
                           and ("puzzleName" in d_boards[1])
                           and (d_boards[1]["puzzleName"] == boardname)
                           and ("availableActions" in d_boards[0])
-                          and (set(d_boards[1]["availableActions"]) == set(board_update_descriptions.basic_actions_description.keys()))
+                          and (set(d_boards[1]["availableActions"]) == set(board_update_descriptions.actions_description.keys()))
                           and ("assignments" in d_boards[1])
                           and (d_boards[1]["assignments"] == [3, 0, 6, 8, 4, 2, 5, 7, 1], [1, 4, 5, 0, 7, 6, 8, 3, 2], [8, 7, 2, 1, 3, 5, 4, 0, 6], [7, 6, 1, 4, 0, 8, 3, 2, 5], [4, 2, 8, 3, 5, 1, 7, 6, 0], [0, 5, 3, 2, 6, 7, 1, 4, 8], [6, 8, 0, 7, 1, 3, 2, 5, 4], [5, 1, 7, 6, 2, 4, 0, 8, 3], [2, 3, 4, 5, 8, 0, 6, 1, 7])),
         lambda: requests.post(
@@ -313,5 +310,5 @@ def do_tests():
                   }
             ))
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 do_tests()
