@@ -173,12 +173,11 @@ def do_tests():
     log_req = {"board": result_logical_ops_upfront, "action": {
         "action": "applyops", "operators": ["inclusion", "pointingpairs"]}}
     result_applying_ops_upfront_noywings = do_single_test(
-        f"apply inclusion, pointing pairs to board for logical ops upfront test, and ensure logicalops no longer selectable",
+        f"apply inclusion, pointing pairs to board for logical ops upfront test, (client ensures logicalops no longer selectable)",
         lambda d_boards: ((len(d_boards) == 1)
                           and ("puzzleName" in d_boards[0])
                           and (d_boards[0]["puzzleName"] == boardname)
-                          and ("rules" in d_boards[0])
-                          and ("select_ops_upfront" in d_board and d_board["select_ops_upfront"] == True)
+                          and ("select_ops_upfront" in d_boards[0] and d_boards[0]["select_ops_upfront"] == True)
                           and ("availableActions" in d_boards[0])
                           and (set(d_boards[0]["availableActions"]) == set(board_update_descriptions.actions_description.keys()))
                           and ("assignments" in d_boards[0])
