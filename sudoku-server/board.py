@@ -440,7 +440,6 @@ class Board():
         self._degree = degree
         self._parent_id = None
         assert name is None or isinstance(name, str), f"Name must be a str, not {name} of type {type(name)}."
-        self.params = {}
         self.accessible_cells = None
         self.config = None
         if isinstance(state, Board):
@@ -451,17 +450,16 @@ class Board():
                 self._state[cell.getIdentifier()] = Cell(cell)
             self._degree = state.getDegree()
             self._parent_id = state._id
-            self.params = copy.deepcopy(state.params)
             self.accessible_cells = state.accessible_cells
             self.config = state.config.copy()
         elif isinstance(state, dict):
             # State was parsed from json; keep the same identifier and update fields appropriately
             # board_dict = json.loads(board_json)
             logger.info("Initializing Board for dict %s.", str(state))
-            self.params = copy.deepcopy(state)
+            params = copy.deepcopy(state)
             assert 'serialNumber' in state, "Expecting serialNumber in state provided."
             self._id = state['serialNumber']
-            del self.params['serialNumber']
+            del params['serialNumber']
 
             assert 'assignments' in state, "Expecting assignments in state provided."
             assert 'availableMoves' in state, "Expecting availableMoves in state provided."
@@ -474,8 +472,8 @@ class Board():
                 cell_state = assignments[i] if assignments[i] is not None else options[i]
                 self._state[identifier] = Cell(identifier, cell_state)
                 i += 1
-            del self.params['assignments']
-            del self.params['availableMoves']
+            del params['assignments']
+            del params['availableMoves']
 
             if 'degree' in state:
                 self._degree = state['degree']
@@ -483,26 +481,26 @@ class Board():
                 logger.warn("'degree' not specified in state: board initialization or use may fail unexpectedly.")
             if 'parentSerialNumber' in state:
                 self._parent_id = state['parentSerialNumber']
-                del self.params['parentSerialNumber']
+                del params['parentSerialNumber']
             # MAL TODO remove this
             if 'goalCell' in state:
                 goal = state['goalCell']
                 assert len(goal) == 2, "Expected exactly a row and column index for goal."
                 cell_id = self.getCellIDFromArrayIndex(goal[0], goal[1])
-                if 'goal' in self.params:
-                    assert self.params['goal'] == cell_id, "goalCell details do not match stored goal."
-                self.params['goal'] = cell_id
-                del self.params['goalCell']
+                if 'goal' in params:
+                    assert params['goal'] == cell_id, "goalCell details do not match stored goal."
+                params['goal'] = cell_id
+                del params['goalCell']
             if 'accessibleCells' in state:
                 self.accessible_cells = []
                 for accs in state['accessibleCells']:
                     assert len(accs) == 2, "Expected exactly a row and column index for accessibleCell."
                     self.accessible_cells.append(self.getCellIDFromArrayIndex(accs[0], accs[1]))
-                del self.params['accessibleCells']
+                del params['accessibleCells']
             else:
                 self.computeAccessibleCells()
             self.config = config_data.ConfigurationData(self.getStateStr(
-                False, False, ''), name)
+                False, False, ''), name, params)
         elif isinstance(state, str):
             logger.info("Initializing Board for string %s, name %s.", str(state), str(name))
             i = 0
@@ -514,7 +512,6 @@ class Board():
             self.config = config_data.ConfigurationData(self.getStateStr(
                 False, False, ''), name)
             logger.debug("Crafted config to be %s.", str(self.config))
-            self.params = config_data.parse_name_config(name) if name else {}
             self.computeAccessibleCells()
             logger.debug("Calculated accessible cells as %s.", str(self.accessible_cells))
         else:
@@ -534,8 +531,8 @@ class Board():
 
     def getGoalCell(self):
         """ If we have a goal cell, return it; otherwise, return None. """
-        if "goal" in self.params:
-            return self.params["goal"]
+        if self.config and self.config.parameters and "goal" in self.config.parameters:
+            return self.config.parameters["goal"]
         return None
 
     def computeAccessibleCells(self):
@@ -577,7 +574,7 @@ class Board():
         Background boards represent places to which a user can back up over his own decision
         if he accidentally placed himself in a corner.  They are lower priority.
         """
-        self.params["backtrackingBoard"] = True
+        self.config.parameters["backtrackingBoard"] = True
 
     def getDegree(self):
         """ Returns the degree of this puzzle board. """
@@ -589,15 +586,15 @@ class Board():
 
     def getDisplayName(self):
         """ Returns the simple display name of this puzzle board. """
-        return self.params["displayName"] if "displayName" in self.params else None
+        return self.config.parameters["displayName"] if "displayName" in self.config.parameters else None
 
     def getPuzzleName(self):
         """ Returns the fully qualified puzzle name of this puzzle board. """
-        return self.params["puzzleName"] if "puzzleName" in self.params else None
+        return self.config.parameters["puzzleName"] if "puzzleName" in self.config.parameters else None
 
     def getQuestion(self):
         """ Returns the question associated with this puzzle board. """
-        return self.params["question"] if "question" in self.params else None
+        return self.config.parameters["question"] if "question" in self.config.parameters else None
 
     def countUncertainValues(self):
         """ Counts the number of uncertain values summed across all uncertain cells.
@@ -683,7 +680,7 @@ class Board():
                 # Finally print the state string
                 output += self.getCell(identifier).getStateStr(uncertain, self.getGoalCell())
             else:
-                output += (self.getCell(identifier).getStateStr(uncertain, self.getGoalCell()).strip() + sep)
+                output += (self.getCell(identifier).getStateStr(uncertain, None).strip() + sep)
 
         return output
 
@@ -704,8 +701,6 @@ class Board():
                                # (this gives us an empty list when the cell is certain)
                                for row in Board.getSortedRows(self.getDegree())],
         }
-        for key in self.params.keys():
-            brd[key] = self.params[key]
         if self._parent_id:
             brd['parentSerialNumber'] = self._parent_id
         if self.isSolved():

@@ -17,10 +17,10 @@ import sys
 import logging
 logger = logging.getLogger(__name__)
 
-def parse_name_config(name):
+def parse_name_config(name, initial_config = {}):
     """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
     parameters = name.split('...')
-    config_dict = {}
+    config_dict = initial_config
     assert len(parameters) > 0, "Was unable to get any data from name."
     config_dict['puzzleName'] = name
     config_dict['displayName'] = parameters[0]
@@ -46,13 +46,16 @@ class ConfigurationData():
     """ Collect all the configuration data for a board and its SudokuLogger and the solver.
     """
 
-    def __init__(self, puzzle=None, name=None):
+    def __init__(self, puzzle=None, name=None, initial_config : dict = {}):
         if name:
             name = name.strip()
         self.log = sudoku_logger.SudokuLogger(puzzle, name)
 
         # Keep track of any special rules for the board (see apply_config_from_name below)
         self.rules = {}
+
+        # Keep track of parameters associated with the board
+        self.parameters = initial_config
 
         # Keep track of available actions and operators and how to cost them
         self.actions = [
@@ -127,12 +130,12 @@ class ConfigurationData():
             return
         name = self.log.name
         if name:
-            parameters = parse_name_config(name)
-            if 'costlyops' in parameters:
+            self.parameters = parse_name_config(name, self.parameters)
+            if 'costlyops' in self.parameters:
                 # Get the part specifying the costly operations
                 self.rules['specializedCostlyOperations'] = True
                 # The ops themselves are verified later via self.verify
-                self.costly_operations = parameters['costlyops']
+                self.costly_operations = self.parameters['costlyops']
         self.verify()
 
     def copy(self):
@@ -149,6 +152,8 @@ class ConfigurationData():
             json_dict['rules'] = self.rules
             if 'specializedCostlyOperations' in self.rules:
                 json_dict['costlyOperations'] = self.costly_operations
+        for key in self.parameters.keys():
+            json_dict[key] = self.parameters[key]
         return json_dict
 
     def verify(self):

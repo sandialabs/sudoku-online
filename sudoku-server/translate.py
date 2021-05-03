@@ -64,7 +64,6 @@ def get_initial_board(content):
     logger.info("load puzzle %s %s", name, full_board.getStateStr(True, False))
     logger.debug("Configured requested puzzle " + str(name))
     logger.debug(full_board.getSimpleJson())
-    parameters = config_data.parse_name_config(name)
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     logger.info("Simplified requested puzzle " + str(basename))
