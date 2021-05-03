@@ -65,12 +65,6 @@ def get_initial_board(content):
     logger.debug("Configured requested puzzle " + str(name))
     logger.debug(full_board.getSimpleJson())
     parameters = config_data.parse_name_config(name)
-    if "select_ops_upfront" in parameters:
-        # For the initial board only, the only possible action is selectOps
-        #   and the canChangeLogicalOperators is True
-        #   so let's just overwrite them here.
-        full_board.config.actions = ["selectops"]
-        full_board.config.rules["canChangeLogicalOperators"] = True
     if full_board.config.simplify_initial_board:
         solvers.apply_free_operators(full_board)
     logger.info("Simplified requested puzzle " + str(basename))

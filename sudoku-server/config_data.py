@@ -33,8 +33,13 @@ def parse_name_config(name):
                 config_dict[assigned[0]] = value_list
             else:
                 config_dict[assigned[0]] = assigned[1]
+            logger.debug("Found %s to set to %s (from %s).", str(assigned[0]),
+                str(config_dict[assigned[0]]), str(param))
         else:
             config_dict[param] = True
+            logger.debug("Found %s to set to %s (from %s).", str(param),
+                str(config_dict[param]), str(param))
+    logger.info("Final config dict is %s (from %s)", str(config_dict), str(name))
     return config_dict
 
 class ConfigurationData():
@@ -51,7 +56,7 @@ class ConfigurationData():
 
         # Keep track of available actions and operators and how to cost them
         self.actions = [
-            k for k in board_update_descriptions.basic_actions_description.keys()]
+            k for k in board_update_descriptions.actions_description.keys()]
         self.free_operations = ['exclusion']
         self.costly_operations = [op for op in
                                   filter(lambda op: op not in self.free_operations,
@@ -123,24 +128,11 @@ class ConfigurationData():
         name = self.log.name
         if name:
             parameters = parse_name_config(name)
-            if 'select_ops_upfront' in parameters:
-                # If we are selecting logical operators up front, they can't be changed later in the game
-                self.rules['canChangeLogicalOperators'] = False
             if 'costlyops' in parameters:
                 # Get the part specifying the costly operations
                 self.rules['specializedCostlyOperations'] = True
                 # The ops themselves are verified later via self.verify
                 self.costly_operations = parameters['costlyops']
-
-        if 'canChangeLogicalOperators' not in self.rules:
-            # They can be changed, and we have an additional action (applyops) to support that
-            # Note that the apply_ops action is redundant with 'heuristics' in the request, but that's OK.
-            # We could leave this as an assumption, but let's make it explicit
-            self.rules['canChangeLogicalOperators'] = True
-            if self.log.puzzle:
-                # We have a puzzle with no name, so we still need to add 'applyops' to the list of actions
-                self.actions.append('applyops')
-
         self.verify()
 
     def copy(self):
