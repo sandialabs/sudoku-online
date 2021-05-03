@@ -8,10 +8,15 @@ July 2, 2020
 
 Lightweight sudoku client for sudoku online testing.
 """
-import requests
-import json
-from flask import jsonify
 import board_update_descriptions
+
+import datetime
+import json
+import requests
+from flask import jsonify
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def do_single_test(dbg_message, success_func, req_func):
@@ -282,9 +287,10 @@ def do_tests():
                             lambda: requests.get(
                                 f"http://localhost:5000/sudoku/request/boardsForGame/{gamename}"))
 
+    simplified = None
     for b in boards:
         msg = f"getting from {gamename} one at a time; board {b}"
-        do_single_test(msg,
+        simplified = do_single_test(msg,
                        lambda d_boards: ((len(d_boards) > 0)
                                         and ("puzzleName" in d_boards[0])
                                         and ("puzzleName" in b)
@@ -293,4 +299,19 @@ def do_tests():
                                              json={"board": b, "action": {
                                                    "action": "applyops", "operators": ["inclusion"]}}))
 
+    result = do_single_test(
+        f"submit a gametree",
+        lambda d_list: (d_list),
+        lambda: requests.post(
+            f"http://localhost:5000/sudoku/request/submit_game_tree",
+            json={"finishedTree": simplified,
+                  "abandonedTree": None,
+                  "answer": "No",
+                  "session_id": "mal_test_session",
+                  "game_id": "MonkeyGame",
+                  "timestamp": str(datetime.datetime.now())
+                  }
+            ))
+
+logging.basicConfig(level=logging.DEBUG)
 do_tests()
