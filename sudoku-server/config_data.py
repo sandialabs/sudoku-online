@@ -17,10 +17,10 @@ import sys
 import logging
 logger = logging.getLogger(__name__)
 
-def parse_name_config(name, initial_config = {}):
+def parse_name_config(name, initial_config = None):
     """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
     parameters = name.split('...')
-    config_dict = initial_config
+    config_dict = initial_config if initial_config is not None else {}
     assert len(parameters) > 0, "Was unable to get any data from name."
     config_dict['puzzleName'] = name
     config_dict['displayName'] = parameters[0]
@@ -46,7 +46,7 @@ class ConfigurationData():
     """ Collect all the configuration data for a board and its SudokuLogger and the solver.
     """
 
-    def __init__(self, puzzle=None, name=None, initial_config : dict = {}):
+    def __init__(self, puzzle=None, name=None, initial_config : dict = None):
         if name:
             name = name.strip()
         self.log = sudoku_logger.SudokuLogger(puzzle, name)
@@ -55,7 +55,7 @@ class ConfigurationData():
         self.rules = {}
 
         # Keep track of parameters associated with the board
-        self.parameters = initial_config
+        self.parameters = initial_config if initial_config is not None else {}
 
         # Keep track of available actions and operators and how to cost them
         self.actions = [
@@ -123,6 +123,21 @@ class ConfigurationData():
 
         self.apply_config_from_name()
         self.verify()
+
+    def setParam(self, key, value):
+        """ Add the mapping to our parameters storage. """
+        if key in self.parameters and self.parameters[key] != value:
+            logger.info("Overwriting config parameters %s (which was %s) with %s",
+                str(key), str(self.parameters[key]), str(value))
+        self.parameters[key] = value
+
+    def getParam(self, key):
+        """ Add the mapping to our parameters storage. """
+        if key not in self.parameters:
+            logger.info("Returning None from non-existent config parameter %s",
+                str(key))
+            return None
+        return self.parameters[key]
 
     def apply_config_from_name(self):
         """ Parsing the puzzle name from the SudokuLogger, apply required configuration. """

@@ -31,6 +31,7 @@ def do_single_test(dbg_message, success_func, req_func):
         print(f"PASSED TEST {dbg_message}.")
     else:
         print(f"Failed succes check for {dbg_message}.")
+        logger.info("Results are %s", json.dumps(result))
     logger.debug("Results are %s", json.dumps(result))
     return result
 
@@ -310,5 +311,5 @@ def do_tests():
                   }
             ))
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 do_tests()

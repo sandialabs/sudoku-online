@@ -14,6 +14,7 @@ import operators
 import config_data
 import board_update_descriptions
 import board
+import translate
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,12 +36,12 @@ def calculate_status(sboard, msg):
     # If we found a contradiction (bad guess earlier in search), return 0
     #    as no more cells can be assigned
     if(sboard.invalidCells()):
-        progress = f'Found logical contradiction.'
-        sboard.config.debug_print('invalidcells', progress, sboard)
+        logger.debug("Found logical contradiction: invalid cells on board %s",
+            str(sboard.getStateStr(True, False)))
         return 0
     nValues = sboard.countUncertainValues()
-    progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
-    sboard.config.debug_print('status', progress, sboard)
+    logger.debug("Uncertainty state after %s\n%s\n%s uncertain values remaining",
+        str(msg), str(sboard.getStateStr(True)), str(nValues))
     return nValues
 
 
@@ -154,8 +155,8 @@ def select_all_logical_operators_ordered(ordering=None):
         def ordering(name):
             return board_update_descriptions.operators_description[name]['cost']
     costly_ops = sorted(
-        config_data.defaultConfig.costly_operations, key=ordering)
-    config_data.defaultConfig.debug_print(str(costly_ops), None, None)
+        translate.get_possible_operators(), key=ordering)
+    logger.debug("Allowing for costly operations %s", str(costly_ops))
     return costly_ops
 
 

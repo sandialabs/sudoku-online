@@ -574,7 +574,8 @@ class Board():
         Background boards represent places to which a user can back up over his own decision
         if he accidentally placed himself in a corner.  They are lower priority.
         """
-        self.config.parameters["backtrackingBoard"] = True
+        assert self.config, "Cannot set backtrackingBoard without a configuration."
+        self.config.setParam("backtrackingBoard", True)
 
     def getDegree(self):
         """ Returns the degree of this puzzle board. """
@@ -586,15 +587,21 @@ class Board():
 
     def getDisplayName(self):
         """ Returns the simple display name of this puzzle board. """
-        return self.config.parameters["displayName"] if "displayName" in self.config.parameters else None
+        if not self.config:
+            return None
+        return self.config.getParam("displayName")
 
     def getPuzzleName(self):
         """ Returns the fully qualified puzzle name of this puzzle board. """
-        return self.config.parameters["puzzleName"] if "puzzleName" in self.config.parameters else None
+        if not self.config:
+            return None
+        return self.config.getParam("puzzleName")
 
     def getQuestion(self):
         """ Returns the question associated with this puzzle board. """
-        return self.config.parameters["question"] if "question" in self.config.parameters else None
+        if not self.config:
+            return None
+        return self.config.getParam("question")
 
     def countUncertainValues(self):
         """ Counts the number of uncertain values summed across all uncertain cells.
