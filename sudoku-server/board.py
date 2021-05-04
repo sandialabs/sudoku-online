@@ -167,7 +167,7 @@ class Cell():
             if not s:
                 # Underconstrained: highlight a conflict
                 return str.center('X', width)
-            s = str(s)
+            s = str(''.join(s))
             if goal_cell == self.getIdentifier():
                 # Highlight the goal cell
                 s = '*' + s + '*'
