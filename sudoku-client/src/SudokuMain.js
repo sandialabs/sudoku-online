@@ -29,8 +29,8 @@ class SudokuMain extends React.Component {
 
         // Change the next line to determine which game gets requested
         //this.state.gameName = 'test_game1_6_operators_open';
-        this.state.gameName = 'test_game1_6';
-
+        //this.state.gameName = 'test_game1_6';
+        this.state.gameName = 'pilot_test_a_board';
 		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
 		this.submitFinishedGameTree = this.submitFinishedGameTree.bind(this);
 	}
@@ -51,8 +51,8 @@ class SudokuMain extends React.Component {
 						<ErrorBoundary>
 							<SudokuGame 
 								degree={this.props.degree}
-								boards={this.state.boards}
-								gameConfiguration={this.state.gameConfiguration}
+								puzzles={this.state.boards}
+								gameName={this.state.gameName}
 								issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 								cellActions={this.state.cellActions}
 								logicalOperators={this.state.logicalOperators}
@@ -111,14 +111,18 @@ class SudokuMain extends React.Component {
 		return request(myRequest);
 	}
 
-	submitFinishedGameTree(tree) {
+	submitFinishedGameTree(finishedTree, abandonedTrees, answer) {
 		const myRequest = {
 			method: 'POST',
 			url: this.state.serverAddress + '/sudoku/request/submit_game_tree',
 			headers: {
 				'Content-Type': 'application/json; utf-8'
 			},
-			body: JSON.stringify(tree)
+			body: JSON.stringify({
+				finishedTree: finishedTree,
+				abandonedTrees: abandonedTrees,
+				answer: answer
+			})
 		}
 		return request(myRequest);
 	}
@@ -155,9 +159,11 @@ class SudokuMain extends React.Component {
 		
 		this.requestGameConfiguration().then(
 			(boardList) => {
-				console.log('Board list received:');
-				console.log(boardList);
-				this.setState({boards: JSON.parse(boardList)});
+				const boardObjects = JSON.parse(boardList);
+				console.log('Board list received containing '
+					+ boardObjects.length + ' elements:');
+				console.log(boardObjects);
+				this.setState({boards: boardObjects});
 			}).catch(
 				(failure) => {console.log('ERROR requesting game information: ' + failure);}
 			);

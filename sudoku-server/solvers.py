@@ -14,6 +14,10 @@ import operators
 import config_data
 import board_update_descriptions
 import board
+import translate
+
+import logging
+logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
 # LOGICAL PUZZLE SOLVER SUPPORT METHODS
@@ -32,12 +36,12 @@ def calculate_status(sboard, msg):
     # If we found a contradiction (bad guess earlier in search), return 0
     #    as no more cells can be assigned
     if(sboard.invalidCells()):
-        progress = f'Found logical contradiction.'
-        sboard.config.debug_print('invalidcells', progress, sboard)
+        logger.debug("Found logical contradiction: invalid cells on board %s",
+            str(sboard.getStateStr(True, False)))
         return 0
     nValues = sboard.countUncertainValues()
-    progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
-    sboard.config.debug_print('status', progress, sboard)
+    logger.debug("Uncertainty state after %s\n%s\n%s uncertain values remaining",
+        str(msg), str(sboard.getStateStr(True)), str(nValues))
     return nValues
 
 
@@ -87,16 +91,14 @@ NORMAL = int(0xcafe)
 def apply_one_operator(op, sboard):
     """ Apply one operator.
         Returns:
-            boolean Changed if the operator changed the board.
+            boolean Changed if the operator changed the board,
+            MAGIC BREAK if the operator loop should break/restart and NORMAL if it should continue.
     """
     prevValues = sboard.countUncertainValues()
     prevBoard = board.Board(sboard)
     sboard = get_operator(op)(sboard)
     newValues = calculate_status(sboard, op)
     changed = newValues < prevValues
-    if changed and not op in sboard.config.free_operations:
-        sboard.config.log.logCall(op)
-        sboard.config.log.logState(op, prevBoard)
     if changed and sboard.config.restart_op_search_on_match:
         return (sboard, BREAK)
     return (sboard, NORMAL)
@@ -151,10 +153,11 @@ def select_all_logical_operators_ordered(ordering=None):
     """ Returns an ordered list of parameterized logical operators. """
     if not ordering:
         def ordering(name):
+            logger.debug("Asking to order operator %s", str(name))
             return board_update_descriptions.operators_description[name]['cost']
     costly_ops = sorted(
-        config_data.defaultConfig.costly_operations, key=ordering)
-    config_data.defaultConfig.debug_print(str(costly_ops), None, None)
+        [op['internal_name'] for op in translate.get_possible_operators()], key=ordering)
+    logger.debug("Allowing for costly operations %s", str(costly_ops))
     return costly_ops
 
 
@@ -193,7 +196,7 @@ def logical_solve(sboard, logical_ops):
 
     req_ops = list(logical_ops)
     req_ops.extend(sboard.config.free_operations)
-    sboard.config.log_operation_request(
+    sboard.config.log_operations_request(
         req_ops,
         f'Requested application of {len(logical_ops)} operators, {len(sboard.config.free_operations)} free operators',
         sboard)
@@ -373,40 +376,44 @@ def take_action(sboard, expansion_op, args):
     return ret
 
 
-# -----------------------------------------------------------------------------
-# SEARCH PUZZLE CELL SELECTORS
-# -----------------------------------------------------------------------------
-
-def select(sboard, heuristic, criterion, selector):
+def collect_cells(sboard):
     """
-    Selects and returns a single cell from sboard by the following:
-    1. Apply heuristic to each uncertain cell
-    2. Filter the set of cells according to criterion
-    3. If multiple cells satisfy criterion, select among those using selector
-    Heuristic argument is a function that takes an uncertain cell as
+    Given an sboard, collect the set of cells to select from.
+    """
+    # Get the list of board cells that are accessible
+    access_cells = sboard.computeAccessibleCells()
+    logger.debug("Accessible cells are %s", str(access_cells))
+    cell_list = []
+    #Need to get the actual cells not the identifier
+    for ide in access_cells:
+        cell_list.append(sboard.getCell(ide))
+    return cell_list
+
+
+def select(item_list, heuristic, criterion, selector):
+    """
+    Selects and returns a single selected item from item_list by the following:
+    1. Apply heuristic to each item_list
+    2. Filter the set of item_list according to criterion
+    3. If multiple item_list satisfy criterion, select among those using selector
+    Heuristic argument is a function that takes an item from item_list as
         input and returns a number (e.g., number of candidate values)
     Criterion argument is a function that takes a list of heuristic scores and
         returns whatever value(s) satisfy the criterion (e.g., max or min)
-    Selector argument is a function that takes a list of cells and
-        returns whatever cell is selected by selector
+    Selector argument is a function that takes a list of items and
+        returns whatever item is selected by selector
+    Returns:
+        One item from item_list
     """
 
-    # Get the list of board cells that are accessible
-    sboard.computeAccessibleCells()
-    cell_list = []
-    #Need to get the actual cells not the identifier
-    access_cells = sboard.accessible_cells
-    for ide in access_cells:
-        cell_list.append(sboard.getCell(ide))
-
-    # Apply heuristic to get list of (cell, score) tuples
-    hscores = list(map(lambda cell: (cell, heuristic(cell)), cell_list))
+    # Apply heuristic to get list of (item, score) tuples
+    hscores = list(map(lambda item: (item, heuristic(item)), item_list))
 
     # Apply criterion to determine the best score
-    selection = criterion([score for (cell, score) in hscores])
+    selection = criterion([score for (item, score) in hscores])
 
     # Filter the list of heuristic scores to get the set of best cells
-    best_list = [cell for (cell, score) in hscores if score == selection]
+    best_list = [item for (item, score) in hscores if score == selection]
 
     # Pick one of the best cells at random
     if selector is None:
@@ -414,34 +421,87 @@ def select(sboard, heuristic, criterion, selector):
     return selector(best_list)
 
 
+# -----------------------------------------------------------------------------
+# SEARCH PUZZLE CELL / BOARD / ACTION SELECTORS
+# -----------------------------------------------------------------------------
+
+
 def select_random_cell_with_fewest_uncertain_values(sboard):
     """ Return the Cell that has the fewest uncertain values. """
-    return select(sboard, candidate_values_heuristic, min, random.choice)
+    return select(collect_cells(sboard), candidate_cell_values_heuristic, min, random.choice)
 
 
 def select_random_cell_with_most_uncertain_values(sboard):
     """ Return the Cell that has the most uncertain values. """
-    return select(sboard, candidate_values_heuristic, max, random.choice)
+    return select(collect_cells(sboard), candidate_cell_values_heuristic, max, random.choice)
 
 
-def select_by_user(sboard):
+def select_cell_by_user(sboard):
     """ Return the Cell selected by the user. """
-    return select(sboard, uniform_heuristic, min, users_choice)
+    return select(collect_cells(sboard), uniform_heuristic, min, users_choice_cell)
+
+
+def select_random_board_with_fewest_uncertain_values(node_list):
+    """ Return the Board that has the fewest uncertain values, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_values_heuristic, min, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_random_board_with_most_uncertain_values(node_list):
+    """ Return the Board that has the most uncertain values, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_values_heuristic, max, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_random_board_with_fewest_uncertain_cells(node_list):
+    """ Return the Board that has the fewest uncertain cells, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_cells_heuristic, min, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_random_board_with_most_uncertain_cells(node_list):
+    """ Return the Board that has the most uncertain cells, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_cells_heuristic, max, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_board_by_user(node_list):
+    """ Return the Board selected by the user, removing it from node_list. """
+    board = select(node_list, uniform_heuristic, min, users_choice_board)
+    node_list.remove(board)
+    return board
+
 
 # -----------------------------------------------------------------------------
 # SEARCH PUZZLE HEURISTICS
 # Cell -> comparable value representing "goodness" of cell
+# Board -> comparable value representing "goodness" of board
 # -----------------------------------------------------------------------------
 
 
-def candidate_values_heuristic(cell):
+def candidate_cell_values_heuristic(cell):
     """ Taking in a Cell, return the number of candidate values. """
     return len(cell.getValues())
 
 
-def uniform_heuristic(cell):
-    """ Taking in a Cell, return 1. """
+def uniform_heuristic(item):
+    """ Taking in an item, return 1. """
     return 1
+
+
+def candidate_board_uncertain_cells_heuristic(node):
+    """ Taking in a GameTreeNode, return the number of uncertain cells. """
+    return len(node.board.getUncertainCells())
+
+
+def candidate_board_uncertain_values_heuristic(node):
+    """ Taking in a GameTreeNode, return the number of uncertain values across cells. """
+    return node.board.countUncertainValues()
+
 
 # -----------------------------------------------------------------------------
 # SEARCH PUZZLE SELECTORS
@@ -449,152 +509,49 @@ def uniform_heuristic(cell):
 # -----------------------------------------------------------------------------
 
 
-def users_choice(cell_list):
+def users_choice_cell(cell_list):
     """ Taking in a list of Cells, ask the user to select one and return it.
-
-    Takes in the Board containing the Cells to help extracting the correct one.
     """
-    names = sorted([cell.getIdentifier() for cell in cell_list])
-    print("Which cell do you want to expand? {}".format(names))
-    selected = input()
-    print(selected)
-    return next(filter(lambda x: x.getIdentifier() == selected, cell_list))
+    selected = None
 
-# -----------------------------------------------------------------------------
-# LOGIC/SEARCH COMBINED PUZZLE SOLVERS
-# -----------------------------------------------------------------------------
+    assert len(cell_list) > 0, "Can't select cell from empty list."
+    if len(cell_list) == 1:
+        logger.info("Selecting single cell %s", str(cell_list[0]))
+        return cell_list[0]
 
-def board_select(boards, goalc):
-    print("What board would you like to work on, please answer with the board number \n")
-    for b in range(len(boards)):
-        print("Number", b)
-        print(boards[b].getStateStr(uncertain = True, goal_cell = goalc))
-        print("\n")
-    selected = input()
-    return boards[int(selected)]
+    while True:
+        names = sorted([cell.getIdentifier() for cell in cell_list])
+        print("Which cell do you want to expand? {}".format(names))
+        selected = input()
+        if selected in names:
+            logger.debug("User selected cell ID %s.", str(selected))
+            match_cell = next(filter(lambda x: x.getIdentifier() == selected, cell_list))
+            if match_cell:
+                break
+        logger.warn("Unable to find cell matching selected identifier %s.", str(selected))
+    return match_cell
 
-def perform_action(action,sboard,cellselector, logical_ops):
-    expansion = None
-    if action == 'applyops':
-        print("What operations would you like to use?(separate by a space) {}".format(logical_ops))
-        ops = input()
-        ops = ops.split(" ")
-        result = logical_solve(sboard,ops)
-        expansion = [result]
-    else:
-        cell = cellselector(sboard)
-        values = [cell.displayValue(value) for value in cell.getValues()]
-        if action == 'pivot':
-            expansion = expand_cell(sboard, cell.getIdentifier())
-        elif action == 'assign':
-            print("What value do you want to assign? {}".format(values))
-            val = input()
-            expansion = expand_cell_with_assignment(sboard, (cell.getIdentifier(),int(val)-1))
-        elif action == 'exclude':
-            print("What value do you want to exclude? {}".format(values))
-            val = input()
-            expansion = expand_cell_with_exclusion(sboard, (cell.getIdentifier(),int(val)-1))
-    return expansion
 
-def interactive_solve(sboard, logical_ops=[], cellselector= select_by_user, expand_cell_action = expand_cell):
-    solved_boards = []
-    contradicted_boards = []
-    active_boards = [sboard]
-    possible_acts = config_data.defaultConfig.actions
-    possible_acts.append("applyops")
-    ready = False
-    question = "Will C6 have value 7?"
-    answer = "no"
-    goalc = sboard.config.goal_cell_name
-    #Goal is to answer question or run out of boards
-    print("\n\n")
-    print("Goal is to answer: ", question,"Meaning can C6 have value 7 when the board is solved \n  HINT: you may not need to solve the whole board to answer this question.")
-    print("The Goal cell,", goalc, ", will be marked with astrics '*' on the board")
-    print("Any cell marked with an 'X' means there is a contradiction for that cell and the board can't be solved")
-    print("\n")
-    while(not ready and len(active_boards)>0):
-        select_board = board_select(active_boards, goalc)
-        active_boards.remove(select_board)
-        result = apply_free_operators(select_board)
-        if not result:
-            contradicted_boards.append(result)
-            print(result.getStateStr(uncertain = True, goal_cell = goalc))
-            print("This board contains a contradiction. Please answer the question or select another board")
-        elif result.isSolved():
-            solved_boards.append(result)
-            print(result.getStateStr(uncertain = True, goal_cell = goalc))
-            print("This board is solved. Please answer the question or select another board")
-        else:
-            #ask what action
-            print("What action do you want to perfom? {}".format(possible_acts))
-            action = input()
-            #Perform action
-            expansion = perform_action(action, result, cellselector, logical_ops)
-            while not expansion:
-                print("Please enter a valid action. {}".format(possible_acts))
-                action = input()
-                expansion = perform_action(action, result, cellselector, logical_ops)
-
-            #Apply free ops and check if contradiction or solved
-            for brd in expansion:
-                n_brd = apply_free_operators(brd)
-                if not n_brd or n_brd.getStateStr(uncertain = True).find('X')>=0:
-                    contradicted_boards.append(n_brd)
-                    print("\nBoard contains a contradiction")
-                elif n_brd.isSolved():
-                    solved_boards.append(n_brd)
-                    print("\nBoard is solved")
-                else:
-                    print("\nResulted board after action")
-                    active_boards.append(n_brd)
-                print(n_brd.getStateStr(uncertain = True, goal_cell = goalc))
-        print("\nWould you like to answer the question? y/n (", question ,")")
-        ans = input()
-        if ans == 'y'or ans == 'yes':
-            ready = True
-
-    print(question, "Please answer yes or no")
-    inp = input()
-    if inp == answer:
-        print("Congratulations! You got the question correct")
-    else:
-        print("I'm sorry. That answer is incorrect")
-
-def combined_solve(sboard, logical_ops=[], cellselector=None, expand_cell_action= expand_cell):
+def users_choice_board(node_list):
     """
-    Solves sboard to a single completion by using a combination of logical and
-    search-based operators.  Applies logical_solve to completion on
-    initial board, then selects a cell to expand, then returns to
-    logical_solve again.  Process continues recursively until a solution
-    or contradiction is found.  If solution, final board state is returned.
-    If contradiction, returns None and tests another of the expansion
-    candidates.
+    Allow the user to select a board to continue exploring. Remove that board from the node_list
     """
-    # Apply logical solver first
-    result = logical_solve(sboard, logical_ops)
+    assert len(node_list) > 0, "Can't select board from empty list."
+    if len(node_list) == 1:
+        logger.info("Selecting single board %s", str(node_list[0]))
+        return node_list[0]
 
-    # If the puzzle is solved, just return the solution
-    if(result and result.isSolved()):
-        result.config.debug_print('solved', f'Puzzle solved.', result)
-        return result
-
-    # If we found a contradiction (bad guess earlier in search), return None
-    elif(not result or result.invalidCells()):
-        sboard.config.debug_print('incorrect', f'Found contradiction.', result)
-        return None
-
-    # Some action needs to be taken
-    msg = f'Taking action, selecting cell using {str(cellselector)} and expanding cell using {str(expand_cell_action)}'
-    result.config.debug_print('take action', msg, result)
-    cell = cellselector(result)
-    expansion = expand_cell_action(result, cell.getIdentifier())
-    for brd in expansion:
-        brd2 = combined_solve(brd, logical_ops, cellselector)
-        if(brd2 is None):  # if we get None back, try another value
-            continue
-        else:  # found solution
-            return brd2
-
-    # Tried all candidate values and failed
-    # May happen if we tried a bad candidate earlier in the recursive search
-    return None
+    while True:
+        print("Choose a board to explore.")
+        # MAL TODO gross
+        for i in range(len(node_list)):
+            node = node_list[i]
+            print("Board Number {}:\n{}\n".format(i, node.board.getStateStr(True)))
+        print("Please input the desired board number:")
+        idx = int(input())
+        if idx >= 0 and idx < len(node_list):
+            logger.debug("User selected board index %s.", str(idx))
+            active = node_list[idx]
+            break
+        logger.warn("Selected index not valid (%s).", str(idx))
+    return active

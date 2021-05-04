@@ -63,7 +63,7 @@ The example move lists are probably incorrect.  They're intended as examples of 
     degree: 2,
     serialNumber: 12345,
     parentSerialNumber: 1234,
-    puzzleName: "underconstrained1_4x4",
+    displayName: "underconstrained1_4x4",
     assignments: [
                    [ 1,    2,    null, 4    ],
                    [ 3,    null, 1,    2    ],
@@ -78,12 +78,16 @@ The example move lists are probably incorrect.  They're intended as examples of 
                  [ [4],[],     [],     [4, 3] ]
                ],
 
+    question: "Can cell B1 be a 1?",
     goalCell: [0, 2],
     accessibleCells: [ [3, 0], [3, 3] ],
     solved: True,
 
     availableActions: ["applyops", "pivot", "assign", "exclude"],
     rules : {'canChangeLogicalOperators': True},
-    cost : 87.5
+    cost : 87.5,
+
+    puzzleName: "underconstrained1_4x4...goal=A3",
+    puzzle: ".1....2..8..3...........5...5....41....7...6...2..8...9......73....5........4...."
 }
 ```

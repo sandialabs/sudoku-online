@@ -59,19 +59,25 @@ class SudokuChoiceGrid extends React.Component {
 	makeChoiceGridContents() {
 		const D = this.props.degree;
 		const rows = [];
+		let rowClass = 'sudoku-choice-grid';
 
+		if (!this.props.accessible) {
+			rowClass += ' inaccessible';
+		}
 		for (let row = 0; row < D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D; ++col) {
 				const value = row*D + col;
 				if (this.props.moveList.includes(value)) {
-					squaresInRow.push(this.makeChoiceButton(col, value));
+					squaresInRow.push(
+						this.makeChoiceButton(row, col, value)
+						);
 				} else {
 					squaresInRow.push(this.makeBlankSquare(col));
 				}
 			}
 			rows.push(
-				<tr key={row} className='sudoku-choice-grid'>{squaresInRow}</tr>
+				<tr key={row} className={rowClass}>{squaresInRow}</tr>
 				);
 		}
 		return (
@@ -79,7 +85,14 @@ class SudokuChoiceGrid extends React.Component {
 			);
 	}
 
-	makeChoiceButton(key, value) {
+	makeChoiceButton(row, col, value) {
+
+		const onClick = (event) => {
+			if (this.props.accessible) {
+				this.handleClick(event);
+			} 
+		}
+
 		let cellClasses = 'sudoku-choice-grid available';
 		if (this.props.boardSquareIsSelected) {
 			cellClasses += ' selected-square';
@@ -87,11 +100,18 @@ class SudokuChoiceGrid extends React.Component {
 				cellClasses += ' selected-value';
 			}
 		}
+
+		let buttonClasses = 'sudoku-choice-grid';
+		if (!this.props.accessible) {
+			buttonClasses += ' inaccessible';
+			cellClasses += ' inaccessible';
+		} 
 		return (
-			<td className={cellClasses} key={key}>
-				<button className='sudoku-choice-grid'
-						onClick={this.handleClick}
+			<td className={cellClasses} key={col}>
+				<button className={buttonClasses}
+						onClick={onClick}
 						value={value}
+						id="button"
 					>
 					{value}
 				</button>
@@ -104,6 +124,9 @@ class SudokuChoiceGrid extends React.Component {
 		let classes = 'sudoku-choice-grid unavailable';
 		if (this.props.boardSquareIsSelected) {
 			classes += ' selected-square';
+		}
+		if (!this.props.accessible) {
+			classes += ' inaccessible';
 		}
 		return (
 			<td className={classes} key={key}>
@@ -119,6 +142,8 @@ class SudokuChoiceGrid extends React.Component {
 }
 
 SudokuChoiceGrid.propTypes = {
+	accessible: PropTypes.bool.isRequired,
+	cellKey: PropTypes.array.isRequired,
 	degree: PropTypes.number.isRequired,
 	boardSquareIsSelected: PropTypes.bool.isRequired,
 	selectedValue: PropTypes.number
