@@ -16,6 +16,7 @@ import config_data
 import operators
 import puzzles
 import solvers
+import translate
 
 # Imports from Python standard library
 import enum
@@ -23,263 +24,9 @@ import json
 import random
 import sys
 
+import logging
+logger = logging.getLogger(__name__)
 
-def get_initial_board(content):
-    """
-    Get an initial board of 'degree' given a dict request, randomly if 'name' is None, else by name.
-    """
-    puzzle = None
-    assert isinstance(content, dict), \
-        "Failed assumption that request for initial board is formatted as a dict"
-    name = content['name'] if 'name' in content else None
-    degree = content['degree'] if 'degree' in content else 3
-
-    basename = None
-    if name:
-        basename = name[0:name.index('?')] if '?' in name else name
-    if basename and basename in puzzles.puzzles:
-        print("Loading requested puzzle " + str(basename))
-        puzzle = puzzles.puzzles[basename]
-    else:
-        (name, puzzle) = random.choice(list(puzzles.puzzles.items()))
-        config_data.defaultConfig.debug_print(
-            'select puzzle', name, None)
-    full_board = board.Board(puzzle, degree, name)
-    config_data.defaultConfig.debug_print('load puzzle', name, full_board)
-    print("Configured requested puzzle " + str(basename))
-    print(full_board.getSimpleJson())
-    if '?select_ops_upfront' in name:
-        # For the initial board only, the only possible action is selectOps
-        #   and the canChangeLogicalOperators is True
-        #   so let's just overwrite them here.
-        full_board.config.actions = ['selectops']
-        full_board.config.rules['canChangeLogicalOperators'] = True
-    if full_board.config.simplify_initial_board:
-        solvers.apply_free_operators(full_board)
-    print("Simplified requested puzzle " + str(basename))
-    return full_board
-
-
-def __configure_games(name_list, alternatives_list):
-    """
-    Given a list of games, do whatever configuration needs to be done to configure them.
-    """
-
-    if not alternatives_list:
-        return name_list
-
-    alt = alternatives_list.pop()
-    # MAL TODO randomly reorder the name_list
-
-    for i in range(int(len(name_list)/2)):
-        name_list[i] += f'?{alt}'
-
-    return __configure_games(name_list, alternatives_list)
-
-
-def get_boards_for_game(name):
-    """
-    Return a list of boards associated with a game, randomly if 'name' is None, else by name.
-
-    Associates appropriate configuration with each puzzle as indicated by the request.
-    """
-    game = {}
-    if name and name in puzzles.games:
-        print("Loading requested game " + str(name))
-        game = puzzles.games[name]
-    else:
-        (name, game) = random.choice(list(puzzles.games.items()))
-        config_data.defaultConfig.debug_print('select game', name, None)
-
-    game_names = game['puzzles']
-    assert 'config_alterations' in game, "Must at least provide empty list for 'config_alterations' in game description."
-    if 'randomly_apply' in game['config_alterations']:
-        game_names = __configure_games(
-            list.copy(game['puzzles']), list.copy(game['config_alterations']['randomly_apply']))
-    if 'default_config' in game['config_alterations']:
-        default_config = game['config_alterations']['default_config']
-        if 'costly_ops' in default_config:
-            config_data.defaultConfig.costly_operations = default_config['costly_ops']
-    config_data.defaultConfig.debug_print(
-        'load game', f'name: {game_names}', None)
-    return game_names
-
-
-def __parse_cell_arg(cell_loc):
-    """ Parse a cell location into a cell_id. """
-    assert isinstance(cell_loc, list) and 2 == len(cell_loc), \
-        "Must specify cell using [x,y] location notation."
-    cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
-    #print(f'Found cell argument {cell_id}')
-    return cell_id
-
-
-def __parse_value_arg(value):
-    """ Parse a value. """
-    assert isinstance(value, int) and value >= 0, \
-        "Assuming that all values are represented as non-negative ints. (offending value: {})".format(value)
-    #print(f'Found value argument {value}')
-    return value
-
-
-def __parse_operators_arg(ops_list):
-    """ Parse a list of operators. """
-    assert isinstance(ops_list, list), \
-        "Must specify list of operators in applyLogicalOperators action"
-    #print(f'Found operators argument {ops_list}')
-    return ops_list
-
-
-def __collect_argument(arg_nm, action_dict):
-    """ Collect the argument specified. """
-    try:
-        # Yes, it's insecure, but at least we're getting the thing we eval from ourselves
-        parser_function = eval(f'__parse_{arg_nm}_arg')
-        raw_val = action_dict[arg_nm]
-        return parser_function(raw_val)
-    except AttributeError:
-        raise Exception(
-            f'Can\'t extract argument {arg_nm} needed')
-    except KeyError:
-        raise Exception(
-            f'Can\'t find value for argument {arg_nm} needed')
-
-
-def __collect_args(action, action_dict):
-    """
-    Given a request action and a dictionary of the content request,
-    return a list of the parsed arguments needed for that action.
-    """
-    assert action in board_update_descriptions.actions_description, \
-        f'Cannot exercise action {action}'
-    try:
-        arg_names = board_update_descriptions.actions_description[action]['arguments']
-    except KeyError:
-        raise Exception(f'Cannot find description for action {action}')
-
-    if len(arg_names) == 1:
-        return __collect_argument(arg_names[0], action_dict)
-    elif len(arg_names) == 2:
-        return (__collect_argument(arg_names[0], action_dict),
-                __collect_argument(arg_names[1], action_dict))
-    else:
-        raise Exception(
-            f'Haven\'t implemented parsing for arguments {arg_names}')
-
-
-def parse_and_apply_action(content):
-    """
-    Given a requested action and board, parse and apply the given action to board.
-
-    Possible actions include selectValueForCell (cell, value), pivotOnCell (cell), and
-    applyLogicalOperators ([list of operators])
-        board (Board)  : the Board on which the action should be performed.
-        action  : the action to take, and appropriate operators as specified in server_api.md
-    Returns:
-        [Boards] : a collection of boards resulting from the selection action.
-    """
-    assert isinstance(content, dict), \
-        "Failed assumption that request for action on board is formatted as a dict"
-    if 'board' not in content:
-        return {'error': 'You must specify a board to act upon.'}
-    board_dict = content['board']
-    assert isinstance(
-        board_dict, dict), "Failed assumption that the parsed board is a dict."
-    board_object = board.Board(board_dict)
-
-    if 'action' not in content:
-        return {'error': 'You must specify an action to take on the given board.'}
-    action_dict = content['action']
-    assert isinstance(action_dict, dict), \
-        "Failed assumption that the parsed action is a dict."
-    assert 'action' in action_dict, "Failed assumption that action request specified the action to take."
-    action_choice = action_dict['action']
-
-    print("Action choice: {}".format(action_choice), file=sys.stderr)
-
-    try:
-        args = __collect_args(action_choice, action_dict)
-        collected = solvers.take_action(
-            board.Board(board_object), action_choice, args)
-        result = []
-        if 'heuristics' in content:
-            logicalops = content['heuristics']
-            assert isinstance(logicalops, list), \
-                "Failed assumption that the parsed action argument heuristics ia  list."
-            for brd in collected:
-                result.extend(solvers.take_action(brd, 'applyops', logicalops))
-        else:
-            result = collected
-
-    except Exception as e:
-        return {'error': f'{e}'}
-
-    jsoned_result = []
-    game_score = True
-    average_score = 0
-    for full_board in result:
-        jsoned_result.append(full_board.getSimpleJson())
-        if game_score and full_board.config.cost_per_game_not_per_board:
-            if average_score == 0:
-                average_score = full_board.config.log.difficulty_score
-            else:
-                assert average_score == full_board.config.log.difficulty_score, \
-                    'Can\'t average score when assuming that the scores are the same across child boards'
-        else:
-            game_score = False
-    if game_score and (len(jsoned_result) > 0):
-        # Amortize the game score across all the boards,
-        #   as each currently has the same score as a single board would
-        #   and we want to amortize that cost across all children boards
-        average_score /= len(jsoned_result)
-        for full_board in jsoned_result:
-            full_board['cost'] = average_score
-
-    return jsoned_result
-
-
-def _jsonify_action(name, description_dict):
-    """ Remove all the extra cruft and dispatch fields,
-        and create one dict describing the named action / operator. """
-    short_description = {'internal_name': name}
-    for data in ['requested_arguments', 'cost', 'user_name', 'description', 'short_description']:
-        if data in description_dict:
-            short_description[data] = description_dict[data]
-    return short_description
-
-
-def get_possible_operators():
-    """ Return a list of all possible operators for this game. """
-    operators = list()
-    for op in config_data.defaultConfig.costly_operations:
-        operators.append(_jsonify_action(
-            op, board_update_descriptions.operators_description[op]))
-    return operators
-
-
-def get_cell_actions():
-    """ Return a list of all possible actions for this game.
-
-    May eventually want to update to alter possible actions for all possible games. """
-    operators = get_possible_operators()
-
-    actions = list()
-    for act in config_data.defaultConfig.actions:
-        short_desc = _jsonify_action(
-            act, board_update_descriptions.actions_description[act])
-        if act == 'applyops':
-            short_desc['operators'] = operators
-        actions.append(short_desc)
-
-    return actions
-
-def submit_game_tree(tree):
-    print("Saving game tree.", file=sys.stderr)
-    with open('latest-game.json', 'w') as outfile:
-        outfile.write(json.dumps(tree))
-    return {
-        'message': 'Game tree successfully saved.'
-    }
 
 class ActiveGameTreeState():
     """
@@ -307,26 +54,11 @@ class ActiveGameTreeState():
         """ Return True if active nodes remain for exploration. """
         return len(self._active_nodes) > 0
 
-    def selectActiveNode(self):
+    def getModifiableActiveNodes(self):
         """
-        Allow the user to select an active node to continue exploring.
-        Remove that node from the _active_nodes list.
+        Return the modifiable list of active nodes (i.e., removing the node from the returned list is reflected here WARNING).
         """
-        # MAL TODO make this actually give a choice
-        if len(self._active_nodes) > 1:
-            print("Choose a board to explore:\n")
-            # MAL TODO gross
-            for i in range(len(self._active_nodes)):
-                node = self._active_nodes[i]
-                print("{}\n{}".format(i, node.board.getStateStr(True)))
-            idx = int(input())
-            active = self._active_nodes[idx]
-            self._active_nodes.remove(active)
-        else:
-            active = self._active_nodes.pop()
-        print("DEBUG: Exploring board \n{}".format(
-            active.board.getStateStr(True)))
-        return active
+        return self._active_nodes
 
     def addSuccessNode(self, node):
         """
@@ -358,17 +90,20 @@ class GameTreeNode():
        game_state: MAL TODO doing this incorrectly: a global game state that keeps the list of incomplete boards to explore from
     """
 
-    NodeType = enum.Enum('NodeType',
-                         'ROOT CHOICE SUCCESS FAILURE AUTO_MOVES SELECTED_MOVES CONDENSED',
+    NodeType = enum.Enum("NodeType",
+                         "ROOT CHOICE SUCCESS FAILURE AUTO_MOVES SELECTED_MOVES CONDENSED",
                          module=__name__,
-                         qualname='GameTreeNode.NodeType')
+                         qualname="GameTreeNode.NodeType")
 
-    SelectFrequency = enum.Enum('SelectFrequency',
-                                'START_ONLY ON_EACH_DECISION',
+    SelectFrequency = enum.Enum("SelectFrequency",
+                                "START_ONLY ON_EACH_DECISION",
                                 module=__name__,
-                                qualname='GameTreeNode.SelectFrequency')
+                                qualname="GameTreeNode.SelectFrequency")
 
-    def __init__(self, board, parent=None, moves=None, success=False, node_type=None, game_state=None):
+    def __init__(self, board, logical_ops=None, cell_selector=None,
+                 board_selector=None,
+                 parent=None, moves=None, success=False,
+                 node_type=None, game_state=None):
         self.board = board
         self.moves = moves
         self.parent = parent
@@ -376,6 +111,9 @@ class GameTreeNode():
         self.children = []
         self._depth = 0
         self.node_type = node_type
+        self._my_ops = logical_ops if logical_ops else parent._my_ops if parent else solvers.select_all_logical_operators_ordered()
+        self._cellselector = cell_selector if cell_selector else parent._cellselector if parent else solvers.select_cell_by_user
+        self._boardselector = board_selector if board_selector else parent._boardselector if parent else solvers.select_board_by_user
 
         self.game_state = ActiveGameTreeState() if game_state is None else game_state
         # TODO MAL: add a self.explanation to keep track of what each node was doing (e.g., pivot cell?)
@@ -394,8 +132,8 @@ class GameTreeNode():
 
         # If the board is fully constrained and a valid solution
         if self.board.isSolved():
-            self._debug("Puzzle solved!  Board:\n{}".format(
-                self.board.getStateStr()))
+            logger.info("Puzzle solved!  Board:\n%s",
+                      self.board.getStateStr())
             success_node = GameTreeNode(self.board,
                                         parent=self,
                                         success=True,
@@ -403,13 +141,13 @@ class GameTreeNode():
                                         game_state=self.game_state)
             self.children.append(success_node)
             self.game_state.addSuccessNode(success_node)
-            return
+            return self.board
 
         # If the board is in an invalid state
         contradictions = self.board.invalidCells()
         if contradictions:
-            self._debug("Move set led to contradictions {}.  Failure reached; must backtrack.  Board:\n{}".format(
-                str(contradictions), self.board.getStateStr(True)))
+            logger.info("Move set led to contradictions %s.  Failure reached; must backtrack.  Board:\n%s",
+                str(contradictions), self.board.getStateStr(True))
             failure_node = GameTreeNode(self.board,
                                         parent=self,
                                         moves=contradictions,
@@ -417,36 +155,32 @@ class GameTreeNode():
                                         node_type=GameTreeNode.NodeType.FAILURE,
                                         game_state=self.game_state)
             self.children.append(failure_node)
-            return
+            return None
 
         # The board has potential: apply rules and see how far we get
-        # MAL QUESTION: Do we unit propagate before they make the first decision or not? See example board 10.
+        my_uncertainty = self.board.countUncertainValues()
         new_board = board.Board(self.board)
-        my_ops = solvers.select_all_logical_operators_ordered()
-        resboard = solvers.logical_solve(new_board, my_ops)
-        determined_moves = [item
-                            for item in resboard.getCertainCells() if item not in self.board.getCertainCells()]
+        resboard = solvers.logical_solve(new_board, self._my_ops)
+        child_uncertainty = resboard.countUncertainValues()
 
-        # We applied rules and made progress.  Recurse.
-        if len(determined_moves) > 0:
-            self._debug("{} determined move(s)".format(
-                len(determined_moves)))
-            child_node = GameTreeNode(resboard,
+        # We progressed. Make a new child and play it.
+        if child_uncertainty < my_uncertainty:
+            logger.info("Reduced uncertainty from %d to %d.", my_uncertainty, child_uncertainty)
+            child_node = GameTreeNode(new_board,
                                       parent=self,
-                                      moves=determined_moves,
                                       node_type=GameTreeNode.NodeType.AUTO_MOVES,
                                       game_state=self.game_state)
             self.children.append(child_node)
-            child_node.play()
-            return
+            return child_node.play()
 
-        # We had no given progress.  A decision must be made: pivot node? new rule? backtrack?
-        explore = self.selectNextApproach()
-        explore.play()
+        # This board needs a decision made to progress it, so it's an active node.
+        self.game_state.addActiveNodes([self])
 
-        # We explored for a while.  If there are more active states, keep exploring.
+        # Select an active state and keep exploring.
         while (self.game_state.hasActiveNode()):
-            explore = self.game_state.selectActiveNode()
+            # MAL TODO bug in here trying to get back to an older state.
+            explore = self._boardselector(self.game_state.getModifiableActiveNodes())
+            explore = self.selectNextApproach()
             explore.play()
 
         self.game_state.printSuccessNodes()
@@ -461,68 +195,88 @@ class GameTreeNode():
         We then have the user select an active state to explore and return that state.
         In the future, we could select new rules, new solvers, backtrack, etc.
         """
-        # TODO: This is where we will select the "unable to progress" policy. For now, manually select pivot cell.
-        child_nodes = self.pivotOnCell()
-        self.game_state.addActiveNodes(child_nodes)
+        print("Your goal is to answer the following question:")
+        print(self.board.getQuestion())
+        print("  HINT: you may not need to solve the whole board to answer this question.")
+        print("The Goal cell, {}, will be *marked* on the board with asterisks '*'.".format(self.board.getGoalCell()))
+        print("\n")
 
-        # TODO MAL: I think we want to unit propagate after we make an assignment from a pivot but before we select?
-        return self.game_state.selectActiveNode()
+        # MAL TODO Allow for asking questions
+        # print("\nWould you like to answer the question? y/n (", self.board.getQuestion() ,")")
+        # ans = input()
+        # if ans == 'y'or ans == 'yes':
+        #     print(question, "Please answer yes or no")
+        #     inp = input()
+        #     if inp == 'y': #self.board._answer:
+        #         print("Congratulations! You got the question correct")
+        #     else:
+        #         print("I'm sorry. That answer is incorrect")
 
-    def pivotOnCell(self):
-        """
-        Taking in a set of uncertain cells in options, ask the user to select one to expand on.
-        Return a list of all new GameTreeNodes with the pivot node expanded.
-        """
-        # Get only the cells that have multiple possibilities at this point
-        options = self.board.getUncertainCells()
-        # TODO: filter the options based on the constraints imposed by the test
-        options = options
+        while True:
+            # TODO MAL this should use the board's idea of what cell actions it likes
+            print("What action do you want to perform? {}".format(
+                [self.board.config.actions]))
+            action = input()
+            if action in self.board.config.actions:
+                break
 
-        # Select a cell to pivot
-        names = [cell.getIdentifier() for cell in options]
-        print(
-            "Which cell do you want to expand into all possible options? {}".format(names))
-        selected = input()
-        pivot = self.board.getCell(selected)
-        new_boards = operators.expand_cell(self.board, pivot.getIdentifier())
+        while True:
+            # Select the arguments for the action somehow
+            action_desc = board_update_descriptions.actions_description[action]
+            cell = None
+            args = None # CellID, (CellID, Value), or [ops]
+            if "arguments" in action_desc:
+                for arg_type in action_desc["arguments"]:
+                    if "cell" == arg_type:
+                        cell = self._cellselector(self.board)
+                        args = cell.getIdentifier()
+                    elif "value" == arg_type:
+                        # We expect to have already seen the cell
+                        if cell is None:
+                            logger.warn("Can only have a value if a cellID has already been given.")
+                        print(f"What value do you want to select? (of {str(cell.getValues())})")
+                        value = int(input())
+                        args = (args, value)
+                    elif "operators" == arg_type:
+                        # We currently assume that this command is mutually exclusive with the others and just replace the arguments
+                        print("What operations would you like to use? (separate by a space) {}".format(self._my_ops))
+                        args = str(input()).split(" ")
+                        action = "applyops"
 
-        # Make a new board for each possible value for that cell
-        children = []
-        for child in new_boards:
-            move = set()
-            # WARNING: PROBABLY BREAKS ABSTRACTION BARRIER
-            move.add(pivot.getIdentifier())
+            logger.info("Requested action is %s with arguments %s.", str(action), str(args))
+            try:
+                collected = solvers.take_action(self.board, action, args)
+                break
+            except AssertionError as e:
+                logger.warn(e)
+
+        child_nodes = []
+        for board in collected:
+            logger.info("Simplifying child board %s.", board.getIdentifier())
+            child = solvers.apply_free_operators(board)
             child_node = GameTreeNode(child,
                                       parent=self,
-                                      moves=move,
                                       node_type=GameTreeNode.NodeType.CHOICE,
                                       game_state=self.game_state)
-            children.append(child_node)
-
-        # return all new GameTreeNodes
-        return children
-
-    def _debug(self, message):
-        print("DEBUG: {}{}".format(
-            ''.join([' '] * self._depth),
-            message))
+            child_nodes.append(child_node)
+        self.children.extend(child_nodes)
+        self.game_state.addActiveNodes(child_nodes)
+        return child_nodes[0]
 
 # -----------------------------------------------------
 
 
 def test_sudoku():
-    # board.Board.initialize()
-    root = board.Board(puzzles.puzzles['underconstrained1'])
-
-    # solver = Solver(board)
-    # solver.setVerbosity(3)
-    # solver.solve()
+    # root = translate.get_initial_board({"name": "underconstrained1"})
+    root = translate.get_initial_board({"name": "hard4"})
 
     search_tree = GameTreeNode(root)
     print("Initial board:\n{}".format(root.getStateStr(True)))
-    search_tree.play()
-    # print("Solved?",root.isSolved())
+    result = search_tree.play()
+    print("Solved?",result.isSolved())
+    print(f"Final board:\n{str(result.getStateStr(True))}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     test_sudoku()

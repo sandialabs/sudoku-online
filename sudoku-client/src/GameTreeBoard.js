@@ -8,12 +8,23 @@
 // 	   board: SudokuBoard object with assignments, moveLists, and degree
 
 import React from 'react';
+import PropTypes from 'prop-types';
 
 class GameTreeBoard extends React.Component {
 	
 	render() {
 		const assignmentArray = this.props.board.assignments;
-		return this.makeBoardTable(assignmentArray);	
+		const tableData = this.makeBoardTable(assignmentArray);
+		return (
+			<table>
+			   <tbody>
+			     <tr>
+			        <td>{this.props.name}</td>
+			        <td>{tableData}</td>
+			     </tr>
+			   </tbody>
+			</table>
+			);	
 	}
 
 	/// Make the board as an array of blocks.
@@ -33,7 +44,7 @@ class GameTreeBoard extends React.Component {
 	//     
 	makeBoardTable(assignments) {
 		const D = this.props.board.degree;
-		const tableStyle = 'game-tree-board degree-' + D;
+		const tableStyle = 'miniature-board degree-' + D;
 		const boardId = 'game-tree-board-' + this.props.board.serialNumber;
 
 		const tableRows = [];
@@ -58,14 +69,28 @@ class GameTreeBoard extends React.Component {
 	}
 
 	makeSquare(row, column, assignments) {
-		let cellStyleName = 'game-tree-board degree-' + this.props.board.degree;
+		let classes = [ 
+		   'miniature-board', 
+		   'degree-' + this.props.board.degree
+		   ];
+
 		if (assignments[row][column] !== null) {
+			// return (
+			// 	<td className={cellStyleName} key={column}>
+			// 		{assignments[row][column]}
+			// 	</td>
+			// 	);
+			classes.push('assigned');
+			const cellStyleName = classes.join(' ');
+			const bg_blue = { backgroundColor: 'blue' };
+
 			return (
-				<td className={cellStyleName} key={column}>
-					{assignments[row][column]}
+				<td className={cellStyleName} style={bg_blue} key={column}>
+					<span className='occupied'></span>
 				</td>
 				);
 		} else {
+			const cellStyleName = classes.join(' ');
 			return (
 				<td className={cellStyleName} key={column}></td>
 				);
@@ -73,5 +98,10 @@ class GameTreeBoard extends React.Component {
 	}
 }
 
+
+GameTreeBoard.propTypes = {
+	name: PropTypes.string,
+	board: PropTypes.object
+};
 
 export {GameTreeBoard};

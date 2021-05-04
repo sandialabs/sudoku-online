@@ -115,7 +115,7 @@ class LogicalOperatorPanel extends React.Component {
 			} else {
 				return (
 					<Paper name='logicalOperators'>
-						<Typography variant="h5">Logical Operators</Typography>
+						<Typography variant="h5">Specialized Operators</Typography>
 						{operatorListPanel}
 						<p>
 							Operator selection can change freely.

@@ -69,12 +69,16 @@ class ActiveBoardView extends React.Component {
 		const D = this.props.board.degree;
 		const tableRows = [];
 
+		const accessibleCellKeys = this.props.board.accessibleCells.map(
+			(coords) => (coords[0].toString() + coords[1].toString())
+			);
+
 		const tableStyle = 'active-board degree-' + D;
 		for (let row = 0; row < D*D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D*D; ++col) {
 				squaresInRow.push(
-					this.makeSquare(row, col, assignments, moveLists)
+					this.makeSquare(row, col, assignments, moveLists, accessibleCellKeys)
 					);
 			}
 			tableRows.push(
@@ -89,7 +93,7 @@ class ActiveBoardView extends React.Component {
 			);
 	}
 
-	makeSquare(row, column, assignments, moveLists) {
+	makeSquare(row, column, assignments, moveLists, accessibleCellKeys) {
 		let cellStyleName = 'active-board square degree-' + this.props.board.degree;
 		if (this.props.selectedSquare !== null
 			&& this.props.selectedSquare[0] === row
@@ -97,7 +101,35 @@ class ActiveBoardView extends React.Component {
 			cellStyleName += ' selected-square';
 		}
 
-		const allCellStyleNames = cellStyleName;
+		let allCellStyleNames = cellStyleName;
+		const cellKey = row.toString() + column.toString();
+		const cellIsAccessible = (accessibleCellKeys.indexOf(cellKey) != -1);
+		if (cellIsAccessible) {
+			allCellStyleNames += ' accessible';
+		} else {
+			allCellStyleNames += ' inaccessible';
+		}
+		
+		const selectIfAccessible = () => {
+			if (cellIsAccessible) {
+				return this.selectCell(row, column);
+			} else {
+				console.log('Cell ' + cellKey + ' is inaccessible in '
+					        + 'this puzzle.  Ignoring selection.');
+			}
+		}
+
+		const cellIsGoal = (
+			this.props.board.goalCell !== undefined 
+			&& this.props.board.goalCell !== null 
+			&& row === this.props.board.goalCell[0]
+			&& column === this.props.board.goalCell[1]
+			);
+
+		if (cellIsGoal) {
+			allCellStyleNames += ' goal-cell';
+		}
+
 		if (assignments[row][column] !== null) {
 			return (
 				<td className={allCellStyleNames} key={column}>
@@ -105,31 +137,44 @@ class ActiveBoardView extends React.Component {
 				</td>
 				);
 		} else {
-			const choiceGrid = this.makeChoiceGrid(moveLists[row][column], row, column);
+			const choiceGrid = this.makeChoiceGrid(
+				moveLists[row][column], 
+				row, 
+				column,
+				accessibleCellKeys
+				);
+
 			return (
-				<td className={allCellStyleNames} key={column} onClick={() => this.selectCell(row, column)}>
+				<td className={allCellStyleNames} 
+				    key={column} 
+				    onClick={selectIfAccessible}
+					>
 					{choiceGrid}
 				</td>
 			);
 		}
 	}
 
-	makeChoiceGrid(moveList, boardRow, boardColumn) {
+	makeChoiceGrid(moveList, boardRow, boardColumn, accessibleCellKeys) {
 		const squareIsSelected = (
 			this.props.selectedSquare !== null
 			&& this.props.selectedSquare[0] === boardRow
 			&& this.props.selectedSquare[1] === boardColumn
 			);
 
+		const cellKey = boardRow.toString() + boardColumn.toString();
+		const isCellAccessible = (accessibleCellKeys.indexOf(cellKey) !== -1);
 		return (
 			<SudokuChoiceGrid
+				cellKey={[boardRow, boardColumn]}
 				degree={this.props.board.degree}
 				moveList={moveList}
 				boardRow={boardRow}
 				boardColumn={boardColumn}
 				boardSquareIsSelected={squareIsSelected}
 				selectedValue={this.props.selectedValue}
-				announceChoiceSelection={ (row, column, value) => {this.choiceSelected(row, column, value);} }
+				announceChoiceSelection={ (row, column, value) => {this.choiceSelected(row, column, value);}}
+				accessible={isCellAccessible}
 				/>
 			);
 	}
