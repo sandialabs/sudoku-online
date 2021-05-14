@@ -113,7 +113,7 @@ class SudokuChoiceGrid extends React.Component {
 						value={value}
 						id="button"
 					>
-					{value}
+					{value +1}
 				</button>
 			</td>
 		);
