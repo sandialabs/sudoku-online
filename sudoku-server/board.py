@@ -434,6 +434,7 @@ class Board():
         # (though it's been pointed out that they might leak a little information about MAC address)
         self._id = uuid.uuid1().int >> 64
         self._is_background = False
+        self._action = {}
         self._state = dict()
         assert isinstance(degree, int), "Degree must be an int."
         assert 2 <= degree <= 4, "Degree must be between 2 and 4 for now."
@@ -482,7 +483,6 @@ class Board():
             if 'parentSerialNumber' in state:
                 self._parent_id = state['parentSerialNumber']
                 del params['parentSerialNumber']
-            # MAL TODO remove this
             if 'goalCell' in state:
                 goal = state['goalCell']
                 assert len(goal) == 2, "Expected exactly a row and column index for goal."
@@ -499,6 +499,12 @@ class Board():
                 del params['accessibleCells']
             else:
                 self.computeAccessibleCells()
+            if 'action' in state:
+                self.action = state['action']
+                del params['action']
+            if 'backtrackingBoard' in state:
+                self._is_background = state['backtrackingBoard']
+                del params['backtrackingBoard']
             self.config = config_data.ConfigurationData(self.getStateStr(
                 False, False, ''), name, params)
         elif isinstance(state, str):
@@ -574,8 +580,17 @@ class Board():
         Background boards represent places to which a user can back up over his own decision
         if he accidentally placed himself in a corner.  They are lower priority.
         """
-        assert self.config, "Cannot set backtrackingBoard without a configuration."
-        self.config.setParam("backtrackingBoard", True)
+        self._is_background = True
+
+    def addAction(self, action: dict):
+        """ Adds the action describing the item that changed this board to this state to the board description. """
+        if not self._action:
+            self._action = action
+        for (key, value) in action.items():
+            if key == 'action' and key in self._action and value == 'applyops':
+                # Don't overwrite an existing action with applyops
+                continue
+            self._action[key] = value
 
     def getDegree(self):
         """ Returns the degree of this puzzle board. """
@@ -718,6 +733,8 @@ class Board():
             invalid_locs = [list(type(self).getLocations(
                 ident, self.getDegree())) for ident in invalid_cells]
             brd['conflictingCells'] = invalid_locs
+        if self._is_background:
+            brd['backtrackingBoard'] = True
         brd = self.config.add_config_mappings_to_dict(brd)
 
         logger.debug(f"Goal cell, accessible_cells: {self.getGoalCell()} and {self.accessible_cells}.")
@@ -730,6 +747,7 @@ class Board():
             brd['accessibleCells'] = accessible_locs
         else:
             brd['accessibleCells'] = []
+        brd['action'] = self._action
         return brd
 
     def getUncertainCells(self):
