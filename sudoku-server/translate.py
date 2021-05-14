@@ -10,6 +10,7 @@ Requires python3.
 """
 
 # Imports from our own code
+import uuid
 import board
 import board_update_descriptions
 import config_data
@@ -18,11 +19,13 @@ import puzzles
 import solvers
 
 # Imports from Python standard library
+import datetime
 import enum
 import json
 import random
 import os
 import sys
+import uuid
 
 import logging
 logger = logging.getLogger(__name__)
@@ -197,6 +200,7 @@ def parse_and_apply_action(content):
     """
     if not isinstance(content, dict):
         raise SudokuServerException("Failed assumption that request for action on board is formatted as a dict")
+    logger.info("Full action request: {}".format(content))
     if "board" not in content:
         raise SudokuServerException("You must specify a board to act upon.")
     board_dict = content["board"]
@@ -207,6 +211,8 @@ def parse_and_apply_action(content):
     if "action" not in content:
         raise SudokuServerException("You must specify an action to take on the given board.")
     action_dict = content["action"]
+    if "operators" in content:
+        action_dict["operators"] = content["operators"]
     if not isinstance(action_dict, dict):
         raise SudokuServerException("Failed assumption that the parsed action is a dict.")
     if "action" not in action_dict:
@@ -296,26 +302,36 @@ def _validate_and_craft_filename(tree_data):
         do some lightweight validation that it is what we expect,
         and that it won't be too big, and then save it. """
     logger.debug("Received tree data %s", str(tree_data))
-    if "session_id" not in tree_data:
-        raise SudokuServerException("Expect to receive a session ID with game_tree.")
-    if "game_id" not in tree_data:
-        raise SudokuServerException("Expect to receive a game ID with game_tree.")
-    if "timestamp" not in tree_data:
-        raise SudokuServerException("Expect to receive a timestamp with game_tree.")
+    # if "session_id" not in tree_data:
+    #     raise SudokuServerException("Expect to receive a session ID with game_tree.")
+    if "finishedTree" not in tree_data:
+        raise SudokuServerException("Expect to receive a finished_tree with relevant info.")
 
-    return f"{tree_data['session_id']}-{tree_data['game_id']}-{tree_data['timestamp']}"
+    filename = ""
+    # TODO MAL : do we need to worry about people pinging this and dropping a ton of data into the store?
+    if 'id' not in tree_data['finishedTree']:
+        raise SudokuServerException("Expect to receive an id in finished_tree.")
+    filename += str(tree_data['finishedTree']['id']) + "-"
+    if 'timestamp' not in tree_data:
+        tree_data['timestamp'] = str(datetime.datetime.now())
+    filename += str(tree_data['timestamp'])
+
+    return filename
 
 def submit_game_tree(tree_data):
     """ Given a json tree per the specifications in server_api.md,
         do some lightweight validation that it is what we expect
         and then save it. """
-    logger.info("Saving game tree data.")
+    logger.info("Saving game tree data (%s).", str(tree_data))
     filename = _validate_and_craft_filename(tree_data)
 
     if not os.path.exists("data"):
         os.makedirs("data")
+    file_path = f"data/{filename}"
+    if os.path.exists(f"{file_path}.json"):
+        file_path += str(uuid.uuid4())
 
-    with open(f"data/{filename}.json", "w") as outfile:
+    with open(f"{file_path}.json", "w") as outfile:
         json.dump(tree_data, outfile)
     return {
         "message": "Game tree successfully saved."

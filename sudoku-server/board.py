@@ -711,7 +711,7 @@ class Board():
         if self._parent_id:
             brd['parentSerialNumber'] = self._parent_id
         if self.isSolved():
-            brd['solved']: True
+            brd['solved'] = True
         invalid_cells = self.invalidCells()
         if invalid_cells:
             # Get the locations in row, column form of the given cell id
@@ -728,6 +728,8 @@ class Board():
             accessible_locs = [list(type(self).getLocations(
                 ident, self.getDegree())) for ident in self.accessible_cells]
             brd['accessibleCells'] = accessible_locs
+        else:
+            brd['accessibleCells'] = []
         return brd
 
     def getUncertainCells(self):
