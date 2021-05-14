@@ -211,8 +211,6 @@ def parse_and_apply_action(content):
     if "action" not in content:
         raise SudokuServerException("You must specify an action to take on the given board.")
     action_dict = content["action"]
-    if "operators" in content:
-        action_dict["operators"] = content["operators"]
     if not isinstance(action_dict, dict):
         raise SudokuServerException("Failed assumption that the parsed action is a dict.")
     if "action" not in action_dict:
@@ -226,8 +224,8 @@ def parse_and_apply_action(content):
         collected = solvers.take_action(
             board.Board(board_object), action_choice, args)
         result = []
-        if "heuristics" in content:
-            logicalops = content["heuristics"]
+        if "operators" in action_dict:
+            logicalops = action_dict["operators"]
             if not isinstance(logicalops, list):
                 raise SudokuServerException("Failed assumption that the parsed action argument heuristics is a list.")
             for brd in collected:
