@@ -29,6 +29,7 @@ import { Typography } from '@material-ui/core';
 import { ActiveBoardView } from './ActiveBoardView';
 import { AnalysisQuestionPanel } from './AnalysisQuestionPanel';
 import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
+import { ErrorCannotExecuteDialog } from './ErrorCannotExecuteDialog';
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
@@ -51,6 +52,7 @@ class SudokuGame extends React.Component {
             gameTreeExpandedNodes: new Set(),
             logicalOperatorsSelected: false,
             selectedBoardSquare: null,
+            selectedCellAction: null,
             selectedLogicalOperators: [],
             selectedValue: null,
             selectLogicalOperatorsUpFront: false,
@@ -259,7 +261,9 @@ class SudokuGame extends React.Component {
                                 actionsEnabled={actionsEnabled}
                                 disabledReason={disabledReason}
                                 key={this.state.resetCount}
-
+                                />
+                            <ErrorCannotExecuteDialog
+                                action={this.state.selectedCellAction}
                                 />
                         </Grid>
                         <Grid item xs={6}>
