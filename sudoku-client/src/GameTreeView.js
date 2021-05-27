@@ -126,20 +126,24 @@ function hasTreeSizeChanged(oldTree, newTree) {
 
 
 function cellToString(cell) {
-    return '(' + cell[0] + ', ' + cell[1] + ')';
+    return String.fromCharCode(0x41 + cell[0]) + (cell[1] +1);
 }
 
 // Turn an action object into a human-readable name for the game tree.
 function actionToName(action, board) {
     switch (action.action) {
         case 'assign': {
-            return 'Assign: ' + cellToString(action.cell) + ' \u2190 ' + action.value; 
+            return 'Assign:  ' + cellToString(action.cell) + ' \u2190 ' + (action.value +1);
         }
         case 'exclude': {
-            return 'Exclude: ' + cellToString(action.cell) + ' \u2260 ' + action.value;
+            return 'Exclude: ' + cellToString(action.cell) + ' \u2260 ' + (action.value +1);
         }
         case 'pivot': {
-            return 'Pivot: ' + cellToString(action.cell) + ' \u2190 ' + board.assignments[action.cell[0]][action.cell[1]];
+            return 'Pivot:   ' + cellToString(action.cell) + ' \u2190 ' + (board.assignments[action.cell[0]][action.cell[1]] +1);
+        }
+        // TODO: Logical operators are not yet implemented here
+        case 'applyops': {
+            return 'Operators: ' + action.operators;
         }
         // TODO: Logical operators are not yet implemented here
         default: {
@@ -165,19 +169,15 @@ function prepareTreeForTreebeard(sudokuTree, activeNodeId, expandedNodes) {
         "Couldn't find ancestors of active board");
     for (const node of activeBoardAncestors.path) {
         expandedNodesPlusActiveNodeAncestry.add(node.data.board.serialNumber);
-    }       
+    }
 
 
     GameTree.walkTree(ourTree,
         (node) => {
-            if (node.data.board.backtrackingBoard) {
-                node.name = 'Backtrack to Parent';
+            if (node.data.board.hasOwnProperty('action')) {
+                node.name = actionToName(node.data.board.action, node.data.board);
             } else {
-                if (node.data.board.hasOwnProperty('action')) {
-                    node.name = actionToName(node.data.board.action, node.data.board);
-                } else {
-                    node.name = 'UNIMPLEMENTED: ' + node.data.board.serialNumber;
-                }
+                node.name = 'UNIMPLEMENTED: ' + node.data.board.serialNumber;
             }
             if (node.data.board.serialNumber === activeNodeId) {
                 node.selected = true;

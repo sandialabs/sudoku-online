@@ -133,7 +133,7 @@ class ActiveBoardView extends React.Component {
 		if (assignments[row][column] !== null) {
 			return (
 				<td className={allCellStyleNames} key={column}>
-					{assignments[row][column]}
+					{assignments[row][column] +1}
 				</td>
 				);
 		} else {

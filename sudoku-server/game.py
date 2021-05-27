@@ -54,25 +54,11 @@ class ActiveGameTreeState():
         """ Return True if active nodes remain for exploration. """
         return len(self._active_nodes) > 0
 
-    def selectActiveNode(self):
+    def getModifiableActiveNodes(self):
         """
-        Allow the user to select an active node to continue exploring.
-        Remove that node from the _active_nodes list.
+        Return the modifiable list of active nodes (i.e., removing the node from the returned list is reflected here WARNING).
         """
-        if len(self._active_nodes) > 1:
-            print("Choose a board to explore. Please input the desired board number:")
-            # MAL TODO gross
-            for i in range(len(self._active_nodes)):
-                node = self._active_nodes[i]
-                print("Board Number {}:\n{}\n".format(i, node.board.getStateStr(True)))
-            idx = int(input())
-            active = self._active_nodes[idx]
-            self._active_nodes.remove(active)
-        else:
-            active = self._active_nodes.pop()
-        logger.info("Exploring board \n{}".format(
-            active.board.getStateStr(True)))
-        return active
+        return self._active_nodes
 
     def addSuccessNode(self, node):
         """
@@ -115,6 +101,7 @@ class GameTreeNode():
                                 qualname="GameTreeNode.SelectFrequency")
 
     def __init__(self, board, logical_ops=None, cell_selector=None,
+                 board_selector=None,
                  parent=None, moves=None, success=False,
                  node_type=None, game_state=None):
         self.board = board
@@ -125,7 +112,8 @@ class GameTreeNode():
         self._depth = 0
         self.node_type = node_type
         self._my_ops = logical_ops if logical_ops else parent._my_ops if parent else solvers.select_all_logical_operators_ordered()
-        self._cellselector = cell_selector if cell_selector else parent._cellselector if parent else solvers.select_by_user
+        self._cellselector = cell_selector if cell_selector else parent._cellselector if parent else solvers.select_cell_by_user
+        self._boardselector = board_selector if board_selector else parent._boardselector if parent else solvers.select_board_by_user
 
         self.game_state = ActiveGameTreeState() if game_state is None else game_state
         # TODO MAL: add a self.explanation to keep track of what each node was doing (e.g., pivot cell?)
@@ -191,9 +179,8 @@ class GameTreeNode():
         # Select an active state and keep exploring.
         while (self.game_state.hasActiveNode()):
             # MAL TODO bug in here trying to get back to an older state.
-            explore = self.game_state.selectActiveNode()
+            explore = self._boardselector(self.game_state.getModifiableActiveNodes())
             explore = self.selectNextApproach()
-            explore = self.game_state.selectActiveNode()
             explore.play()
 
         self.game_state.printSuccessNodes()
@@ -209,13 +196,13 @@ class GameTreeNode():
         In the future, we could select new rules, new solvers, backtrack, etc.
         """
         print("Your goal is to answer the following question:")
-        print(self.board._question)
+        print(self.board.getQuestion())
         print("  HINT: you may not need to solve the whole board to answer this question.")
-        print("The Goal cell, {}, will be *marked* on the board with asterisks '*'.".format(self.board.goal_cell))
+        print("The Goal cell, {}, will be *marked* on the board with asterisks '*'.".format(self.board.getGoalCell()))
         print("\n")
 
         # MAL TODO Allow for asking questions
-        # print("\nWould you like to answer the question? y/n (", self.board._question ,")")
+        # print("\nWould you like to answer the question? y/n (", self.board.getQuestion() ,")")
         # ans = input()
         # if ans == 'y'or ans == 'yes':
         #     print(question, "Please answer yes or no")
@@ -274,6 +261,7 @@ class GameTreeNode():
             child_nodes.append(child_node)
         self.children.extend(child_nodes)
         self.game_state.addActiveNodes(child_nodes)
+        return child_nodes[0]
 
 # -----------------------------------------------------
 

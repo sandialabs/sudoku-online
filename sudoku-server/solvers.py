@@ -14,6 +14,7 @@ import operators
 import config_data
 import board_update_descriptions
 import board
+import translate
 
 import logging
 logger = logging.getLogger(__name__)
@@ -35,12 +36,12 @@ def calculate_status(sboard, msg):
     # If we found a contradiction (bad guess earlier in search), return 0
     #    as no more cells can be assigned
     if(sboard.invalidCells()):
-        progress = f'Found logical contradiction.'
-        sboard.config.debug_print('invalidcells', progress, sboard)
+        logger.debug("Found logical contradiction: invalid cells on board %s",
+            str(sboard.getStateStr(True, False)))
         return 0
     nValues = sboard.countUncertainValues()
-    progress = f'Uncertainty state after {msg}\n{sboard.getStateStr(True)}\n{str(nValues)} uncertain values remaining'
-    sboard.config.debug_print('status', progress, sboard)
+    logger.debug("Uncertainty state after %s\n%s\n%s uncertain values remaining",
+        str(msg), str(sboard.getStateStr(True)), str(nValues))
     return nValues
 
 
@@ -152,10 +153,11 @@ def select_all_logical_operators_ordered(ordering=None):
     """ Returns an ordered list of parameterized logical operators. """
     if not ordering:
         def ordering(name):
+            logger.debug("Asking to order operator %s", str(name))
             return board_update_descriptions.operators_description[name]['cost']
     costly_ops = sorted(
-        config_data.defaultConfig.costly_operations, key=ordering)
-    config_data.defaultConfig.debug_print(str(costly_ops), None, None)
+        [op['internal_name'] for op in translate.get_possible_operators()], key=ordering)
+    logger.debug("Allowing for costly operations %s", str(costly_ops))
     return costly_ops
 
 
@@ -203,6 +205,7 @@ def logical_solve(sboard, logical_ops):
 
 def logical_solve_action(sboard, logical_ops):
     child_board = logical_solve(sboard, logical_ops)
+    child_board.addAction({'action': 'applyops', 'operators': list(logical_ops)})
     return [child_board]
 
 # -----------------------------------------------------------------------------
@@ -247,6 +250,7 @@ def expand_cell(sboard, cell_id):
 
         progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
         b.config.complete_operation('pivot', progress, b, True)
+        b.addAction({'action': 'pivot', 'cell': list(type(b).getLocations(cell_id, b.getDegree())), 'value': v})
 
     progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
     sboard.config.complete_operation('pivot', progress, sboard, True)
@@ -337,15 +341,19 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
         expansion.append(assigned)
         expansion.append(removed)
 
+    cell_loc = list(type(assigned).getLocations(cell_id, assigned.getDegree()))
+
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
     progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
     assigned.config.complete_operation(action, progress, assigned, True)
+    assigned.addAction({'action': 'assign', 'cell': cell_loc, 'value': value})
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
     progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
     removed.config.complete_operation(action, progress, removed, True)
+    removed.addAction({'action': 'exclude', 'cell': cell_loc, 'value': value})
 
     progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
     sboard.config.complete_operation(action, progress, sboard, True)
@@ -374,26 +382,10 @@ def take_action(sboard, expansion_op, args):
     return ret
 
 
-# -----------------------------------------------------------------------------
-# SEARCH PUZZLE CELL SELECTORS
-# -----------------------------------------------------------------------------
-
-def select(sboard, heuristic, criterion, selector):
+def collect_cells(sboard):
     """
-    Selects and returns a single cell from sboard by the following:
-    1. Apply heuristic to each uncertain cell
-    2. Filter the set of cells according to criterion
-    3. If multiple cells satisfy criterion, select among those using selector
-    Heuristic argument is a function that takes an uncertain cell as
-        input and returns a number (e.g., number of candidate values)
-    Criterion argument is a function that takes a list of heuristic scores and
-        returns whatever value(s) satisfy the criterion (e.g., max or min)
-    Selector argument is a function that takes a list of cells and
-        returns whatever cell is selected by selector
-    Returns:
-        A CellID
+    Given an sboard, collect the set of cells to select from.
     """
-
     # Get the list of board cells that are accessible
     access_cells = sboard.computeAccessibleCells()
     logger.debug("Accessible cells are %s", str(access_cells))
@@ -401,15 +393,33 @@ def select(sboard, heuristic, criterion, selector):
     #Need to get the actual cells not the identifier
     for ide in access_cells:
         cell_list.append(sboard.getCell(ide))
+    return cell_list
 
-    # Apply heuristic to get list of (cell, score) tuples
-    hscores = list(map(lambda cell: (cell, heuristic(cell)), cell_list))
+
+def select(item_list, heuristic, criterion, selector):
+    """
+    Selects and returns a single selected item from item_list by the following:
+    1. Apply heuristic to each item_list
+    2. Filter the set of item_list according to criterion
+    3. If multiple item_list satisfy criterion, select among those using selector
+    Heuristic argument is a function that takes an item from item_list as
+        input and returns a number (e.g., number of candidate values)
+    Criterion argument is a function that takes a list of heuristic scores and
+        returns whatever value(s) satisfy the criterion (e.g., max or min)
+    Selector argument is a function that takes a list of items and
+        returns whatever item is selected by selector
+    Returns:
+        One item from item_list
+    """
+
+    # Apply heuristic to get list of (item, score) tuples
+    hscores = list(map(lambda item: (item, heuristic(item)), item_list))
 
     # Apply criterion to determine the best score
-    selection = criterion([score for (cell, score) in hscores])
+    selection = criterion([score for (item, score) in hscores])
 
     # Filter the list of heuristic scores to get the set of best cells
-    best_list = [cell for (cell, score) in hscores if score == selection]
+    best_list = [item for (item, score) in hscores if score == selection]
 
     # Pick one of the best cells at random
     if selector is None:
@@ -417,34 +427,87 @@ def select(sboard, heuristic, criterion, selector):
     return selector(best_list)
 
 
+# -----------------------------------------------------------------------------
+# SEARCH PUZZLE CELL / BOARD / ACTION SELECTORS
+# -----------------------------------------------------------------------------
+
+
 def select_random_cell_with_fewest_uncertain_values(sboard):
     """ Return the Cell that has the fewest uncertain values. """
-    return select(sboard, candidate_values_heuristic, min, random.choice)
+    return select(collect_cells(sboard), candidate_cell_values_heuristic, min, random.choice)
 
 
 def select_random_cell_with_most_uncertain_values(sboard):
     """ Return the Cell that has the most uncertain values. """
-    return select(sboard, candidate_values_heuristic, max, random.choice)
+    return select(collect_cells(sboard), candidate_cell_values_heuristic, max, random.choice)
 
 
-def select_by_user(sboard):
+def select_cell_by_user(sboard):
     """ Return the Cell selected by the user. """
-    return select(sboard, uniform_heuristic, min, users_choice)
+    return select(collect_cells(sboard), uniform_heuristic, min, users_choice_cell)
+
+
+def select_random_board_with_fewest_uncertain_values(node_list):
+    """ Return the Board that has the fewest uncertain values, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_values_heuristic, min, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_random_board_with_most_uncertain_values(node_list):
+    """ Return the Board that has the most uncertain values, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_values_heuristic, max, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_random_board_with_fewest_uncertain_cells(node_list):
+    """ Return the Board that has the fewest uncertain cells, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_cells_heuristic, min, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_random_board_with_most_uncertain_cells(node_list):
+    """ Return the Board that has the most uncertain cells, removing it from node_list. """
+    board = select(node_list, candidate_board_uncertain_cells_heuristic, max, random.choice)
+    node_list.remove(board)
+    return board
+
+
+def select_board_by_user(node_list):
+    """ Return the Board selected by the user, removing it from node_list. """
+    board = select(node_list, uniform_heuristic, min, users_choice_board)
+    node_list.remove(board)
+    return board
+
 
 # -----------------------------------------------------------------------------
 # SEARCH PUZZLE HEURISTICS
 # Cell -> comparable value representing "goodness" of cell
+# Board -> comparable value representing "goodness" of board
 # -----------------------------------------------------------------------------
 
 
-def candidate_values_heuristic(cell):
+def candidate_cell_values_heuristic(cell):
     """ Taking in a Cell, return the number of candidate values. """
     return len(cell.getValues())
 
 
-def uniform_heuristic(cell):
-    """ Taking in a Cell, return 1. """
+def uniform_heuristic(item):
+    """ Taking in an item, return 1. """
     return 1
+
+
+def candidate_board_uncertain_cells_heuristic(node):
+    """ Taking in a GameTreeNode, return the number of uncertain cells. """
+    return len(node.board.getUncertainCells())
+
+
+def candidate_board_uncertain_values_heuristic(node):
+    """ Taking in a GameTreeNode, return the number of uncertain values across cells. """
+    return node.board.countUncertainValues()
+
 
 # -----------------------------------------------------------------------------
 # SEARCH PUZZLE SELECTORS
@@ -452,21 +515,49 @@ def uniform_heuristic(cell):
 # -----------------------------------------------------------------------------
 
 
-def users_choice(cell_list):
+def users_choice_cell(cell_list):
     """ Taking in a list of Cells, ask the user to select one and return it.
-
-    Takes in the Board containing the Cells to help extracting the correct one.
     """
     selected = None
+
+    assert len(cell_list) > 0, "Can't select cell from empty list."
+    if len(cell_list) == 1:
+        logger.info("Selecting single cell %s", str(cell_list[0]))
+        return cell_list[0]
+
     while True:
         names = sorted([cell.getIdentifier() for cell in cell_list])
         print("Which cell do you want to expand? {}".format(names))
         selected = input()
         if selected in names:
-            break
-    logger.debug("User selected cell ID %s.", str(selected))
-    match_cell = next(filter(lambda x: x.getIdentifier() == selected, cell_list))
-    if not match_cell:
+            logger.debug("User selected cell ID %s.", str(selected))
+            match_cell = next(filter(lambda x: x.getIdentifier() == selected, cell_list))
+            if match_cell:
+                break
         logger.warn("Unable to find cell matching selected identifier %s.", str(selected))
-        return users_choice(cell_list)
     return match_cell
+
+
+def users_choice_board(node_list):
+    """
+    Allow the user to select a board to continue exploring. Remove that board from the node_list
+    """
+    assert len(node_list) > 0, "Can't select board from empty list."
+    if len(node_list) == 1:
+        logger.info("Selecting single board %s", str(node_list[0]))
+        return node_list[0]
+
+    while True:
+        print("Choose a board to explore.")
+        # MAL TODO gross
+        for i in range(len(node_list)):
+            node = node_list[i]
+            print("Board Number {}:\n{}\n".format(i, node.board.getStateStr(True)))
+        print("Please input the desired board number:")
+        idx = int(input())
+        if idx >= 0 and idx < len(node_list):
+            logger.debug("User selected board index %s.", str(idx))
+            active = node_list[idx]
+            break
+        logger.warn("Selected index not valid (%s).", str(idx))
+    return active

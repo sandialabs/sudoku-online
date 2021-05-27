@@ -59,6 +59,7 @@ def test_sudoku(args):
         logger.info("Initial state of %s:\n%s\n%s", sboard.getPuzzleName(), sboard.getStateStr(), sboard.getSimpleJson())
 
         cellselector = getattr(solvers, "select_" + args.cellselector)
+        boardselector = getattr(solvers, "select_" + args.boardselector)
         search_tree = game.GameTreeNode(sboard, my_ops, cellselector)
         result = search_tree.play()
 
@@ -83,10 +84,18 @@ if __name__ == "__main__":
     # parser.add_argument("--outfile", nargs="?", type=argparse.FileType("w"), default=sys.stdout)
     parser.add_argument("--cellselector", nargs="?",
                         choices=["random_cell_with_fewest_uncertain_values",
-                                 "random_cell_with_most_uncertain_values"
-                                 "by_user"],
-                        default="by_user",
+                                 "random_cell_with_most_uncertain_values",
+                                 "cell_by_user"],
+                        default="cell_by_user",
                         help="function to select pivot cell")
+    parser.add_argument("--boardselector", nargs="?",
+                        choices=["random_board_with_fewest_uncertain_values",
+                                 "random_board_with_most_uncertain_values",
+                                 "random_board_with_fewest_uncertain_cells",
+                                 "random_board_with_most_uncertain_cells",
+                                 "board_by_user"],
+                        default="board_by_user",
+                        help="function to select pivot board")
     parser.add_argument("--opselector", nargs="?",
                         choices=["all_logical_operators_ordered"],
                         default="all_logical_operators_ordered",

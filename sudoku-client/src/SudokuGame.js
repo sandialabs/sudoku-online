@@ -1,8 +1,8 @@
 // SudokuGame: manage and render the entire game tree
-// 
+//
 // Our implementation of Sudoku is intended to track the moves and
 // decisions players make.  We represent these decisions explicitly
-// by showing a tree of boards.  When the user makes a move in a 
+// by showing a tree of boards.  When the user makes a move in a
 // single square, the board is given one or more child nodes that
 // illustrate the consequences of that move.
 //
@@ -14,7 +14,7 @@
 //  initialBoard: top of game
 //  issueActionRequest: function
 //  submitFinishedGameTree: function
-//  
+//
 
 import React from 'react';
 import { clone } from 'ramda';
@@ -72,7 +72,7 @@ class SudokuGame extends React.Component {
             gameTree: gameTree,
             activeBoardId: gameTree.data.board.serialNumber
         });
-    } 
+    }
 
     boardAnnouncesChoice(board, cell, choice) {
         this.setState({
@@ -90,32 +90,26 @@ class SudokuGame extends React.Component {
     }
 
     handleNewBoards(parentSerial, newBoards, request) {
-        
+
         console.log('handleNewBoards: parentSerial is ' + parentSerial);
         console.log('handleNewBoards: request: ');
         console.log(request);
         console.log('handleNewBoards: reply: ');
         console.log(newBoards);
 
-        // Each new board needs to know about the action taken to produce it
-        // so that it can come up with a meaningful name.
-        for (const board of newBoards) {
-            board.action = request.action
-        }
-        
         this.setState({
             gameTree: GameTree.addBoards(
                 this.state.gameTree,
                 parentSerial,
                 newBoards
-                ),
+            ),
         });
 
         const newActiveSerial = findFirstNonBacktrackBoard(newBoards);
         console.assert(
             newActiveSerial !== null,
             "Couldn't find non-backtrack message in new boards"
-            );
+        );
         this.changeActiveBoard(newActiveSerial);
     }
 
@@ -137,14 +131,14 @@ class SudokuGame extends React.Component {
     }
 
     changeActiveBoard(boardSerial) {
-        if (boardSerial !== this.state.activeBoardId) {         
+        if (boardSerial !== this.state.activeBoardId) {
             console.log('SudokuGame: Request received to change active board to ' + boardSerial + '.');
             this.setState({
                 activeBoardId: boardSerial,
                 selectedBoardSquare: null,
                 selectedValue: null
             });
-        }    
+        }
     }
 
     announceBoardToggled(boardSerial) {
@@ -160,20 +154,17 @@ class SudokuGame extends React.Component {
     }
 
     canCellActionsExecute() {
-        if (this.state.selectLogicalOperatorsUpFront === true 
-            && this.state.logicalOperatorsSelected === false) 
-        {
+        if (this.state.selectLogicalOperatorsUpFront === true
+            && this.state.logicalOperatorsSelected === false) {
             return false;
         }
 
-        if (this.state.activeBoardId === null 
-            || this.state.activeBoardId === -1)
-        {
+        if (this.state.activeBoardId === null
+            || this.state.activeBoardId === -1) {
             return false;
         }
 
-        if (this.state.selectedValue === null)
-        {
+        if (this.state.selectedValue === null) {
             return false;
         }
 
@@ -186,15 +177,13 @@ class SudokuGame extends React.Component {
 
     // These reasons are listed in descending order of priority.
     cellActionsDisabledBecause() {
-        if (this.state.selectLogicalOperatorsUpFront === true 
-            && this.state.logicalOperatorsSelected === false) 
-        {
+        if (this.state.selectLogicalOperatorsUpFront === true
+            && this.state.logicalOperatorsSelected === false) {
             return 'Select Logical Operators First';
         }
 
-        if (this.state.activeBoardId === null 
-            || this.state.activeBoardId === -1)
-        {
+        if (this.state.activeBoardId === null
+            || this.state.activeBoardId === -1) {
             return 'Error: No Active Board';
         }
 
@@ -202,11 +191,10 @@ class SudokuGame extends React.Component {
             return 'This board has already been acted upon';
         }
 
-        if (this.state.selectedValue === null)
-        {
+        if (this.state.selectedValue === null) {
             return 'You must select a square to operate upon';
         }
-        
+
         return 'ERROR: No reason given for disabled actions';
     }
 
@@ -214,11 +202,11 @@ class SudokuGame extends React.Component {
         if (this.state.gameTree === null) {
             return (
                 <div>
-                   Loading Game Tree...
+                    Loading Game Tree...
                 </div>
             );
         } else if (this.state.gameTree.data.board === null
-                   || this.state.gameTree.data.board === undefined) {
+            || this.state.gameTree.data.board === undefined) {
             return (
                 <div>
                     SudokuGame has a game tree but no root board.  This shouldn't happen.
@@ -230,7 +218,7 @@ class SudokuGame extends React.Component {
             console.log("Game tree:");
             console.log(this.state.gameTree);
             const board = this.activeBoard();
-            
+
             let defaultAction = null;
             if (this.props.cellActions !== null && this.props.cellActions.length > 0) {
                 // FIXME: make sure the default action is not disabled
@@ -242,11 +230,11 @@ class SudokuGame extends React.Component {
             const disabledReason = this.cellActionsDisabledBecause();
             const startingBoard = this.state.gameTree.data.board;
             const analysisQuestion = "How is a raven like a writing desk?";
-            
+
             const logicalOperatorsFrozen = (
-                this.state.selectLogicalOperatorsUpFront 
+                this.state.selectLogicalOperatorsUpFront
                 && this.state.logicalOperatorsSelected
-                );
+            );
 
             return (
                 <Grid container id="gameContainer">
@@ -256,28 +244,26 @@ class SudokuGame extends React.Component {
                                 allActions={this.props.cellActions}
                                 permittedActions={board.availableActions}
                                 defaultAction={defaultAction}
-                                selectedActionChanged={(newAction) => {this.handleCellActionSelection(newAction)}}
+                                selectedActionChanged={(newAction) => { this.handleCellActionSelection(newAction) }}
                                 executeAction={(action) => this.handleExecuteAction(action)}
                                 actionsEnabled={actionsEnabled}
                                 disabledReason={disabledReason}
                                 key={this.state.resetCount}
                                 />
-                            <ErrorCannotExecuteDialog
-                                action={this.state.selectedCellAction}
-                                />
+                           
                         </Grid>
                         <Grid item xs={6}>
                             <LogicalOperatorPanel
                                 operators={this.props.logicalOperators}
-                                selectionChanged={(operators) => {this.handleLogicalOperatorSelection(operators);}}
+                                selectionChanged={(operators) => { this.handleLogicalOperatorSelection(operators); }}
                                 selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
                                 logicalOperatorsFrozen={logicalOperatorsFrozen}
                                 confirmOperatorSelection={() => {
                                     console.log("SudokuGame: Confirming logical operator selection.");
-                                    this.setState({logicalOperatorsSelected: true});
+                                    this.setState({ logicalOperatorsSelected: true });
                                 }}
                                 key={this.state.resetCount}
-                                />
+                            />
                         </Grid>
                         <Grid item xs={6}>
                             <Paper>
@@ -295,22 +281,22 @@ class SudokuGame extends React.Component {
                             gameTree={this.state.gameTree}
                             activeBoardId={this.state.activeBoardId}
                             expandedNodes={this.state.gameTreeExpandedNodes}
-                            changeActiveBoard={(serial) => {this.changeActiveBoard(serial);}}
-                            announceBoardToggled={(serial) => {this.announceBoardToggled(serial);}}
-                            />
+                            changeActiveBoard={(serial) => { this.changeActiveBoard(serial); }}
+                            announceBoardToggled={(serial) => { this.announceBoardToggled(serial); }}
+                        />
                     </Grid>
                     <Grid container item id="activeBoard" xs={6}>
-                         <ActiveBoardView
+                        <ActiveBoardView
                             board={board}
-                            announceChoice={(board, cell, choice) => {this.boardAnnouncesChoice(board, cell, choice);}}
+                            announceChoice={(board, cell, choice) => { this.boardAnnouncesChoice(board, cell, choice); }}
                             selectedSquare={this.state.selectedBoardSquare}
                             selectedValue={this.state.selectedValue}
-                            />
+                        />
                     </Grid>
                     <Grid container id="questionPanel">
                         <AnalysisQuestionPanel
                             question={rootBoard.question}
-                            handleAnswerChanged={(answer) => {this.handleAnalysisAnswerChanged(answer)}}
+                            handleAnswerChanged={(answer) => { this.handleAnalysisAnswerChanged(answer) }}
                         />
                     </Grid>
                     <Grid container id="finishOrResetButtonContainer">
@@ -320,7 +306,7 @@ class SudokuGame extends React.Component {
                                 dialogTitle={"Sudoku: Please Confirm"}
                                 dialogText={"Are you sure you want to finish this puzzle and move on to the next one?"}
                                 handleConfirmation={() => this.handleFinishButton()}
-                                />
+                            />
                         </Grid>
                         <Grid item xs={3}>
                             <ButtonWithAlertDialog
@@ -329,22 +315,22 @@ class SudokuGame extends React.Component {
                                 dialogTitle={"Sudoku: Please Confirm"}
                                 dialogText={"Are you sure you want to discard your work and start this puzzle over?"}
                                 handleConfirmation={() => this.handleResetButton()}
-                                />
+                            />
 
                         </Grid>
                     </Grid>
 
                     <Grid container id="debugInfo">
-                       <DebugInfoPanel 
+                        <DebugInfoPanel
                             gameConfiguration={this.props.gameConfiguration}
                             puzzleInfo={rootBoard}
                             puzzles={this.props.puzzles}
                             answer={this.state.analysisAnswer}
-                            />
+                        />
                     </Grid>
                 </Grid>
 
-                );
+            );
         }
     } // end of render()
 
@@ -354,7 +340,7 @@ class SudokuGame extends React.Component {
 
     handleAnalysisAnswerChanged(newAnswer) {
         console.log("User's answer to analysis question changed to '"
-                    + newAnswer + "'.");
+            + newAnswer + "'.");
         this.setState({
             analysisAnswer: newAnswer
         });
@@ -366,7 +352,7 @@ class SudokuGame extends React.Component {
             this.state.gameTree,
             this.state.abandonedGameTrees,
             this.state.analysisAnswer
-            );
+        );
         this.displayNextBoard();
     }
 
@@ -374,8 +360,8 @@ class SudokuGame extends React.Component {
         this.resetState();
         this.initializeGameTree(
             this.props.puzzles[
-                this.state.currentPuzzleIndex
-                ]);
+            this.state.currentPuzzleIndex
+            ]);
         this.setState({
             resetCount: this.state.resetCount + 1
         });
@@ -398,11 +384,11 @@ class SudokuGame extends React.Component {
         const request = {
             action: {
                 action: action.internal_name,
-                cell: this.state.selectedBoardSquare, 
-                value: this.state.selectedValue
+                cell: this.state.selectedBoardSquare,
+                value: this.state.selectedValue,
+                operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
             },
             board: this.activeBoard(),
-            operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
         };
 
         console.log(request);
@@ -421,9 +407,9 @@ class SudokuGame extends React.Component {
                     all_scores.push(node.data.board.cost);
                 }
             }
-            );
+        );
 
-        return all_scores.reduce((a, b) => (a+b), 0);
+        return all_scores.reduce((a, b) => (a + b), 0);
     }
 
     configureNewBoard(board) {
@@ -442,7 +428,7 @@ class SudokuGame extends React.Component {
     }
 
     displayNextBoard() {
-        if (this.props.puzzles === null 
+        if (this.props.puzzles === null
             || this.props.puzzles.length === 0) {
             throw new Error("ERROR: No boards present.  Can't display next board.");
         }
@@ -450,7 +436,7 @@ class SudokuGame extends React.Component {
         let nextBoardIndex = 0;
         if (this.state.currentPuzzleIndex !== null) {
             nextBoardIndex = this.state.currentPuzzleIndex + 1;
-        } 
+        }
 
         if (nextBoardIndex === this.props.puzzles.length) {
             throw new Error("ERROR: Can't advance past the last board");
@@ -462,10 +448,10 @@ class SudokuGame extends React.Component {
         });
 
         const nextPuzzle = this.props.puzzles[nextBoardIndex];
-        const selectUpFront = !nextPuzzle.rules.canChangeLogicalOperators;
-        this.setState({
-            selectLogicalOperatorsUpFront: selectUpFront,
-        })
+        // const selectUpFront = !nextPuzzle.rules.canChangeLogicalOperators;
+        // this.setState({
+        //     selectLogicalOperatorsUpFront: selectUpFront,
+        // })
 
         this.initializeGameTree(nextPuzzle);
 
@@ -503,8 +489,8 @@ class SudokuGame extends React.Component {
 
     isTerminalNode(boardId) {
         const node = GameTree.findNodeById(this.state.gameTree, boardId);
-        return (node.children === null 
-                || node.children.length === 0);
+        return (node.children === null
+            || node.children.length === 0);
     }
 }
 
@@ -520,11 +506,10 @@ function findFirstNonBacktrackBoard(boardList) {
 
 SudokuGame.propTypes = {
     cellActions: PropTypes.array.isRequired,
-    logicalOperators: PropTypes.array.isRequired,    
+    logicalOperators: PropTypes.array.isRequired,
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
     puzzles: PropTypes.array,
     gameName: PropTypes.string
 }
 export default SudokuGame;
-
