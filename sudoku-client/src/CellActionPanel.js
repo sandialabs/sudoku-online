@@ -62,6 +62,10 @@ class CellActionPanel extends React.Component {
 			);
 
 
+		if (!someActionCanExecute) {
+			buttonText = this.props.disabledReason;
+		}
+		
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}

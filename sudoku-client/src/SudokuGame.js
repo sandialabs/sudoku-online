@@ -164,7 +164,7 @@ class SudokuGame extends React.Component {
             return false;
         }
 
-        if (this.state.selectedValue === null) {
+        if (this.state.selectedBoardSquare === null) {
             return false;
         }
 
@@ -191,7 +191,7 @@ class SudokuGame extends React.Component {
             return 'This board has already been acted upon';
         }
 
-        if (this.state.selectedValue === null) {
+        if (this.state.selectedBoardSquare === null) {
             return 'You must select a square to operate upon';
         }
 
