@@ -164,7 +164,7 @@ class SudokuGame extends React.Component {
             return false;
         }
 
-        if (this.state.selectedValue === null) {
+        if (this.state.selectedBoardSquare === null) {
             return false;
         }
 
@@ -191,7 +191,7 @@ class SudokuGame extends React.Component {
             return 'This board has already been acted upon';
         }
 
-        if (this.state.selectedValue === null) {
+        if (this.state.selectedBoardSquare === null) {
             return 'You must select a square to operate upon';
         }
 
@@ -226,7 +226,7 @@ class SudokuGame extends React.Component {
             }
             const rootBoard = this.rootBoard();
             const currentScore = this.computeScore();
-            const actionsEnabled = this.canCellActionsExecute();
+            const actionsCanExecute = this.canCellActionsExecute();
             const disabledReason = this.cellActionsDisabledBecause();
             const startingBoard = this.state.gameTree.data.board;
             const analysisQuestion = "How is a raven like a writing desk?";
@@ -236,17 +236,22 @@ class SudokuGame extends React.Component {
                 && this.state.logicalOperatorsSelected
             );
 
+            const enabledActions = actionsEnabledGivenSelection(
+                this.state.selectedBoardSquare,
+                this.state.selectedValue
+                );
+
             return (
                 <Grid container id="gameContainer">
                     <Grid container item xs={12} id="actionsAndOperators">
                         <Grid item xs={6}>
                             <CellActionPanel
                                 allActions={this.props.cellActions}
-                                permittedActions={board.availableActions}
                                 defaultAction={defaultAction}
+                                permittedActions={enabledActions}
+                                actionsCanExecute={actionsCanExecute}
                                 selectedActionChanged={(newAction) => { this.handleCellActionSelection(newAction) }}
                                 executeAction={(action) => this.handleExecuteAction(action)}
-                                actionsEnabled={actionsEnabled}
                                 disabledReason={disabledReason}
                                 key={this.state.resetCount}
                                 />
@@ -455,21 +460,6 @@ class SudokuGame extends React.Component {
 
         this.initializeGameTree(nextPuzzle);
 
-        // this.props.requestBoard({name: boardName})
-        //     .then(
-        //         (boardAsString) => {
-        //             this.setState({
-        //                 currentPuzzleIndex: nextBoardIndex
-        //             });
-        //             this.configureNewBoard(JSON.parse(boardAsString));
-        //         }
-        //         )
-        //     .catch(
-        //         (errorResponse) => {
-        //             console.log('ERROR fetching board ' + nextBoardIndex + ' (' + boardName + '): '
-        //                 + errorResponse);
-        //         }
-        //         );
     }
 
 
@@ -492,6 +482,27 @@ class SudokuGame extends React.Component {
         return (node.children === null
             || node.children.length === 0);
     }
+}
+
+// Cell actions are available, or not, depending on whether their 
+// prerequisites are selected on the game board.
+//
+// Assign and Exclude require the user to select an available value.
+//
+// Pivot just requires that the user select an available (unassigned)
+// cell -- whether or not they select a value in the cell is immaterial.
+
+
+function actionsEnabledGivenSelection(selectedCell, selectedValue) {
+    return {
+        assign: (selectedValue !== null 
+                 && selectedValue !== -1
+                 && selectedCell !== null),
+        exclude: (selectedValue !== null
+                  && selectedValue !== -1
+                  && selectedCell !== null),
+        pivot: (selectedCell !== null)
+    };
 }
 
 function findFirstNonBacktrackBoard(boardList) {

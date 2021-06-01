@@ -49,9 +49,23 @@ class CellActionPanel extends React.Component {
 	renderActionList() {
 		let radioButtons = this.makeRadioButtons();
 		let buttonText = "Execute Selected Action";
-		if (!this.props.actionsEnabled) {
+		
+		const anyActionsEnabled = (
+			this.props.permittedActions['assign'] === true
+			|| this.props.permittedActions['exclude'] === true
+			|| this.props.permittedActions['pivot'] === true
+			);
+
+		const someActionCanExecute = (
+			this.props.actionsCanExecute 
+			&& anyActionsEnabled
+			);
+
+
+		if (!someActionCanExecute) {
 			buttonText = this.props.disabledReason;
 		}
+		
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
@@ -64,7 +78,7 @@ class CellActionPanel extends React.Component {
 				<Button onClick={() => this.handleExecuteAction()}
 						variant="contained"
 						color="primary"
-						disabled={!this.props.actionsEnabled}>
+						disabled={!someActionCanExecute}>
 					{buttonText}
 				</Button>
 			</FormControl>
@@ -79,17 +93,19 @@ class CellActionPanel extends React.Component {
 
 	makeMaterialRadioButton(action) {
 		const actionPermitted = (
-			this.props.permittedActions.length === 0
-            || this.props.permittedActions.indexOf(action.internal_name) !== -1
-            || (
-            	// XXX This is a hack -- selectops is not working as expected
-            	this.props.actionsEnabled &&
-            	this.props.permittedActions.indexOf('selectops') !== -1
-            	)
-            	);
+			this.props.permittedActions[action.internal_name] === true
+			);
 		
 		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
-		const forbiddenText = 'This action is not permitted on this board.';
+		let forbiddenText = 'This action is not permitted right now';
+
+		if (action.internal_name === 'assign'
+			|| action.internal_name === 'exclude') {
+			forbiddenText = 'You must select a value in an unassigned square in order to execute this operation.';
+		} else if (action.internal_name === 'pivot') {
+			forbiddenText = 'You must select an unassigned square to execute this operation.';
+		}
+
 		let toolTipText = action.user_name + ': ' + action.description;
 
 		if (!actionPermitted) {
@@ -170,11 +186,11 @@ class CellActionPanel extends React.Component {
 
 CellActionPanel.propTypes = {
 	allActions: PropTypes.array.isRequired,
-	permittedActions: PropTypes.array.isRequired,
+	permittedActions: PropTypes.object.isRequired,
 	selectedActionChanged: PropTypes.func,
 	defaultAction: PropTypes.object,
 	executeAction: PropTypes.func.isRequired,
-	actionsEnabled: PropTypes.bool.isRequired,
+	actionsCanExecute: PropTypes.bool.isRequired,
 	disabledReason: PropTypes.string,
 };
 
