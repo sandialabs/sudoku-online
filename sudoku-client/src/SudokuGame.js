@@ -164,7 +164,9 @@ class SudokuGame extends React.Component {
             return false;
         }
 
-        if (this.state.selectedBoardSquare === null) {
+        if (this.state.selectedBoardSquare === null
+            && (this.state.selectedLogicalOperators === null
+                || this.state.selectedLogicalOperators.length === 0)) {
             return false;
         }
 
@@ -192,7 +194,11 @@ class SudokuGame extends React.Component {
         }
 
         if (this.state.selectedBoardSquare === null) {
+<<<<<<< HEAD
             return 'You must select a square to operate upon';
+=======
+            return 'You must select a square or some logical operators';
+>>>>>>> 45ec28f7f24c2b46e02a37b6516ccde26507986b
         }
 
         return 'ERROR: No reason given for disabled actions';
@@ -238,7 +244,12 @@ class SudokuGame extends React.Component {
 
             const enabledActions = actionsEnabledGivenSelection(
                 this.state.selectedBoardSquare,
+<<<<<<< HEAD
                 this.state.selectedValue
+=======
+                this.state.selectedValue,
+                this.state.selectedLogicalOperators
+>>>>>>> 45ec28f7f24c2b46e02a37b6516ccde26507986b
                 );
 
             return (
@@ -267,6 +278,7 @@ class SudokuGame extends React.Component {
                                     console.log("SudokuGame: Confirming logical operator selection.");
                                     this.setState({ logicalOperatorsSelected: true });
                                 }}
+                                executeLogicalOperators={() => {this.handleExecuteLogicalOperators();}}
                                 key={this.state.resetCount}
                             />
                         </Grid>
@@ -349,6 +361,13 @@ class SudokuGame extends React.Component {
         this.setState({
             analysisAnswer: newAnswer
         });
+    }
+
+    handleExecuteLogicalOperators() {
+        const shortNames = this.state.selectedLogicalOperators.map(
+            (op) => op.internal_name
+            );
+        console.log('handleExecuteLogicalOperators: Selected operators: ' + JSON.stringify(shortNames));
     }
 
     handleFinishButton() {
@@ -493,7 +512,11 @@ class SudokuGame extends React.Component {
 // cell -- whether or not they select a value in the cell is immaterial.
 
 
+<<<<<<< HEAD
 function actionsEnabledGivenSelection(selectedCell, selectedValue) {
+=======
+function actionsEnabledGivenSelection(selectedCell, selectedValue, selectedLogicalOperators) {
+>>>>>>> 45ec28f7f24c2b46e02a37b6516ccde26507986b
     return {
         assign: (selectedValue !== null 
                  && selectedValue !== -1
@@ -501,7 +524,13 @@ function actionsEnabledGivenSelection(selectedCell, selectedValue) {
         exclude: (selectedValue !== null
                   && selectedValue !== -1
                   && selectedCell !== null),
+<<<<<<< HEAD
         pivot: (selectedCell !== null)
+=======
+        pivot: (selectedCell !== null),
+        applyops: (selectedLogicalOperators !== null
+                   && selectedLogicalOperators.length > 0)
+>>>>>>> 45ec28f7f24c2b46e02a37b6516ccde26507986b
     };
 }
 

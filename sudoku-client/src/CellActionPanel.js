@@ -54,6 +54,7 @@ class CellActionPanel extends React.Component {
 			this.props.permittedActions['assign'] === true
 			|| this.props.permittedActions['exclude'] === true
 			|| this.props.permittedActions['pivot'] === true
+			|| this.props.permittedActions['applyops'] === true
 			);
 
 		const someActionCanExecute = (
@@ -61,11 +62,18 @@ class CellActionPanel extends React.Component {
 			&& anyActionsEnabled
 			);
 
+		const thisActionCanExecute = (
+			this.props.permittedActions[this.state.selectedAction.internal_name] === true
+			)
 
 		if (!someActionCanExecute) {
 			buttonText = this.props.disabledReason;
+		} else if (!thisActionCanExecute) {
+			buttonText = 'Please select an available action';
 		}
-		
+
+		const enableExecuteButton = (someActionCanExecute && thisActionCanExecute);
+
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
@@ -78,7 +86,7 @@ class CellActionPanel extends React.Component {
 				<Button onClick={() => this.handleExecuteAction()}
 						variant="contained"
 						color="primary"
-						disabled={!someActionCanExecute}>
+						disabled={!enableExecuteButton}>
 					{buttonText}
 				</Button>
 			</FormControl>
@@ -104,6 +112,8 @@ class CellActionPanel extends React.Component {
 			forbiddenText = 'You must select a value in an unassigned square in order to execute this operation.';
 		} else if (action.internal_name === 'pivot') {
 			forbiddenText = 'You must select an unassigned square to execute this operation.';
+		} else if (action.internal_name === 'applyops') {
+			forbiddenText = 'You must select at least one operator to apply.';
 		}
 
 		let toolTipText = action.user_name + ': ' + action.description;
@@ -120,8 +130,8 @@ class CellActionPanel extends React.Component {
 					control={<Radio />}
 					label={fullLabelText}
 					/>
-				</Tooltip>
-			);
+			</Tooltip>
+		);
 	}
 
 	actionsAvailable() {

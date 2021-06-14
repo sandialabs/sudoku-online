@@ -95,31 +95,22 @@ class LogicalOperatorPanel extends React.Component {
 		
 		} else {
 			const operatorListPanel = this.renderOperatorList();
+			const executeOperatorsButton = this.makeExecuteOperatorsButton();
+
 			if (this.props.selectLogicalOperatorsUpFront) {
-				let selectOperatorButtonText = "Confirm Operator Selection";
-				if (this.props.logicalOperatorsFrozen) {
-					selectOperatorButtonText = "Specialized Operators Frozen";
-				}
 				return (
 					<Paper name='logicalOperators'>
 						<Typography variant="h5">Specialized Operations</Typography>
 						{operatorListPanel}
-						<Button onClick={() => this.props.confirmOperatorSelection()}
-							variant="contained"
-							color="primary"
-							disabled={this.props.logicalOperatorsFrozen}>
-						{selectOperatorButtonText}
-						</Button>	
+						{executeOperatorsButton}
 					</Paper>
 					);
 			} else {
 				return (
-					<Paper name='logicalOperators'>
-						<Typography variant="h5">Specialized Operators</Typography>
+					<Paper name='logicalOperators' elevation={2}>
+						<Typography variant='h5'>Specialized Operations</Typography>
+						<Typography variant='body1'>(Execute using Apply Operators action)</Typography>
 						{operatorListPanel}
-						<p>
-							Operator selection can change freely.
-						</p>
 					</Paper>
 					);
 			}
@@ -170,6 +161,35 @@ class LogicalOperatorPanel extends React.Component {
 
 		this.props.selectionChanged(selectedOperators);
 	}
+
+    makeExecuteOperatorsButton() {
+    	let selectOperatorButtonText = "ERROR: LOGICAL OPERATOR BUTTON TEXT UNDEFINED";
+    	let onClick = null;
+    	let disabled = false;
+
+    	if (this.props.selectLogicalOperatorsUpFront) {
+    		selectOperatorButtonText = "Confirm Operator Selection";
+			disabled = false;
+			onClick = () => this.props.confirmOperatorSelection(); 
+			if (this.props.logicalOperatorsFrozen) {
+				selectOperatorButtonText = "Specialized Operators Frozen";
+				disabled = true;
+			}
+		} else {
+			selectOperatorButtonText = "Execute Specialized Operations";
+			disabled = false;
+			onClick = () => this.props.executeLogicalOperators();
+		}
+
+		return (
+			<Button onClick={onClick}
+				variant="contained"
+				color="primary"
+				disabled={disabled} >
+				{selectOperatorButtonText}
+			</Button>	
+			);
+    }
 }
 
 LogicalOperatorPanel.propTypes = {
@@ -178,6 +198,7 @@ LogicalOperatorPanel.propTypes = {
 	operators: PropTypes.array.isRequired,
 	selectLogicalOperatorsUpFront: PropTypes.bool.isRequired,
 	selectionChanged: PropTypes.func.isRequired,
+	executeLogicalOperators: PropTypes.func.isRequired,
 
 };
 
