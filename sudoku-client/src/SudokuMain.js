@@ -38,30 +38,20 @@ class SudokuMain extends React.Component {
 	render() {
 		if (this.state.boards !== null) {
 			return (
-				<div key={3}>
-					<div key={4}>
-				    	Hi.  This is the Sudoku app.  My responsibilities
-				    	are as follows:
-				    	<ul>
-				        	<li>Maintain connections between all the different components.</li>
-				        	<li>Handle communication with the server.</li>
-					    </ul>
-					</div>
-					<div key={6}>
-						<ErrorBoundary>
-							<SudokuGame 
-								degree={this.props.degree}
-								puzzles={this.state.boards}
-								gameName={this.state.gameName}
-								issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
-								cellActions={this.state.cellActions}
-								logicalOperators={this.state.logicalOperators}
-								issueActionRequest={this.sendActionRequestToServer}
-								submitFinishedGameTree={this.submitFinishedGameTree}
-								requestBoard={(boardInfo) => {return this.requestBoard(boardInfo);}}
-								/>
-						</ErrorBoundary>
-					</div>
+				<div key={6}>
+					<ErrorBoundary>
+						<SudokuGame 
+							degree={this.props.degree}
+							puzzles={this.state.boards}
+							gameName={this.state.gameName}
+							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
+							cellActions={this.state.cellActions}
+							logicalOperators={this.state.logicalOperators}
+							issueActionRequest={this.sendActionRequestToServer}
+							submitFinishedGameTree={this.submitFinishedGameTree}
+							requestBoard={(boardInfo) => {return this.requestBoard(boardInfo);}}
+							/>
+					</ErrorBoundary>
 				</div>
 			);
 		} else {
@@ -111,7 +101,7 @@ class SudokuMain extends React.Component {
 		return request(myRequest);
 	}
 
-	submitFinishedGameTree(finishedTree, abandonedTrees, answer) {
+	submitFinishedGameTree(finishedTree, abandonedTrees, answer, mturkId) {
 		const myRequest = {
 			method: 'POST',
 			url: this.state.serverAddress + '/sudoku/request/submit_game_tree',
@@ -121,7 +111,8 @@ class SudokuMain extends React.Component {
 			body: JSON.stringify({
 				finishedTree: finishedTree,
 				abandonedTrees: abandonedTrees,
-				answer: answer
+				answer: answer,
+				mechanicalTurkId: mturkId
 			})
 		}
 		return request(myRequest);

@@ -238,7 +238,7 @@ function _makeLabelRowTable(degree) {
 
 	// The first cell is an empty label
 	cells.push(
-		<td className='label blank-square'>
+		<td className='label blank-square' key={-1}>
 			{label}
 		</td>
 	);
@@ -246,7 +246,7 @@ function _makeLabelRowTable(degree) {
 	for (let i = 0; i < degree*degree; ++i) {
 		label = _columnLabel(i);	
 		cells.push(
-			<td className='label column-label'>
+			<td className='label column-label' key={i}>
 				{label}
 			</td>
 			);
@@ -272,7 +272,7 @@ function _makeLabelColumnTable(degree) {
 	for (let i = 0; i < degree*degree; ++i) {
 		const label = _rowLabel(i);
 		rows.push(
-			<tr>
+			<tr key={i}>
 				<td className='label row-label'>
 					{label}
 				</td>
