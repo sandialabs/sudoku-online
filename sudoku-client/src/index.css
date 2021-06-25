@@ -90,7 +90,22 @@ td.active-board.square.degree-3.goal-cell:nth-child(3n+3) {
     border: none;
     margin: 0px;
     padding: 0px;
-    display: inline-block;
+ /*   display: inline-block; */
+}
+
+div#activeBoardContainer {
+    margin:  0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+div#sideLabelsAndBoard {
+    margin: 0px;
+    padding: 0px;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
 }
 
 table.label.rows {
