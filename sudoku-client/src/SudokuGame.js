@@ -29,7 +29,6 @@ import { Typography } from '@material-ui/core';
 import { ActiveBoardView } from './ActiveBoardView';
 import { AnalysisAnswerPanel } from './AnalysisAnswerPanel';
 import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
-import { ErrorCannotExecuteDialog } from './ErrorCannotExecuteDialog';
 import { MechanicalTurkIdForm } from './MechanicalTurkIdForm'; 
 import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
