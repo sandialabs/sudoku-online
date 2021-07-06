@@ -551,7 +551,6 @@ SudokuGame.propTypes = {
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
     puzzles: PropTypes.array,
-    gameName: PropTypes.string,
     initialScore: PropTypes.number
 }
 

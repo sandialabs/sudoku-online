@@ -12,7 +12,11 @@ import React from 'react';
 import SudokuGame from './SudokuGame';
 import { request } from './SudokuUtilities';
 import { ErrorBoundary } from './ErrorBoundary';
+import { PropTypes } from 'prop-types';
 
+import {
+	useParams
+} from 'react-router-dom';
 
  
 class SudokuMain extends React.Component {
@@ -23,14 +27,20 @@ class SudokuMain extends React.Component {
 			boards: null,
 			cellActions: [],
 			logicalOperators: [],
-			serverAddress: 'http://localhost:5000'
+			serverAddress: 'http://localhost:5000',
+			// Change this line to change which game is loaded by default.
+			gameName: 'pilot_test_a_board'
 		};
 
-
+		console.log('SudokuMain: this.props.gameName: ' + this.props.gameName);
+		if (this.props.gameName === "from_url") {
+			let { gameName } = useParams();
+			this.state.gameName = gameName;
+			console.log("SudokuMain: Using game name from URL: " + gameName);
+		} else {
+			console.log("SudokuMain: Using default game name.");
+		}
         // Change the next line to determine which game gets requested
-        //this.state.gameName = 'test_game1_6_operators_open';
-        //this.state.gameName = 'test_game1_6';
-        this.state.gameName = 'pilot_test_a_board';
 		this.sendActionRequestToServer = this.sendActionRequestToServer.bind(this);
 		this.submitFinishedGameTree = this.submitFinishedGameTree.bind(this);
 	}
@@ -43,7 +53,6 @@ class SudokuMain extends React.Component {
 						<SudokuGame 
 							degree={this.props.degree}
 							puzzles={this.state.boards}
-							gameName={this.state.gameName}
 							issueBoardRequest={(board, move) => {return this.handleBoardRequest(board, move);}}
 							cellActions={this.state.cellActions}
 							logicalOperators={this.state.logicalOperators}
@@ -195,4 +204,8 @@ class SudokuMain extends React.Component {
 	}
 }
 
+SudokuMain.propTypes = { 
+	degree: PropTypes.number.isRequired,
+	gameName: PropTypes.string.isRequired
+}
 export default SudokuMain;
