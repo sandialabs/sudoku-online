@@ -137,15 +137,41 @@ games = {
                     #'...name=Test Hidden Quads...goal=...question=',
                     ]
     },
+    'training_games': {
+        'puzzles': [
+            # Requires 2 calls to inclusion, resolved after 1st call to inclusion (doesn't require 2nd)
+            'easy2...goal=E7...name=Training #1...question=Can E7 be 6?...answer=no',
+            'easy2...goal=E7...name=Training #1...question=Can E7 be 6?...answer=no...select_ops_upfront',
+            # Requires pointingpairs and inclusion, with final call to pointing pairs to resolve (no call to inclusion after pointing pairs)
+            'test11-i36e28hp2...goal=B8...name=Training #2...question=Can B8 be odd?...answer=yes',
+            'test11-i36e28hp2...goal=B8...name=Training #2...question=Can B8 be odd?...answer=yes...select_ops_upfront',
+            # Requires pointingpairs and inclusion, but doesn't require last call to inclusion _after_ pointing pairs
+            'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no',
+            'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no...select_ops_upfront',
+        ]
+    },
+    'weedout_games': {
+        'puzzles': [
+            # Requires pointing pairs and inclusion; doesn't require last inclusion after pointing pairs (poss. 1 4 6 7 9)
+            'test36-i30e33np2hp2yw1...goal=F7...name=WeedOut #1...question=Can F7 be 1, 6, or 7?...answer=yes',
+            'test36-i30e33np2hp2yw1...goal=F7...name=WeedOut #1...question=Can F7 be 1, 6, or 7?...answer=yes...select_ops_upfront',
+            # Requires 4 calls to inclusion, resolved after 3rd call to inclusion (doesn't require 4th) (poss. 5 7 8 9)
+            'test4-i28e36...goal=B1...name=WeedOut #2...question=Can B1 be greater than 5?...answer=no',
+            'test4-i28e36...goal=B1...name=WeedOut #2...question=Can B1 be greater than 5?...answer=no...select_ops_upfront',
+            # Requires just 1 inclusion call to solve
+            'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no',
+            'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no...select_ops_upfront',
+        ]
+    },
     'logical_operators_mturk_test_suite': {
         'puzzles': [
             # Goal: something that gets resolved by second-to-last logical operator
 
             # Inclusion
             # Requires 1 call to inclusion; resolved after last (1) inclusion call
-            'medium1...goal=I3...name=Inclusion Only #1...question=Is I3 prime?...answer=yes',
-            'medium1...goal=I3...name=Inclusion Only #1...question=Is I3 prime?...answer=yes...select_ops_upfront',
-            # Requires 2 calls to inclusion; resolved after 1st call
+            'medium1...goal=I3...name=Inclusion Only #1...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes',
+            'medium1...goal=I3...name=Inclusion Only #1...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes...select_ops_upfront',
+            # Requires 2 calls to inclusion; resolved after 1st call *** training / weed out ***
             'naked_single_test...goal=E6...name=Inclusion Only #2...question=Is E6 less than 5?...answer=yes',
             'naked_single_test...goal=E6...name=Inclusion Only #2...question=Is E6 less than 5?...answer=yes...select_ops_upfront',
             # Requires 4 calls to inclusion; resolved by exclusion propagation of 3rd call
@@ -154,8 +180,6 @@ games = {
             # Requires 4 calls to inclusion; resolved on 3rd inclusion (no exclusion) to be 2
             'test3-i29e35...goal=E2...name=Inclusion Only #4...question=Is E2 6?...answer=no',
             'test3-i29e35...goal=E2...name=Inclusion Only #4...question=Is E2 6?...answer=no...select_ops_upfront',
-            # Requires 4 calls to inclusion;
-            # 'test4-i28e36...goal=B3...name=Sudoku Test #5...question=Can B3 be less than 5?...answer=no',
             # Requires 3 calls to inclusion; resolved after 2nd call
             'test6-i26e38...goal=C5...name=Inclusion Only #5...question=Is C5 7?...answer=no',
             'test6-i26e38...goal=C5...name=Inclusion Only #5...question=Is C5 7?...answer=no...select_ops_upfront',
@@ -169,7 +193,7 @@ games = {
             # Pointing Pairs
             # Requires 1 pointing pairs call and 6 inclusion calls; 1 inclusion call happens after the pointing pairs call but is not required to answer.
             'test8-i32e32hp2...goal=H2...name=Pointing Pairs #1...question=Is H2 7?...answer=no',
-            'test8-i32e32hp2...goal=H2...name=Pointing Pairs #1...question=Is H2  7?...answer=no...select_ops_upfront',
+            'test8-i32e32hp2...goal=H2...name=Pointing Pairs #1...question=Is H2 7?...answer=no...select_ops_upfront',
             # Requires 2 pointing pairs calls. Question resolved by first, where following inclusion, pointing pairs, inclusion solves the board.
             'test9-i29e35hp2...goal=C6...name=Pointing Pairs #2...question=Is C6 equal to A2 or A3?...answer=yes',
             'test9-i29e35hp2...goal=C6...name=Pointing Pairs #2...question=Is C6 equal to A2 or A3?...answer=yes...select_ops_upfront',
@@ -247,7 +271,10 @@ games = {
             # C3 3, 5 -> 3
             'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no',
             'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no...select_ops_upfront',
-
+        ]
+    },
+    'extra_games': {
+        'puzzles': [
             # Exclusion only; resolved with anything
             # These are un-checked by Shelley other than to confirm that they don't need any operators.
             'easy1...goal=D2...name=No Logical Ops Required #1...question=Is D2 greater than 4?...answer=no',
