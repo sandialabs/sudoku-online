@@ -8,21 +8,11 @@ import './index.css';
 import {
     BrowserRouter as Router,
     Switch,
-    Route,
-    Link
+    Route
 } from 'react-router-dom';
 
 import '@fontsource/roboto';
 
-// ReactDOM.render(
-//   <React.StrictMode>
-//     <p>
-//     	Hi.  This is the Sudoku client app.
-//     </p>
-//     <SudokuGame />
-//   </React.StrictMode>,
-//   document.getElementById('root')
-// );
 
 ReactDOM.render(
     <Router>
