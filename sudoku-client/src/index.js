@@ -13,24 +13,29 @@ import {
 
 import '@fontsource/roboto';
 
+const serverAddress = "http://localhost:5000/";
 
 ReactDOM.render(
     <Router>
         <div key={6}>
             <Switch>
-                <Route path="/">
-                    <SudokuMain 
-                        gameName="default"
-                        key={2} degree={3} 
-                        />
-                </Route>
 
                 <Route path="/game/:gameName">
                     <SudokuMain 
                         key={2} degree={3}
-                        gameName="from_url"
+                        gameNameInUrl={true}
+                        serverAddress={serverAddress}
                         />
                 </Route>
+
+                <Route path="/">
+                    <SudokuMain 
+                        gameNameInUrl={false}
+                        serverAddress={serverAddress}
+                        key={2} degree={3} 
+                        />
+                </Route>
+
             </Switch>
         </div>
     </Router>,
