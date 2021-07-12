@@ -369,12 +369,12 @@ class SudokuGame extends React.Component {
 
     handleFinishButton() {
         console.log('Finishing board and submitting result.');
-        this.props.submitFinishedGameTree(
-            this.state.gameTree,
-            this.state.abandonedGameTrees,
-            this.state.analysisAnswer,
-            this.state.mechanicalTurkId
-        );
+        this.props.submitFinishedGameTree({
+            finishedTree: this.state.gameTree,
+            abandonedTrees: this.state.abandonedGameTrees,
+            answer: this.state.analysisAnswer,
+            mechanicalTurkId: this.state.mechanicalTurkId
+        });
         this.displayNextBoard();
     }
 
