@@ -5,21 +5,40 @@ import SudokuMain from './SudokuMain';
 import './index.css';
 
 
+import {
+    BrowserRouter as Router,
+    Switch,
+    Route
+} from 'react-router-dom';
+
 import '@fontsource/roboto';
 
-// ReactDOM.render(
-//   <React.StrictMode>
-//     <p>
-//     	Hi.  This is the Sudoku client app.
-//     </p>
-//     <SudokuGame />
-//   </React.StrictMode>,
-//   document.getElementById('root')
-// );
+const serverAddress = "http://localhost:5000/";
 
 ReactDOM.render(
-	<div key={0}>
-    	<SudokuMain key={2} degree={3}/>
-    </div>,
+    <Router>
+        <div key={6}>
+            <Switch>
+
+                <Route path="/game/:gameName">
+                    <SudokuMain 
+                        key={2} degree={3}
+                        gameNameInUrl={true}
+                        serverAddress={serverAddress}
+                        />
+                </Route>
+
+                <Route path="/">
+                    <SudokuMain 
+                        gameNameInUrl={false}
+                        serverAddress={serverAddress}
+                        key={2} degree={3} 
+                        />
+                </Route>
+
+            </Switch>
+        </div>
+    </Router>,
+
   document.getElementById('root')
 );
