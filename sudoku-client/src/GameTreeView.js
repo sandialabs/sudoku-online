@@ -11,7 +11,7 @@
 
 import React, {Component} from 'react';
 import { Treebeard, theme as defaultTheme, decorators as defaultDecorators } from './modified-react-treebeard';
-import Header from './modified-react-treebeard/components/Decorators/Header';
+// import Header from './modified-react-treebeard/components/Decorators/Header';
 import { clone } from 'ramda';
 import { GameTreeBoard } from './GameTreeBoard';
 import PropTypes from 'prop-types';
@@ -119,12 +119,6 @@ class GameTreeView extends Component {
 
 
 
-
-function hasTreeSizeChanged(oldTree, newTree) {
-    return (GameTree.treeSize(oldTree) !== GameTree.treeSize(newTree));
-}
-
-
 function cellToString(cell) {
     return String.fromCharCode(0x41 + cell[0]) + (cell[1] +1);
 }
@@ -225,25 +219,6 @@ const GameTreeBoardHeader = ({onSelect, node, style, customStyles}) => {
     }
 }
 
-
-function prettyPrintNode(node) {
-    return node.name + ' (selected: ' + node.selected + ', toggled: ' + node.toggled + ', terminal: ' + nodeIsTerminal(node) + ')';
-}
-
-function prettyPrintTreeLevel(tree, indent) {
-   let outstring = indent + prettyPrintNode(tree) + '\n';
-   if (tree.children !== null &&
-       tree.children !== undefined) {
-     for (const child of tree.children) {
-        outstring += prettyPrintTreeLevel(child, indent + '  ');
-     }
-   } 
-   return outstring;
-}
-
-function prettyPrintTree(root) {
-    return prettyPrintTreeLevel(root, '');
-}
 
 function nodeIsTerminal(node) {
     return (node.children === null ||
