@@ -8,7 +8,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Typography, Grid, Paper } from '@material-ui/core';
+import { Paper } from '@material-ui/core';
 
 import { FormControl, FormControlLabel, FormLabel } from '@material-ui/core';
 import { Radio, RadioGroup } from '@material-ui/core';
@@ -21,40 +21,10 @@ class AnalysisAnswerPanel extends React.Component {
                             value={answer}
                             control={<Radio />}
                             label={answer}
+                            onChange={(event) => this.handleRadioChange(event)}
                             />)
             );
 
-        const handleChange = (event) => {
-            if (this.props.handleAnswerChanged) {
-                this.props.handleAnswerChanged(event.target.value);
-            } else {
-                console.log('AnalysisAnswerPanel: No answer handler');
-            }
-        }
-
-            // return (
-            // <Grid container xs={6}>
-            //     <Grid item xs={2}>
-            //         <Paper>
-            //             <Typography key="answer_label">
-            //                 Your Answer:
-            //             </Typography>
-            //         </Paper>
-            //     </Grid>
-            //     <Grid item xs={3}>
-            //         <FormControl component="fieldset">
-            //             <RadioGroup 
-            //                 row
-            //                 aria-label="analysisAnswer"
-            //                 name="analysisAnswer1"
-            //                 onChange={handleChange}
-            //                 >
-            //                 {radioButtons}
-            //             </RadioGroup>
-            //         </FormControl>
-            //     </Grid>
-            // </Grid>
-            // );
         return (
                 <Paper>
                     <FormControl component="fieldset">
@@ -67,6 +37,13 @@ class AnalysisAnswerPanel extends React.Component {
                     </FormControl>
                 </Paper>
             );
+    }
+
+    handleRadioChange(event) {
+        const newValue = event.currentTarget.value;
+        if (this.props.handleAnswerChanged) {
+            this.props.handleAnswerChanged(newValue);
+        }
     }
 }
 

@@ -13,10 +13,12 @@
     "@testing-library/user-event": "^7.2.1",
     "bootstrap": "^4.6.0",
     "jquery": "^3.6.0",
+    "popper.js": "^1.16.1",
     "ramda": "^0.27.1",
     "react": "^16.14.0",
     "react-bootstrap": "^1.6.0",
     "react-dom": "^16.14.0",
+    "react-router-dom": "^5.2.0",
     "react-scripts": "3.4.1",
     "react-treebeard": "^3.2.4",
     "typescript": "^3.9.9"

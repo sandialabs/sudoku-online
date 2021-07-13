@@ -19,8 +19,6 @@
 import React from 'react';
 import { clone } from 'ramda';
 
-import { Button } from '@material-ui/core';
-
 import { Grid } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
@@ -29,16 +27,12 @@ import { Typography } from '@material-ui/core';
 import { ActiveBoardView } from './ActiveBoardView';
 import { AnalysisAnswerPanel } from './AnalysisAnswerPanel';
 import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
-import { ErrorCannotExecuteDialog } from './ErrorCannotExecuteDialog';
 import { MechanicalTurkIdForm } from './MechanicalTurkIdForm'; 
-import { newSerialNumber } from './SudokuUtilities';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
 import { CellActionPanel } from './CellActionPanel';
 import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
-
-import { DebugInfoPanel } from './DebugInfoPanel';
 
 
 class SudokuGame extends React.Component {
@@ -232,8 +226,6 @@ class SudokuGame extends React.Component {
             const currentScore = this.props.initialScore - this.computeScore();
             const actionsCanExecute = this.canCellActionsExecute();
             const disabledReason = this.cellActionsDisabledBecause();
-            const startingBoard = this.state.gameTree.data.board;
-            const analysisQuestion = "How is a raven like a writing desk?";
 
             const logicalOperatorsFrozen = (
                 this.state.selectLogicalOperatorsUpFront
@@ -377,12 +369,12 @@ class SudokuGame extends React.Component {
 
     handleFinishButton() {
         console.log('Finishing board and submitting result.');
-        this.props.submitFinishedGameTree(
-            this.state.gameTree,
-            this.state.abandonedGameTrees,
-            this.state.analysisAnswer,
-            this.state.mechanicalTurkId
-        );
+        this.props.submitFinishedGameTree({
+            finishedTree: this.state.gameTree,
+            abandonedTrees: this.state.abandonedGameTrees,
+            answer: this.state.analysisAnswer,
+            mechanicalTurkId: this.state.mechanicalTurkId
+        });
         this.displayNextBoard();
     }
 
@@ -551,7 +543,6 @@ SudokuGame.propTypes = {
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
     puzzles: PropTypes.array,
-    gameName: PropTypes.string,
     initialScore: PropTypes.number
 }
 
