@@ -227,7 +227,14 @@ class SudokuGame extends React.Component {
             const currentScore = this.props.initialScore - this.computeScore();
             const actionsCanExecute = this.canCellActionsExecute();
             const disabledReason = this.cellActionsDisabledBecause();
-
+            const userCanFinishPuzzle = (this.state.analysisAnswer !== "(no answer specified"
+                                         && this.state.mechanicalTurkId !== "unspecified");
+            let finishButtonDialogText = "Are you sure you want to submit your answer to this puzzle and move on?";
+            let finishButtonDialogTitle = "Sudoku: Please Confirm";
+            if (!userCanFinishPuzzle) {
+                finishButtonDialogText = "You must first answer the analysis question and provide your Mechanical Turk ID."
+                finishButtonDialogTitle = "Sudoku: Some Information Missing";
+            }
             const logicalOperatorsFrozen = (
                 this.state.selectLogicalOperatorsUpFront
                 && this.state.logicalOperatorsSelected
@@ -327,9 +334,9 @@ class SudokuGame extends React.Component {
                         <Grid item>
                             <ButtonWithAlertDialog
                                 buttonText={"Finish This Puzzle"}
-                                dialogTitle={"Sudoku: Please Confirm"}
-                                dialogText={"Are you sure you want to finish this puzzle and move on to the next one?"}
-                                handleConfirmation={() => this.handleFinishButton()}
+                                dialogTitle={finishButtonDialogTitle}
+                                dialogText={finishButtonDialogText}
+                                handleConfirmation={() => this.handleFinishButton(userCanFinishPuzzle)}
                             />
                         </Grid>
                         <Grid item>
@@ -385,15 +392,16 @@ class SudokuGame extends React.Component {
         console.log('handleExecuteLogicalOperators: Selected operators: ' + JSON.stringify(shortNames));
     }
 
-    handleFinishButton() {
-        console.log('Finishing board and submitting result.');
-        this.props.submitFinishedGameTree({
-            finishedTree: this.state.gameTree,
-            abandonedTrees: this.state.abandonedGameTrees,
-            answer: this.state.analysisAnswer,
-            mechanicalTurkId: this.state.mechanicalTurkId
-        });
-        this.displayNextBoard();
+    handleFinishButton(canFinish) {
+        if (canFinish) {
+            this.props.submitFinishedGameTree({
+                finishedTree: this.state.gameTree,
+                abandonedTrees: this.state.abandonedGameTrees,
+                answer: this.state.analysisAnswer,
+                mechanicalTurkId: this.state.mechanicalTurkId
+            });
+            this.displayNextBoard();
+        }   
     }
 
     handleResetButton() {
