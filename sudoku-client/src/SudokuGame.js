@@ -27,7 +27,8 @@ import { Typography } from '@material-ui/core';
 import { ActiveBoardView } from './ActiveBoardView';
 import { AnalysisAnswerPanel } from './AnalysisAnswerPanel';
 import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
-import { MechanicalTurkIdForm } from './MechanicalTurkIdForm'; 
+import { GameInfoDialog } from './GameInfoDialog';
+import { MechanicalTurkIdForm } from './MechanicalTurkIdForm';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
 import { CellActionPanel } from './CellActionPanel';
@@ -236,7 +237,7 @@ class SudokuGame extends React.Component {
                 this.state.selectedBoardSquare,
                 this.state.selectedValue,
                 this.state.selectedLogicalOperators
-                );
+            );
 
             return (
                 <Grid container id="gameContainer">
@@ -247,10 +248,10 @@ class SudokuGame extends React.Component {
                     </Grid>
 
                     <Grid container wrap="nowrap"
-                          justify="flex-start"
-                          id="boardAndOperators"
-                          spacing={2}
-                          >
+                        justify="flex-start"
+                        id="boardAndOperators"
+                        spacing={2}
+                    >
                         <Grid item xs={5} xl={4} id="gameBoard">
                             <ActiveBoardView
                                 board={board}
@@ -273,7 +274,7 @@ class SudokuGame extends React.Component {
                                         executeAction={(action) => this.handleExecuteAction(action)}
                                         disabledReason={disabledReason}
                                         key={this.state.resetCount}
-                                        />
+                                    />
                                 </Paper>
                                 <Paper>
                                     <LogicalOperatorPanel
@@ -285,18 +286,18 @@ class SudokuGame extends React.Component {
                                             console.log("SudokuGame: Confirming logical operator selection.");
                                             this.setState({ logicalOperatorsSelected: true });
                                         }}
-                                        executeLogicalOperators={() => {this.handleExecuteLogicalOperators();}}
+                                        executeLogicalOperators={() => { this.handleExecuteLogicalOperators(); }}
                                         key={this.state.resetCount}
                                     />
                                 </Paper>
                             </Grid>
                         </Grid>
 
-                        <Grid item container 
-                              id="gameTree" 
-                              xs={4} med={5} xl={6}
-                              justify="flex-start"
-                              direction="column">
+                        <Grid item container
+                            id="gameTree"
+                            xs={4} med={5} xl={6}
+                            justify="flex-start"
+                            direction="column">
                             <Typography variant="h5">Decision Tree</Typography>
                             <GameTreeView
                                 gameTree={this.state.gameTree}
@@ -318,7 +319,7 @@ class SudokuGame extends React.Component {
                         <Grid item>
                             <MechanicalTurkIdForm
                                 handleChange={(value) => { this.setState({ mechanicalTurkId: value }); }}
-                                />
+                            />
                         </Grid>
                     </Grid>
 
@@ -342,6 +343,23 @@ class SudokuGame extends React.Component {
 
                         </Grid>
                     </Grid>
+                    <GameInfoDialog
+                        dialogTitle={"Welcome!"}
+                        dialogText={"Hello! This web site is meant to be used from Amazon's Mechanical Turk."}
+                        defaultState={true}
+                    />
+                    <GameInfoDialog
+                        dialogTitle={"Game finished!"}
+                        dialogText={
+                            "Thank you for playing these Sudoku boards. " +
+                            "You have finished the last puzzle in this game; " +
+                            "please close this window. You may choose to play " +
+                            "additional games, if available, " +
+                            "by returning to whence you came."
+                        }
+                        handleConfirmation={() => this.handleCloseWindow()}
+                        registerOpen={(callback) => this.registerEndGameOpen(callback)}
+                    />
                 </Grid>
 
             );
@@ -363,7 +381,7 @@ class SudokuGame extends React.Component {
     handleExecuteLogicalOperators() {
         const shortNames = this.state.selectedLogicalOperators.map(
             (op) => op.internal_name
-            );
+        );
         console.log('handleExecuteLogicalOperators: Selected operators: ' + JSON.stringify(shortNames));
     }
 
@@ -391,6 +409,15 @@ class SudokuGame extends React.Component {
         this.setState({
             resetCount: this.state.resetCount + 1
         });
+    }
+
+    registerEndGameOpen(callback) {
+        this.openEndGame = callback;
+    }
+
+    handleCloseWindow() {
+        window.open("about:blank", "_self");
+        window.close();
     }
 
     handleLogicalOperatorSelection(operators) {
@@ -465,7 +492,8 @@ class SudokuGame extends React.Component {
         }
 
         if (nextBoardIndex === this.props.puzzles.length) {
-            throw new Error("ERROR: Can't advance past the last board");
+            this.openEndGame()
+            return
         }
 
         this.resetState();
@@ -505,7 +533,7 @@ class SudokuGame extends React.Component {
     }
 }
 
-// Cell actions are available, or not, depending on whether their 
+// Cell actions are available, or not, depending on whether their
 // prerequisites are selected on the game board.
 //
 // Assign and Exclude require the user to select an available value.
@@ -515,15 +543,15 @@ class SudokuGame extends React.Component {
 
 function actionsEnabledGivenSelection(selectedCell, selectedValue, selectedLogicalOperators) {
     return {
-        assign: (selectedValue !== null 
-                 && selectedValue !== -1
-                 && selectedCell !== null),
+        assign: (selectedValue !== null
+            && selectedValue !== -1
+            && selectedCell !== null),
         exclude: (selectedValue !== null
-                  && selectedValue !== -1
-                  && selectedCell !== null),
+            && selectedValue !== -1
+            && selectedCell !== null),
         pivot: (selectedCell !== null),
         applyops: (selectedLogicalOperators !== null
-                   && selectedLogicalOperators.length > 0)
+            && selectedLogicalOperators.length > 0)
     };
 }
 
