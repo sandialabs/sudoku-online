@@ -243,7 +243,8 @@ class SudokuGame extends React.Component {
             const enabledActions = actionsEnabledGivenSelection(
                 this.state.selectedBoardSquare,
                 this.state.selectedValue,
-                this.state.selectedLogicalOperators
+                this.state.selectedLogicalOperators,
+                this.state.selectLogicalOperatorsUpFront
             );
 
             return (
@@ -410,7 +411,7 @@ class SudokuGame extends React.Component {
             abandonedGameTrees: this.state.abandonedGameTrees.concat(abandonedTree)
         });
         this.resetState();
-        this.initializeGameTree(
+        this.configureNewBoard(
             this.props.puzzles[
             this.state.currentPuzzleIndex
             ]);
@@ -515,7 +516,7 @@ class SudokuGame extends React.Component {
         //     selectLogicalOperatorsUpFront: selectUpFront,
         // })
 
-        this.initializeGameTree(nextPuzzle);
+        this.configureNewBoard(nextPuzzle);
 
     }
 
@@ -549,7 +550,7 @@ class SudokuGame extends React.Component {
 // Pivot just requires that the user select an available (unassigned)
 // cell -- whether or not they select a value in the cell is immaterial.
 
-function actionsEnabledGivenSelection(selectedCell, selectedValue, selectedLogicalOperators) {
+function actionsEnabledGivenSelection(selectedCell, selectedValue, selectedLogicalOperators, selectLogicalOperatorsUpFront) {
     return {
         assign: (selectedValue !== null
             && selectedValue !== -1
@@ -559,7 +560,8 @@ function actionsEnabledGivenSelection(selectedCell, selectedValue, selectedLogic
             && selectedCell !== null),
         pivot: (selectedCell !== null),
         applyops: (selectedLogicalOperators !== null
-            && selectedLogicalOperators.length > 0)
+            && selectedLogicalOperators.length > 0
+            && selectLogicalOperatorsUpFront === false)
     };
 }
 
