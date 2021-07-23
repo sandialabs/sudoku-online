@@ -8,6 +8,13 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 
 function MechanicalTurkIdForm(props) {
+
+    const ignoreEnter = (event) => {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+        }
+    }
+
     return (
         <form noValidate autoComplete="off">
             <TextField
@@ -15,6 +22,9 @@ function MechanicalTurkIdForm(props) {
                 label="Your Mechanical Turk ID"
                 variant="filled"
                 onChange={ (event) => props.handleChange(event.target.value) }
+                onKeyPress={ignoreEnter}
+                onKeyDown={ignoreEnter}
+                onKeyUp={ignoreEnter}
                 InputProps={{
                     startAdornment: 
                         <InputAdornment position="start">
