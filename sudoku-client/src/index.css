@@ -1,0 +1,203 @@
+body {
+
+  font-family: 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+table.active-board {
+	table-layout: fixed;
+	border-collapse: collapse;
+    border-style: solid;
+    border-color: black;
+    border-width: 5px;
+}
+
+
+/*
+ * Styles for active board display
+ */
+
+td.active-board.square {
+    margin: 0px;
+    padding: 0px;
+}
+
+/* Internal borders between blocks */
+tr.active-board.degree-3:nth-child(3n+3) {
+	border-bottom: 3px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+td.active-board.square.degree-3:nth-child(3n+3) {
+	border-right: 3px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* The rest of the internal borders - not between blocks, just squares */
+tr.active-board {
+	border-bottom: 2px solid #FFA0A0;
+    margin: 0;
+    padding: 0;
+}
+
+td.active-board.square {
+	border-right: 2px solid #FFA0A0;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    width: 60px;
+    height: 60px;
+}
+
+td.active-board.square.selected-square {
+    border: 3px solid red;
+    background-color: #D0D0FF;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    width: 27px;
+    height: 27px;
+}
+
+td.active-board.square.goal-cell {
+    border: 5px solid #B3B300;
+    margin: 0;
+    padding: 0;
+    width: 27px;
+    height: 27px;
+}
+
+td.active-board.square.degree-3.goal-cell:nth-child(3n+3) {
+    border-right: 5px solid #B3B300;
+    margin: 0;
+    padding: 0;
+}
+
+/*
+ * Styles for the choice grid within the unassigned cells in the 
+ * active board
+ */
+
+table.sudoku-choice-grid {
+	margin: 0;
+	padding: 0;
+    border-collapse: collapse;
+}
+
+tr.sudoku-choice-grid {
+	border-bottom: 1px solid blue;
+    margin: 0;
+    padding: 0;
+}
+
+tr.sudoku-choice-grid.inaccessible {
+    border-bottom: 1px solid lightgrey;
+    margin: 0;
+    padding: 0;
+}
+
+tr.sudoku-choice-grid:last-child {
+    border-bottom: none;
+}
+
+td.sudoku-choice-grid {
+    border-right: 1px solid blue;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+}
+
+td.sudoku-choice-grid.inaccessible {
+    border-right: 1px solid lightgrey;
+    background-color: transparent;
+    margin: 0;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+}
+
+td.sudoku-choice-grid:last-child {
+    border-right: none;
+}
+
+td.sudoku-choice-grid.selected-square.selected-value {
+    border: 3px solid blue;
+}
+
+button.sudoku-choice-grid {
+    background-color: transparent;
+	text-align: center;
+    text-weight: bolder;
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: 19px;
+    height: 19px;
+}
+
+button.sudoku-choice-grid.inaccessible 
+{
+    color: #808080;
+    background-color: transparent;
+    text-align: center;
+    border: none;
+    margin: 0;
+    padding: 0;
+    width: 19px;
+    height: 19px;
+}
+
+span.occupied {
+    background-color: blue;
+}
+
+/*
+ * Styles for the tables in the game tree view
+ */
+
+table.miniature-board {
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin: 0px;
+    padding: 0px;
+    border: 1px solid gray;
+    font-size: xx-small;
+}
+
+tr.miniature-board {
+    border-bottom: 1px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+tr.miniature-board.degree-3:nth-child(3n+3) {
+    border-bottom: 1px solid gray;
+    margin: 0;
+    padding: 0;
+}
+
+td.miniature-board {
+    border-right: 1px solid gray;
+    width: 4px;
+    height: 4px;
+    text-align: center;
+}
+
+td.miniature-board.degree-3:nth-child(3n+3) {
+    border-right: 1px solid gray;
+    margin: 0;
+    padding: 0;
+}
