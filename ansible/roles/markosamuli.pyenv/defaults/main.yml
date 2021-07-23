@@ -1,0 +1,39 @@
+---
+# defaults file for markosamuli.pyenv
+
+# Installation paths
+pyenv_home: "{{ ansible_env.HOME }}"
+pyenv_root: "{{ ansible_env.HOME }}/.pyenv"
+
+# Initialize .bashrc and .zshrc shell scripts
+pyenv_init_shell: true
+
+# Versions to install
+pyenv_version: "v1.2.20"
+pyenv_virtualenv_version: "v1.1.5"
+pyenv_virtualenvwrapper_version: "v20140609"
+
+# Latest Python versions
+pyenv_python37_version: "3.7.8"
+pyenv_python38_version: "3.8.5"
+
+# Python versions to install
+pyenv_python_versions:
+  - "{{ pyenv_python37_version }}"
+  - "{{ pyenv_python38_version }}"
+
+# Set global pyenv version
+pyenv_global: "{{ pyenv_python37_version }} system"
+
+# Optionally, install virtualenvwrapper plugin for pyenv
+pyenv_virtualenvwrapper: false
+pyenv_virtualenvwrapper_home: "{{ ansible_env.HOME }}/.virtualenvs"
+
+# Install using package manager where available
+pyenv_install_from_package_manager: true
+
+# Detect existing install
+pyenv_detect_existing_install: true
+
+# Use Homebrew on Linux
+pyenv_homebrew_on_linux: false

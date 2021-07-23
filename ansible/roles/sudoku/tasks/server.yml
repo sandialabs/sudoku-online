@@ -1,0 +1,45 @@
+---
+
+- name: sync server
+  ansible.posix.synchronize:
+    src: ../sudoku-server
+    dest: "{{ app_dir }}"
+
+- name: setup reliable python version with pyenv
+  include_role:
+    name: markosamuli.pyenv
+
+- name: "install virtualenv for {{ app_py_version }}"
+  pip:
+    name: virtualenv
+    executable: "{{ pyenv_root }}/versions/{{ app_py_version }}/bin/pip"
+
+- name: create supervisor config
+  template:
+    dest: /etc/supervisor/conf.d/sudoku-server.conf
+    src: sudoku-server.conf.j2
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload_supervisor
+
+- name: create gunicorn config
+  copy:
+    dest: /etc/gunicorn.conf.py
+    src: gunicorn.conf.py
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload_supervisor
+
+- name: setup local flask venv
+  pip:
+    name: pip
+    virtualenv: "{{ app_dir }}/venv"
+    virtualenv_command: "{{ pyenv_root }}/versions/{{ app_py_version }}/bin/virtualenv"
+
+- name: start supervisor
+  service:
+    name: supervisor
+    enabled: true
+    state: started

@@ -1,0 +1,14 @@
+;/etc/supervisor/conf.d/sudoku-server.conf
+[program:sudoku_server]
+user = {{ app_user }}
+directory = {{ app_dir }}/sudoku-server
+command = gunicorn -c /etc/gunicorn.conf.py wsgi:app
+
+priority = 900
+autostart = true
+autorestart = true
+stopsignal = TERM
+
+redirect_stderr = true
+stdout_logfile = {{ app_dir }}/sudoku-server/%(program_name)s.log
+stderr_logfile = {{ app_dir }}/sudoku-server/%(program_name)s.log

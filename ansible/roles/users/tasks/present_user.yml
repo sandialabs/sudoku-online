@@ -1,0 +1,23 @@
+---
+
+- name: "create {{ item.name }} group"
+  group:
+    name: "{{ item.name }}"
+    gid: "{{ ((item.id | default(id)) | string in gids.stdout_lines) | ternary(omit, item.id) }}"     # avoid occupied gid
+
+- name: "create {{ item.name }} user"
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ ((item.id | default(id)) | string in uids.stdout_lines) | ternary(omit, item.id) }}"    # avoid occupied uid
+    group: "{{ item.name }}"
+    groups: "{{ (item.optional_groups | default(optional_groups)) | intersect(group_names.stdout_lines) | join(',')|default(omit) }}"    # add groups that exist
+    shell: "{{ item.shell|default('/usr/sbin/nologin') }}"     # use default shell if none is set
+
+- name: "setup {{ item.name }} authorized_keys"
+  authorized_key:
+    key: "{{ ssh_key }}"
+    user: "{{ item.name }}"
+  when: item.ssh_auth is defined
+  loop: "{{ item.ssh_auth }}"
+  loop_control:
+    loop_var: ssh_key     # for an arbitrary number of ssh keys

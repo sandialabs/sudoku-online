@@ -1,0 +1,15 @@
+---
+
+
+- name: reload_supervisor
+  service:
+    name: supervisor
+    enabled: true
+    state: reloaded
+
+
+- name: reload_nginx
+  service:
+    name: nginx
+    enabled: true
+    state: reloaded

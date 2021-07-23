@@ -1,0 +1,12 @@
+---
+
+- name: "remove {{ item.name }} user"
+  user:
+    name: "{{ item.name }}"
+    remove: true
+    state: absent
+
+- name: "remove {{ item.name }} group"
+  group:
+    name: "{{ item.name }}"
+    state: absent
