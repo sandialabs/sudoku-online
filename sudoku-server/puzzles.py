@@ -150,6 +150,50 @@ games = {
             'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no...select_ops_upfront',
         ]
     },
+    'training_games_select_ops_upfront': {
+        'puzzles': [
+            'easy2...goal=E7...name=Training #1...question=Can E7 be 6?...answer=no...select_ops_upfront',
+            'test11-i36e28hp2...goal=B8...name=Training #2...question=Can B8 be odd?...answer=yes...select_ops_upfront',
+            'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no...select_ops_upfront',
+        ]
+    },
+    'training_games_always_select': {
+        'puzzles': [
+            'easy2...goal=E7...name=Training #1...question=Can E7 be 6?...answer=no',
+            'test11-i36e28hp2...goal=B8...name=Training #2...question=Can B8 be odd?...answer=yes',
+            'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no',
+        ]
+    },
+    'training_games1_select_ops_upfront': {
+        'puzzles': [
+            'easy2...goal=E7...name=Training #1...question=Can E7 be 6?...answer=no...select_ops_upfront',
+        ]
+    },
+    'training_game2_select_ops_upfront': {
+        'puzzles': [
+            'test11-i36e28hp2...goal=B8...name=Training #2...question=Can B8 be odd?...answer=yes...select_ops_upfront',
+        ]
+    },
+    'training_games3_select_ops_upfront': {
+        'puzzles': [
+            'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no...select_ops_upfront',
+        ]
+    },
+    'training_games1_always_select': {
+        'puzzles': [
+            'easy2...goal=E7...name=Training #1...question=Can E7 be 6?...answer=no',
+        ]
+    },
+    'training_game2_always_select': {
+        'puzzles': [
+            'test11-i36e28hp2...goal=B8...name=Training #2...question=Can B8 be odd?...answer=yes',
+        ]
+    },
+    'training_games3_always_select': {
+        'puzzles': [
+            'test16-i26e36np3...goal=F3...name=Training #3...question=Can F3 be 3 or 7?...answer=no',
+        ]
+    },
     'weedout_games': {
         'puzzles': [
             # Requires pointing pairs and inclusion; doesn't require last inclusion after pointing pairs (poss. 1 4 6 7 9)
@@ -163,26 +207,70 @@ games = {
             'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no...select_ops_upfront',
         ]
     },
+    'weedout_games_always_select': {
+        'puzzles': [
+            'test36-i30e33np2hp2yw1...goal=F7...name=WeedOut #1...question=Can F7 be 1, 6, or 7?...answer=yes',
+            'test4-i28e36...goal=B1...name=WeedOut #2...question=Can B1 be greater than 5?...answer=no',
+            'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no',
+        ]
+    },
+    'weedout_games_select_ops_upfront': {
+        'puzzles': [
+            'test36-i30e33np2hp2yw1...goal=F7...name=WeedOut #1...question=Can F7 be 1, 6, or 7?...answer=yes...select_ops_upfront',
+            'test4-i28e36...goal=B1...name=WeedOut #2...question=Can B1 be greater than 5?...answer=no...select_ops_upfront',
+            'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no...select_ops_upfront',
+        ]
+    },
+    'weedout_games1_select_ops_upfront': {
+        'puzzles': [
+            'test36-i30e33np2hp2yw1...goal=F7...name=WeedOut #1...question=Can F7 be 1, 6, or 7?...answer=yes...select_ops_upfront',
+        ]
+    },
+    'weedout_games2_select_ops_upfront': {
+        'puzzles': [
+            'test4-i28e36...goal=B1...name=WeedOut #2...question=Can B1 be greater than 5?...answer=no...select_ops_upfront',
+        ]
+    },
+    'weedout_games3_select_ops_upfront': {
+        'puzzles': [
+            'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no...select_ops_upfront',
+        ]
+    },
+    'weedout_games1_always_select': {
+        'puzzles': [
+            'test36-i30e33np2hp2yw1...goal=F7...name=WeedOut #1...question=Can F7 be 1, 6, or 7?...answer=yes',
+        ]
+    },
+    'weedout_games2_always_select': {
+        'puzzles': [
+            'test4-i28e36...goal=B1...name=WeedOut #2...question=Can B1 be greater than 5?...answer=no',
+        ]
+    },
+    'weedout_games3_always_select': {
+        'puzzles': [
+            'test22-i33e18nt1xw1...goal=A2...name=WeedOut #3...question=Can A2 be 3?...answer=no',
+        ]
+    },
     'logical_operators_mturk_test_suite': {
         'puzzles': [
             # Goal: something that gets resolved by second-to-last logical operator
 
             # Inclusion
             # Requires 1 call to inclusion; resolved after last (1) inclusion call
-            'medium1...goal=I3...name=Inclusion Only #1...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes',
-            'medium1...goal=I3...name=Inclusion Only #1...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes...select_ops_upfront',
+            'medium1...goal=I3...name=Sudoku Test #01...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes',
+            'medium1...goal=I3...name=Sudoku Test #01...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes...select_ops_upfront',
             # Requires 2 calls to inclusion; resolved after 1st call *** training / weed out ***
-            'naked_single_test...goal=E6...name=Inclusion Only #2...question=Is E6 less than 5?...answer=yes',
-            'naked_single_test...goal=E6...name=Inclusion Only #2...question=Is E6 less than 5?...answer=yes...select_ops_upfront',
+            'naked_single_test...goal=E6...name=Sudoku Test #02...question=Is E6 less than 5?...answer=yes',
+            'naked_single_test...goal=E6...name=Sudoku Test #02...question=Is E6 less than 5?...answer=yes...select_ops_upfront',
             # Requires 4 calls to inclusion; resolved by exclusion propagation of 3rd call
-            'test2-i24e40...goal=B2...name=Inclusion Only #3...question=Is B2 less than 6?...answer=no',
-            'test2-i24e40...goal=B2...name=Inclusion Only #3...question=Is B2 less than 6?...answer=no...select_ops_upfront',
+            'test2-i24e40...goal=B2...name=Sudoku Test #03...question=Is B2 less than 6?...answer=no',
+            'test2-i24e40...goal=B2...name=Sudoku Test #03...question=Is B2 less than 6?...answer=no...select_ops_upfront',
             # Requires 4 calls to inclusion; resolved on 3rd inclusion (no exclusion) to be 2
-            'test3-i29e35...goal=E2...name=Inclusion Only #4...question=Is E2 6?...answer=no',
-            'test3-i29e35...goal=E2...name=Inclusion Only #4...question=Is E2 6?...answer=no...select_ops_upfront',
+            'test3-i29e35...goal=E2...name=Sudoku Test #04...question=Is E2 6?...answer=no',
+            'test3-i29e35...goal=E2...name=Sudoku Test #04...question=Is E2 6?...answer=no...select_ops_upfront',
             # Requires 3 calls to inclusion; resolved after 2nd call
-            'test6-i26e38...goal=C5...name=Inclusion Only #5...question=Is C5 7?...answer=no',
-            'test6-i26e38...goal=C5...name=Inclusion Only #5...question=Is C5 7?...answer=no...select_ops_upfront',
+            'test6-i26e38...goal=C5...name=Sudoku Test #05...question=Is C5 7?...answer=no',
+            'test6-i26e38...goal=C5...name=Sudoku Test #05...question=Is C5 7?...answer=no...select_ops_upfront',
 
             # Process: search for last call to highest-level operator that has at least one non-exclusion operator call after it (if only one call, it can be the last).
             # Pick most uncertain cell (or a cell if that call doesn't resolve any uncertainty) before the call as the goal.
@@ -192,46 +280,46 @@ games = {
 
             # Pointing Pairs
             # Requires 1 pointing pairs call and 6 inclusion calls; 1 inclusion call happens after the pointing pairs call but is not required to answer.
-            'test8-i32e32hp2...goal=H2...name=Pointing Pairs #1...question=Is H2 7?...answer=no',
-            'test8-i32e32hp2...goal=H2...name=Pointing Pairs #1...question=Is H2 7?...answer=no...select_ops_upfront',
+            'test8-i32e32hp2...goal=H2...name=Sudoku Test #06...question=Is H2 7?...answer=no',
+            'test8-i32e32hp2...goal=H2...name=Sudoku Test #06...question=Is H2 7?...answer=no...select_ops_upfront',
             # Requires 2 pointing pairs calls. Question resolved by first, where following inclusion, pointing pairs, inclusion solves the board.
-            'test9-i29e35hp2...goal=C6...name=Pointing Pairs #2...question=Is C6 equal to A2 or A3?...answer=yes',
-            'test9-i29e35hp2...goal=C6...name=Pointing Pairs #2...question=Is C6 equal to A2 or A3?...answer=yes...select_ops_upfront',
+            'test9-i29e35hp2...goal=C6...name=Sudoku Test #07...question=Is C6 equal to A2 or A3?...answer=yes',
+            'test9-i29e35hp2...goal=C6...name=Sudoku Test #07...question=Is C6 equal to A2 or A3?...answer=yes...select_ops_upfront',
             # Requires 1 pointing pairs, 6 inclusions. Pointing pairs solves the board with exclusion.
-            'test15-i28e34np3...goal=F9...name=Pointing Pairs #3...question=Is F9 odd?...answer=yes',
-            'test15-i28e34np3...goal=F9...name=Pointing Pairs #3...question=Is F9 odd?...answer=yes...select_ops_upfront',
+            'test15-i28e34np3...goal=F9...name=Sudoku Test #08...question=Is F9 odd?...answer=yes',
+            'test15-i28e34np3...goal=F9...name=Sudoku Test #08...question=Is F9 odd?...answer=yes...select_ops_upfront',
             # Requires 1 pointing pairs, 6 inclusions. Board requires 2 inclusions afterwards, but question is resolved prior to those.
-            'test13-i34e30np1...goal=A6...name=Pointing Pairs #4...question=Is A6 5?...answer=no',
-            'test13-i34e30np1...goal=A6...name=Pointing Pairs #4...question=Is A6 5?...answer=no...select_ops_upfront',
+            'test13-i34e30np1...goal=A6...name=Sudoku Test #09...question=Is A6 5?...answer=no',
+            'test13-i34e30np1...goal=A6...name=Sudoku Test #09...question=Is A6 5?...answer=no...select_ops_upfront',
             # Requires 2 pointing pairs, 6 inclusions. Question resolved by first pointing pairs.
-            'hard1...goal=B9...name=Pointing Pairs #5...question=Is B9 greater than 3?...answer=yes',
-            'hard1...goal=B9...name=Pointing Pairs #5...question=Is B9 greater than 3?...answer=yes...select_ops_upfront',
+            'hard1...goal=B9...name=Sudoku Test #10...question=Is B9 greater than 3?...answer=yes',
+            'hard1...goal=B9...name=Sudoku Test #10...question=Is B9 greater than 3?...answer=yes...select_ops_upfront',
 
             # Naked Pairs
             # 1 naked pairs, 2 pointingpairs, 7 inclusion. Solved by exclusion after nakedpairs
             # C6 1, 2, 6, 9 -> 1, 2
-            'test7-i26e36hp10...name=Naked Pairs #1...goal=C6...question=Is C6 greater than 5?...answer=no',
-            'test7-i26e36hp10...name=Naked Pairs #1...goal=C6...question=Is C6 greater than 5?...answer=no...select_ops_upfront',
+            'test7-i26e36hp10...name=Sudoku Test #11...goal=C6...question=Is C6 greater than 5?...answer=no',
+            'test7-i26e36hp10...name=Sudoku Test #11...goal=C6...question=Is C6 greater than 5?...answer=no...select_ops_upfront',
             # 1 naked pair, 2 pointing pairs, 2 inclusions. Solved by exclusion after nakedpairs
             # A6 -> 1, 2 -> 1
             # Try operator before naked pairs. Pointing pairs.
             # Still A6 -> 1, 2, not resolved by nakedpairs. Try to reduce uncertainty otherwise.
             # B5 1, 2, 7, 8 -> 7, 8
-            'naked_pair_test_2...goal=B5...name=Naked Pairs #2...question=Is B5 greater than 5?...answer=yes',
-            'naked_pair_test_2...goal=B5...name=Naked Pairs #2...question=Is B5 greater than 5?...answer=yes...select_ops_upfront',
+            'naked_pair_test_2...goal=B5...name=Sudoku Test #12...question=Is B5 greater than 5?...answer=yes',
+            'naked_pair_test_2...goal=B5...name=Sudoku Test #12...question=Is B5 greater than 5?...answer=yes...select_ops_upfront',
             # 1 naked pairs, 2 pointing pairs, 5 inclusions. Requires 1 inclusion to solve after (followed by inclusion, pointingpairs to solve the board).
             # I5 4, 5, 7 -> 4, 5, 7. Need better option, so look at what's resolved before next inclusion.
             # A1 1, 5, 6, 7 -> 6, 7
-            'fiendish4...goal=A1...name=Sudoku Test #20...question=Is A1 greater than 5?...answer=yes',
-            'fiendish4...goal=A1...name=Sudoku Test #20...question=Is A1 greater than 5?...answer=yes...select_ops_upfront',
+            'fiendish4...goal=A1...name=Sudoku Test #13...question=Is A1 greater than 5?...answer=yes',
+            'fiendish4...goal=A1...name=Sudoku Test #13...question=Is A1 greater than 5?...answer=yes...select_ops_upfront',
             # 1 nakedpair, 3 pointingpairs, 10 inclusion. 1 inclusion after nakedpair.
             # F6 2, 3, 4, 5, 7, 9 -> no change after nakedpair, requires an inclusion also to get to -> 2, 3, 4, 7, 9
-            'test10-i29e35hp7...goal=F6...name=Sudoku Test #18...question=Is F6 5?...answer=no',
-            'test10-i29e35hp7...goal=F6...name=Sudoku Test #18...question=Is F6 5?...answer=no...select_ops_upfront',
+            'test10-i29e35hp7...goal=F6...name=Sudoku Test #14...question=Is F6 5?...answer=no',
+            'test10-i29e35hp7...goal=F6...name=Sudoku Test #14...question=Is F6 5?...answer=no...select_ops_upfront',
             # 1 naked pair, 2 pointingpairs, 10 inclusions. Solved by exclusion after nakedpairs.
             # B2 3, 4, 9 -> 3
-            'test14-i24e38np3...goal=B2...name=Sudoku Test #19...question=Is B2 a perfect square (1, 4, 9)?...answer=no',
-            'test14-i24e38np3...goal=B2...name=Sudoku Test #19...question=Is B2 a perfect square (1, 4, 9)?...answer=no...select_ops_upfront',
+            'test14-i24e38np3...goal=B2...name=Sudoku Test #15...question=Is B2 a perfect square (1, 4, or 9)?...answer=no',
+            'test14-i24e38np3...goal=B2...name=Sudoku Test #15...question=Is B2 a perfect square (1, 4, or 9)?...answer=no...select_ops_upfront',
 
             # Y Wings
             # 1 ywings, 1 nakedpairs, 6 inclusion. Solved by exclusion immediately after y-wings
@@ -243,13 +331,6 @@ games = {
             # H3 6, 9 -> 9
             'test32-i25e38np2hp4yw1...goal=H3...name=Sudoku Test #17...question=Is H3 even?...answer=no',
             'test32-i25e38np2hp4yw1...goal=H3...name=Sudoku Test #17...question=Is H3 even?...answer=no...select_ops_upfront',
-            # 1 ywing, 2 pointing pairs, 2 inclusion. solved by exclusion immediately after
-            # F3 1, 3, 4, 5, 6, 8 -> 1, 3, 4, 5, 6
-            # 'ywing_test...goal=%%...name=Sudoku Test #18...question=%%?...answer=%%',
-            # 1 Ywing, 6 inclusion. Solved immediately after ywing by exclusion.
-            # E8 4, 6, 9 -> 4, 9
-            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, 9)?...answer=yes',
-            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, 9)?...answer=yes...select_ops_upfront',
             # 1 ywings, 2 pointing pairs, 9 inclusions. Solved by exclusion after ywing
             # I2 5, 7 -> 5
             # 'test27-i32e31yw3...goal=%%...name=Sudoku Test #20...question=%%?...answer=%%',
@@ -258,8 +339,15 @@ games = {
             # Solve prior to ywing insted.
             # B9 8, 9 -> No change prior to ywing. Try reducing uncertainty instead.
             # G9 2, 6, 7 -> 7
-            'test30-i29e34yw1...goal=G9...name=Sudoku Test #20...question=Is G9 odd?...answer=yes',
-            'test30-i29e34yw1...goal=G9...name=Sudoku Test #20...question=Is G9 odd?...answer=yes...select_ops_upfront',
+            'test30-i29e34yw1...goal=G9...name=Sudoku Test #18...question=Is G9 odd?...answer=yes',
+            'test30-i29e34yw1...goal=G9...name=Sudoku Test #18...question=Is G9 odd?...answer=yes...select_ops_upfront',
+            # 1 ywing, 2 pointing pairs, 2 inclusion. solved by exclusion immediately after
+            # F3 1, 3, 4, 5, 6, 8 -> 1, 3, 4, 5, 6
+            # 'ywing_test...goal=%%...name=Sudoku Test #18...question=%%?...answer=%%',
+            # 1 Ywing, 6 inclusion. Solved immediately after ywing by exclusion.
+            # E8 4, 6, 9 -> 4, 9
+            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, or 9)?...answer=yes',
+            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, or 9)?...answer=yes...select_ops_upfront',
             # 1 ywings, 9 inclusion. Solved after ywing by exclusion.
             # B8 3, 8 -> 3
             # 'test31-i36e27yw1...goal=%%...name=Sudoku Test #20...question=%%?...answer=%%',
@@ -273,6 +361,182 @@ games = {
             'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no...select_ops_upfront',
         ]
     },
+    'logical_operators_mturk_option1_select_upfront': {
+        'puzzles': [
+            # Inclusion 1
+            'medium1...goal=I3...name=Sudoku Test #01...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes...select_ops_upfront',
+            'naked_single_test...goal=E6...name=Sudoku Test #02...question=Is E6 less than 5?...answer=yes...select_ops_upfront',
+            'test2-i24e40...goal=B2...name=Sudoku Test #03...question=Is B2 less than 6?...answer=no...select_ops_upfront',
+            # Pointing Pairs 1
+            'test15-i28e34np3...goal=F9...name=Sudoku Test #08...question=Is F9 odd?...answer=yes...select_ops_upfront',
+            'test13-i34e30np1...goal=A6...name=Sudoku Test #09...question=Is A6 5?...answer=no...select_ops_upfront',
+            # Naked Pairs 1
+            'naked_pair_test_2...goal=B5...name=Sudoku Test #12...question=Is B5 greater than 5?...answer=yes...select_ops_upfront',
+            'fiendish4...goal=A1...name=Sudoku Test #13...question=Is A1 greater than 5?...answer=yes...select_ops_upfront',
+            # Y Wings 1
+            'test32-i25e38np2hp4yw1...goal=H3...name=Sudoku Test #17...question=Is H3 even?...answer=no...select_ops_upfront',
+            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, or 9)?...answer=yes...select_ops_upfront',
+            'test30-i29e34yw1...goal=G9...name=Sudoku Test #18...question=Is G9 odd?...answer=yes...select_ops_upfront',
+        ]
+    },
+    'logical_operators_mturk_option2_select_upfront': {
+        'puzzles': [
+            # Inclusion 2
+            'test3-i29e35...goal=E2...name=Sudoku Test #04...question=Is E2 6?...answer=no...select_ops_upfront',
+            'test6-i26e38...goal=C5...name=Sudoku Test #05...question=Is C5 7?...answer=no...select_ops_upfront',
+            # Pointing Pairs 2
+            'hard1...goal=B9...name=Sudoku Test #10...question=Is B9 greater than 3?...answer=yes...select_ops_upfront',
+            'test8-i32e32hp2...goal=H2...name=Sudoku Test #06...question=Is H2 7?...answer=no...select_ops_upfront',
+            'test9-i29e35hp2...goal=C6...name=Sudoku Test #07...question=Is C6 equal to A2 or A3?...answer=yes...select_ops_upfront',
+            # Naked Pairs 2
+            'test7-i26e36hp10...name=Sudoku Test #11...goal=C6...question=Is C6 greater than 5?...answer=no...select_ops_upfront',
+            'test10-i29e35hp7...goal=F6...name=Sudoku Test #14...question=Is F6 5?...answer=no...select_ops_upfront',
+            'test14-i24e38np3...goal=B2...name=Sudoku Test #15...question=Is B2 a perfect square (1, 4, or 9)?...answer=no...select_ops_upfront',
+            # Y Wings 2
+            'test29-i27e36yw1...name=Sudoku Test #16...goal=H9...question=Is H9 3?...answer=yes...select_ops_upfront',
+            'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no...select_ops_upfront',
+        ]
+    },
+    'logical_operators_mturk_option1_always_select': {
+        'puzzles': [
+            # Inclusion 1
+            'medium1...goal=I3...name=Sudoku Test #01...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes',
+            'naked_single_test...goal=E6...name=Sudoku Test #02...question=Is E6 less than 5?...answer=yes',
+            'test2-i24e40...goal=B2...name=Sudoku Test #03...question=Is B2 less than 6?...answer=no',
+            # Pointing Pairs 1
+            'test15-i28e34np3...goal=F9...name=Sudoku Test #08...question=Is F9 odd?...answer=yes',
+            'test13-i34e30np1...goal=A6...name=Sudoku Test #09...question=Is A6 5?...answer=no',
+            # Naked Pairs 1
+            'naked_pair_test_2...goal=B5...name=Sudoku Test #12...question=Is B5 greater than 5?...answer=yes',
+            'fiendish4...goal=A1...name=Sudoku Test #13...question=Is A1 greater than 5?...answer=yes',
+            # Y Wings 1
+            'test32-i25e38np2hp4yw1...goal=H3...name=Sudoku Test #17...question=Is H3 even?...answer=no',
+            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, or 9)?...answer=yes',
+            'test30-i29e34yw1...goal=G9...name=Sudoku Test #18...question=Is G9 odd?...answer=yes',
+        ]
+    },
+    'logical_operators_mturk_option2_always_select': {
+        'puzzles': [
+            # Inclusion 2
+            'test3-i29e35...goal=E2...name=Sudoku Test #04...question=Is E2 6?...answer=no',
+            'test6-i26e38...goal=C5...name=Sudoku Test #05...question=Is C5 7?...answer=no',
+            # Pointing Pairs 2
+            'hard1...goal=B9...name=Sudoku Test #10...question=Is B9 greater than 3?...answer=yes',
+            'test8-i32e32hp2...goal=H2...name=Sudoku Test #06...question=Is H2 7?...answer=no',
+            'test9-i29e35hp2...goal=C6...name=Sudoku Test #07...question=Is C6 equal to A2 or A3?...answer=yes',
+            # Naked Pairs 2
+            'test7-i26e36hp10...name=Sudoku Test #11...goal=C6...question=Is C6 greater than 5?...answer=no',
+            'test10-i29e35hp7...goal=F6...name=Sudoku Test #14...question=Is F6 5?...answer=no',
+            'test14-i24e38np3...goal=B2...name=Sudoku Test #15...question=Is B2 a perfect square (1, 4, or 9)?...answer=no',
+            # Y Wings 2
+            'test29-i27e36yw1...name=Sudoku Test #16...goal=H9...question=Is H9 3?...answer=yes',
+            'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no',
+        ]
+    },
+    'logical_operators_mturk_optionA_select_upfront': {
+        'puzzles': [
+            # Inclusion A
+            'medium1...goal=I3...name=Sudoku Test #01...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes...select_ops_upfront',
+            # Pointing Pairs A
+            'test13-i34e30np1...goal=A6...name=Sudoku Test #09...question=Is A6 5?...answer=no...select_ops_upfront',
+            # Naked Pairs A
+            'fiendish4...goal=A1...name=Sudoku Test #13...question=Is A1 greater than 5?...answer=yes...select_ops_upfront',
+            # Y Wings A
+            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, or 9)?...answer=yes...select_ops_upfront',
+            'test30-i29e34yw1...goal=G9...name=Sudoku Test #18...question=Is G9 odd?...answer=yes...select_ops_upfront',
+        ]
+    },
+    'logical_operators_mturk_optionB_select_upfront': {
+        'puzzles': [
+            # Inclusion B
+            'naked_single_test...goal=E6...name=Sudoku Test #02...question=Is E6 less than 5?...answer=yes...select_ops_upfront',
+            'test2-i24e40...goal=B2...name=Sudoku Test #03...question=Is B2 less than 6?...answer=no...select_ops_upfront',
+            # Pointing Pairs B
+            'test15-i28e34np3...goal=F9...name=Sudoku Test #08...question=Is F9 odd?...answer=yes...select_ops_upfront',
+            # Naked Pairs B
+            'naked_pair_test_2...goal=B5...name=Sudoku Test #12...question=Is B5 greater than 5?...answer=yes...select_ops_upfront',
+            # Y Wings B
+            'test32-i25e38np2hp4yw1...goal=H3...name=Sudoku Test #17...question=Is H3 even?...answer=no...select_ops_upfront',
+        ]
+    },
+    'logical_operators_mturk_optionC_select_upfront': {
+        'puzzles': [
+            # Inclusion C
+            'test3-i29e35...goal=E2...name=Sudoku Test #04...question=Is E2 6?...answer=no...select_ops_upfront',
+            # Pointing Pairs C
+            'hard1...goal=B9...name=Sudoku Test #10...question=Is B9 greater than 3?...answer=yes...select_ops_upfront',
+            # Naked Pairs C
+            'test7-i26e36hp10...name=Sudoku Test #11...goal=C6...question=Is C6 greater than 5?...answer=no...select_ops_upfront',
+            'test14-i24e38np3...goal=B2...name=Sudoku Test #14...question=Is B2 a perfect square (1, 4, or 9)?...answer=no...select_ops_upfront',
+            # Y Wings C
+            'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no...select_ops_upfront',
+        ]
+    },
+    'logical_operators_mturk_optionD_select_upfront': {
+        'puzzles': [
+            # Inclusion D
+            'test6-i26e38...goal=C5...name=Sudoku Test #05...question=Is C5 7?...answer=no...select_ops_upfront',
+            # Pointing Pairs D
+            'test8-i32e32hp2...goal=H2...name=Sudoku Test #06...question=Is H2 7?...answer=no...select_ops_upfront',
+            'test9-i29e35hp2...goal=C6...name=Sudoku Test #07...question=Is C6 equal to A2 or A3?...answer=yes...select_ops_upfront',
+            # Naked Pairs D
+            'test10-i29e35hp7...goal=F6...name=Sudoku Test #14...question=Is F6 5?...answer=no...select_ops_upfront',
+            # Y Wings D
+            'test29-i27e36yw1...name=Sudoku Test #16...goal=H9...question=Is H9 3?...answer=yes...select_ops_upfront',
+        ]
+    },
+    'logical_operators_mturk_optionA_always_select': {
+        'puzzles': [
+            # Inclusion A
+            'medium1...goal=I3...name=Sudoku Test #01...question=Is I3 prime (2, 3, 5, or 7)?...answer=yes',
+            # Pointing Pairs A
+            'test13-i34e30np1...goal=A6...name=Sudoku Test #09...question=Is A6 5?...answer=no',
+            # Naked Pairs A
+            'fiendish4...goal=A1...name=Sudoku Test #13...question=Is A1 greater than 5?...answer=yes',
+            # Y Wings A
+            'test28-i27e36yw1...goal=E8...name=Sudoku Test #19...question=Is E8 a perfect square (1, 4, or 9)?...answer=yes',
+            'test30-i29e34yw1...goal=G9...name=Sudoku Test #18...question=Is G9 odd?...answer=yes',
+        ]
+    },
+    'logical_operators_mturk_optionB_always_select': {
+        'puzzles': [
+            # Inclusion B
+            'naked_single_test...goal=E6...name=Sudoku Test #02...question=Is E6 less than 5?...answer=yes',
+            'test2-i24e40...goal=B2...name=Sudoku Test #03...question=Is B2 less than 6?...answer=no',
+            # Pointing Pairs B
+            'test15-i28e34np3...goal=F9...name=Sudoku Test #08...question=Is F9 odd?...answer=yes',
+            # Naked Pairs B
+            'naked_pair_test_2...goal=B5...name=Sudoku Test #12...question=Is B5 greater than 5?...answer=yes',
+            # Y Wings B
+            'test32-i25e38np2hp4yw1...goal=H3...name=Sudoku Test #17...question=Is H3 even?...answer=no',
+        ]
+    },
+    'logical_operators_mturk_optionC_always_select': {
+        'puzzles': [
+            # Inclusion C
+            'test3-i29e35...goal=E2...name=Sudoku Test #04...question=Is E2 6?...answer=no',
+            # Pointing Pairs C
+            'hard1...goal=B9...name=Sudoku Test #10...question=Is B9 greater than 3?...answer=yes',
+            # Naked Pairs C
+            'test7-i26e36hp10...name=Sudoku Test #11...goal=C6...question=Is C6 greater than 5?...answer=no',
+            'test14-i24e38np3...goal=B2...name=Sudoku Test #14...question=Is B2 a perfect square (1, 4, or 9)?...answer=no',
+            # Y Wings C
+            'box_line_reduction...goal=C3...name=Sudoku Test #20...question=Is C3 greater than 4?...answer=no',
+        ]
+    },
+    'logical_operators_mturk_optionD_always_select': {
+        'puzzles': [
+            # Inclusion D
+            'test6-i26e38...goal=C5...name=Sudoku Test #05...question=Is C5 7?...answer=no',
+            # Pointing Pairs D
+            'test8-i32e32hp2...goal=H2...name=Sudoku Test #06...question=Is H2 7?...answer=no',
+            'test9-i29e35hp2...goal=C6...name=Sudoku Test #07...question=Is C6 equal to A2 or A3?...answer=yes',
+            # Naked Pairs D
+            'test10-i29e35hp7...goal=F6...name=Sudoku Test #14...question=Is F6 5?...answer=no',
+            # Y Wings D
+            'test29-i27e36yw1...name=Sudoku Test #16...goal=H9...question=Is H9 3?...answer=yes',
+        ]
+    },
     'extra_games': {
         'puzzles': [
             # Exclusion only; resolved with anything
@@ -283,7 +547,6 @@ games = {
             'easy4...goal=A2...name=No Logical Ops Required #2...question=Is A2 odd?...answer=yes...select_ops_upfront',
 
             # May require intermediate operators.
-            # These are un-checked by Shelley other than to confirm that they need intermediate operators.
             'box_line_reduction_2...name=Extra Manipulations Required Beyond Logical Ops #1...goal=C5...question=Is C5 less than 5?...answer=yes',
             'box_line_reduction_2...name=Extra Manipulations Required Beyond Logical Ops #1...goal=C5...question=Is C5 less than 5?...answer=yes...select_ops_upfront',
             'hidden_pair_test_2...goal=F7...name=Extra Manipulations Required Beyond Logical Ops #2...question=Is F7 odd?...answer=yes',
