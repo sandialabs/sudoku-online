@@ -44,6 +44,7 @@ class SudokuGame extends React.Component {
             abandonedGameTrees: [],
             activeBoardId: null,
             currentPuzzleIndex: null,
+            currentPuzzleInitialScore: props.initialScore,
             gameTree: null,
             gameTreeExpandedNodes: new Set(),
             logicalOperatorsSelected: false,
@@ -224,7 +225,7 @@ class SudokuGame extends React.Component {
                 defaultAction = this.props.cellActions[0];
             }
             const rootBoard = this.rootBoard();
-            const currentScore = this.props.initialScore - this.computeScore();
+            const currentScore = this.state.currentPuzzleInitialScore - this.computeScore();
             const actionsCanExecute = this.canCellActionsExecute();
             const disabledReason = this.cellActionsDisabledBecause();
             const userCanFinishPuzzle = (this.state.analysisAnswer !== "(no answer specified"
@@ -345,7 +346,12 @@ class SudokuGame extends React.Component {
                                 buttonColor="secondary"
                                 buttonText={"Reset This Puzzle"}
                                 dialogTitle={"Sudoku: Please Confirm"}
-                                dialogText={"Are you sure you want to discard your work and start this puzzle over?"}
+                                dialogText={
+                                    "Are you sure you want to discard "
+                                    + "your work and start this puzzle "
+                                    + "over?  You will not get back "
+                                    + "the points you have already spent."
+                                }
                                 handleConfirmation={() => this.handleResetButton()}
                             />
 
@@ -407,8 +413,10 @@ class SudokuGame extends React.Component {
 
     handleResetButton() {
         const abandonedTree = clone(this.state.gameTree);
+        const currentScore = this.state.currentPuzzleInitialScore - this.computeScore();
         this.setState({
-            abandonedGameTrees: this.state.abandonedGameTrees.concat(abandonedTree)
+            abandonedGameTrees: this.state.abandonedGameTrees.concat(abandonedTree),
+            currentPuzzleInitialScore: currentScore
         });
         this.resetState();
         this.configureNewBoard(
@@ -522,6 +530,7 @@ class SudokuGame extends React.Component {
 
 
     resetState() {
+        // TODO reset analysis question state
         this.setState({
             selectLogicalOperatorsUpFront: false,
             logicalOperatorsSelected: false,
