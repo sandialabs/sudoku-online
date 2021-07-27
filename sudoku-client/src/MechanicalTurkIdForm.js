@@ -19,7 +19,7 @@ function MechanicalTurkIdForm(props) {
         <form noValidate autoComplete="off">
             <TextField
                 id="mechanical-turk-id"
-                label="Your Mechanical Turk ID"
+                label="Your Participant ID"
                 variant="filled"
                 onChange={ (event) => props.handleChange(event.target.value) }
                 onKeyPress={ignoreEnter}

@@ -233,7 +233,7 @@ class SudokuGame extends React.Component {
             let finishButtonDialogText = "Are you sure you want to submit your answer to this puzzle and move on?";
             let finishButtonDialogTitle = "Sudoku: Please Confirm";
             if (!userCanFinishPuzzle) {
-                finishButtonDialogText = "You must first answer the analysis question and provide your Mechanical Turk ID."
+                finishButtonDialogText = "You must first answer the analysis question and provide your Participant ID."
                 finishButtonDialogTitle = "Sudoku: Some Information Missing";
             }
             const logicalOperatorsFrozen = (
