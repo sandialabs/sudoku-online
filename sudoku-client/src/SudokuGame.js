@@ -360,7 +360,7 @@ class SudokuGame extends React.Component {
                     <GameInfoDialog
                         dialogTitle={"Welcome!"}
                         dialogText={"Hello! This web site is meant to be used from Amazon's Mechanical Turk."}
-                        defaultState={true}
+                        defaultState={false}
                     />
                     <GameInfoDialog
                         dialogTitle={"Game finished!"}
@@ -369,7 +369,7 @@ class SudokuGame extends React.Component {
                             "You have finished the last puzzle in this game; " +
                             "please close this window. You may choose to play " +
                             "additional games, if available, " +
-                            "by returning to whence you came."
+                            "by returning whence you came."
                         }
                         handleConfirmation={() => this.handleCloseWindow()}
                         registerOpen={(callback) => this.registerEndGameOpen(callback)}
