@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>sudoku-server.plist</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/Users/atwilso/sudoku-deploy/stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/atwilso/sudoku-deploy/stderr.log</string>
+    <key>WorkingDirectory</key>
+    <string>/Users/atwilso/sudoku-deploy/</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string><![CDATA[/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin]]></string>
+    </dict>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/local/bin/gunicorn-3.9</string>
+        <string>--workers</string>
+        <string>8</string>
+        <string>--bind</string>
+        <string>unix:/tmp/sudoku.sock</string>        
+        <string>-m</string>
+        <string>000</string>
+        <string>wsgi:app</string>
+    </array>
+</dict>
+</plist>
