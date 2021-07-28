@@ -13,7 +13,8 @@ import {
 
 import '@fontsource/roboto';
 
-const serverAddress = "http://localhost:5000/";
+//const serverAddress = "http://localhost:5000/";
+const serverAddress = window.location.protocol + '//' + window.location.hostname;
 
 ReactDOM.render(
     <Router>
