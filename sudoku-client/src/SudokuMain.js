@@ -27,11 +27,13 @@ function SudokuMain(props) {
 	const defaultGameName = "pilot_test_a_board";
 	let gameName = defaultGameName;
 
-	const { gameNameFromUrl } = useParams();
+	const params = useParams();
 
 	if (props.gameNameInUrl) {
-		gameName = gameNameFromUrl;
+		gameName = params.gameName;
 		console.log("SudokuMain: Using game name from URL: " + gameName);
+		console.log("Params:");
+		console.log(params);
 	} else {
 		console.log("SudokuMain: Using default game name.");
 	}
