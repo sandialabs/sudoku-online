@@ -31,13 +31,15 @@ To deploy the client, you will first create a release build, then move the relea
 
 ### Deploying the Release Build
 
-1. Copy the contents of the `build` folder created by `npm run build` into the root directory of the WWW tree on the web server.  NOTE: If we ever want to relocate this, it requires minor changes to the client code.
+1. Copy the contents of the `build` folder created by `npm run build` into a directory called sudoku-client/ in the root of the WWW tree on the web server.  If you installed nginx with MacPorts, for example, this will be /opt/local/www/sudoku-client.  If you need to move this, change nginx.conf appropriately -- look for sudoku-client and you'll find the line to change.
 
-### Server Configuration (nginx)
+### Web Server Configuration for Client Deployment
 
 The Sudoku client uses parameters passed in the URL to identify the game it should load.  To the server, these look like requests for nonexistent files.  We work around this by telling the server that requests for nonexistent files should actually go to /index.html.  
 
-1. Edit the file `nginx.conf` on the web server.  If you installed nginx with MacPorts, this file is in /opt/local/nginx/.  Find the location { } section corresponding to the directory containing the client code.  Add the following snippet:
+The easiest thing to do here is to use `config_files_for_deployment/nginx.conf` from the repository.  This is a minimally modified default nginx config file.  Note that it assumes that the Sudoku server (the back-end game logic) is running under gunicorn with its socket at /tmp/sudoku-server.sock.
+
+If you installed nginx with MacPorts, this config file goes in /opt/local/etc/nginx/nginx.conf.
 
 ```
     if (!-e $request_filename) {
@@ -61,45 +63,12 @@ Install Flask, Flask-CORS, and GUnicorn using your favorite package manager.  I 
 
 ### Install Server Code
 
+Note: this is Mac-specific at present.  It will not be difficult to adapt to Linux.  The caveat is that the UID that owns the gunicorn process must have write permission for the directory it runs from in order to save the data files.
+
 Make a directory for it somewhere.  Say, ~/sudoku-deploy.  Copy the contents of sudoku-online/sudoku-server into that directory.
 
+Grab the file config_files_for_deployment/sudoku-server.plist and put it in ~/Library/LaunchAgents.
 
-Add ~/Library/LaunchAgents/gunicorn.plist:
+**IMPORTANT**: Edit that file and change the paths that start with /Users/atwilso to point to wherever you have saved the files.
 
----- begin file ----
-
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>sudoku-server.plist</string>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>/Users/atwilso/sudoku-deploy/stdout.log</string>
-    <key>StandardErrorPath</key>
-    <string>/Users/atwilso/sudoku-deploy/stderr.log</string>
-    <key>WorkingDirectory</key>
-    <string>/Users/atwilso/sudoku-deploy/</string>
-    <key>EnvironmentVariables</key>
-    <dict>
-        <key>PATH</key>
-        <string><![CDATA[/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin]]></string>
-    </dict>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/opt/local/bin/gunicorn-3.9</string>
-        <string>--workers</string>
-        <string>8</string>
-        <string>--bind</string>
-        <string>unix:/tmp/sudoku-server.sock</string>        
-        <string>-m</string>
-        <string>000</string>
-        <string>wsgi:app</string>
-    </array>
-</dict>
-</plist>
-
-
----- end file ----
+Start the service by running `launchctl load ~/Library/LaunchAgents/sudoku-server.plist`.  There will probably not be any output on the command line.  Look in `~/sudoku-deploy/{access,error}.log` to make sure it's running correctly.
