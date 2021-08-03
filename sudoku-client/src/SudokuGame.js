@@ -323,6 +323,7 @@ class SudokuGame extends React.Component {
                         <Grid item>
                             <AnalysisAnswerPanel
                                 handleAnswerChanged={(answer) => { this.handleAnalysisAnswerChanged(answer) }}
+                                key={this.state.currentPuzzleIndex}
                             />
                         </Grid>
                         <Grid item>
