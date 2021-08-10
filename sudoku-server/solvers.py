@@ -205,6 +205,7 @@ def logical_solve(sboard, logical_ops):
 
 def logical_solve_action(sboard, logical_ops):
     child_board = logical_solve(sboard, logical_ops)
+    child_board.addAction({'action': 'applyops', 'operators': list(logical_ops)})
     return [child_board]
 
 # -----------------------------------------------------------------------------
@@ -249,6 +250,7 @@ def expand_cell(sboard, cell_id):
 
         progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
         b.config.complete_operation('pivot', progress, b, True)
+        b.addAction({'action': 'pivot', 'cell': list(type(b).getLocations(cell_id, b.getDegree())), 'value': v})
 
     progress = f'Pivoted on {str(bcell.getIdentifier())} for {len(expansion)} new (unvalidated) boards'
     sboard.config.complete_operation('pivot', progress, sboard, True)
@@ -339,15 +341,19 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
         expansion.append(assigned)
         expansion.append(removed)
 
+    cell_loc = list(type(assigned).getLocations(cell_id, assigned.getDegree()))
+
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
     progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
     assigned.config.complete_operation(action, progress, assigned, True)
+    assigned.addAction({'action': 'assign', 'cell': cell_loc, 'value': value})
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
     progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
     removed.config.complete_operation(action, progress, removed, True)
+    removed.addAction({'action': 'exclude', 'cell': cell_loc, 'value': value})
 
     progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
     sboard.config.complete_operation(action, progress, sboard, True)

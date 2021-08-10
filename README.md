@@ -1,4 +1,4 @@
-# Sudoku Online
+# Sudoku Online v.0.2
 
 This is a web-based implementation of Sudoku.  The intent is to allow the user to play Sudoku through a web browser with certain restrictions on the moves they can make.  Server-side code will track and assist gameplay.
 
@@ -8,11 +8,11 @@ The instructions in this file will help you bootstrap an environment to run the 
 
 ### Step 0: Clone the repository
 
-In these instructions we will pretend that you have cloned the repository into the directory `~/projects/EUBA/sudoku-online`.  
+In these instructions we will pretend that you have cloned the repository into the directory `~/projects/EUBA/sudoku-online`.
 
 ### Step 1: Node.js and NPM
 
-You'll need Node.js and NPM (Node Package Manager) installed to run this client. 
+You'll need Node.js and NPM (Node Package Manager) installed to run this client.
 
 Use your favorite package manager to install a relatively recent Node.js (version 8 or newer).  You will probably get NPM along with this for free.  Check this with the command "which npm" at a shell prompt.  If it's not there, then install it using the same package manager.
 
@@ -96,4 +96,3 @@ npm run build
 cd ~/projects/EUBA/sudoku-online/sudoku-client
 npm test
 ```
-

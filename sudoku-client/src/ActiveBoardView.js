@@ -41,14 +41,37 @@ import SudokuChoiceGrid from './SudokuChoiceGrid';
 class ActiveBoardView extends React.Component {
 	
 	render() {
-		const moveListArray = this.props.board.availableMoves;
-		const assignmentArray = this.props.board.assignments;
-
-		return this.makeBoardTable(assignmentArray, moveListArray);
-
+		return this.makeLabeledGameTable();
 	}
 
+	
 
+	makeLabeledGameTable(assignments, moveLists) {
+		const D = this.props.board.degree;
+		const labelRowTable = _makeLabelRowTable(D);
+		const labelColumnTable = _makeLabelColumnTable(D);
+
+		const gameBoard = this.makeBoardTable(
+			this.props.board.assignments,
+			this.props.board.availableMoves
+			);
+
+		return (
+			<div id='activeBoardContainer' className='no-borders'>
+				<div id='topLabels' className='no-borders'>
+					{labelRowTable}
+				</div>
+				<div id='sideLabelsAndBoard' className='no-borders'>
+					<span id='sideLabels' className='no-borders'>
+						{labelColumnTable}
+					</span>
+					<span id='gameBoard' className='no-borders'>
+						{gameBoard}
+					</span>
+				</div>
+			</div>
+			);
+	}
 	/// Make the board as an array of blocks.
 	//
 	// In order to draw thick borders around the D x D blocks of
@@ -74,6 +97,7 @@ class ActiveBoardView extends React.Component {
 			);
 
 		const tableStyle = 'active-board degree-' + D;
+
 		for (let row = 0; row < D*D; ++row) {
 			const squaresInRow = [];
 			for (let col = 0; col < D*D; ++col) {
@@ -103,7 +127,7 @@ class ActiveBoardView extends React.Component {
 
 		let allCellStyleNames = cellStyleName;
 		const cellKey = row.toString() + column.toString();
-		const cellIsAccessible = (accessibleCellKeys.indexOf(cellKey) != -1);
+		const cellIsAccessible = (accessibleCellKeys.indexOf(cellKey) !== -1);
 		if (cellIsAccessible) {
 			allCellStyleNames += ' accessible';
 		} else {
@@ -133,7 +157,7 @@ class ActiveBoardView extends React.Component {
 		if (assignments[row][column] !== null) {
 			return (
 				<td className={allCellStyleNames} key={column}>
-					{assignments[row][column]}
+					{assignments[row][column] +1}
 				</td>
 				);
 		} else {
@@ -203,6 +227,77 @@ ActiveBoardView.propTypes = {
 	board: PropTypes.object.isRequired,
 	selectedSquare: PropTypes.array,
 	selectedValue: PropTypes.number,
+}
+
+// Make a single-row table that starts with a blank square and includes
+// one cell for each column in the table
+
+function _makeLabelRowTable(degree) {
+	const cells = [];
+	let label = ' ';
+
+	// The first cell is an empty label
+	cells.push(
+		<td className='label blank-square' key={-1}>
+			{label}
+		</td>
+	);
+	
+	for (let i = 0; i < degree*degree; ++i) {
+		label = _columnLabel(i);	
+		cells.push(
+			<td className='label column-label' key={i}>
+				{label}
+			</td>
+			);
+	}
+
+	return (
+		<table className='label columns'>
+			<tbody>
+				<tr>{cells}</tr>
+			</tbody>
+		</table>
+		);
+}
+
+// Make a single-column table where every row contains a single cell
+// with the label for a single row in the game table.
+function _makeLabelColumnTable(degree) {
+	const rows = [];
+
+	// The blank cell in the upper left has already been taken care of
+	// in makeLabelRowTable.  All we need here is the label for each
+	// row.
+	for (let i = 0; i < degree*degree; ++i) {
+		const label = _rowLabel(i);
+		rows.push(
+			<tr key={i}>
+				<td className='label row-label'>
+					{label}
+				</td>
+			</tr>
+			);
+	}
+	return (
+		<table className='label rows'>
+			<tbody>
+				{rows}
+			</tbody>
+		</table>
+		);
+}
+
+// Convert a number from 0-8 to a string digit
+// Note: the labels after column 9 are :, ;, <, =, and >.  Beware.
+
+function _columnLabel(index) {
+	return String.fromCharCode(48 + index + 1);
+}
+
+// Convert a number from 0-9 into a letter from A to Z
+function _rowLabel(index) {
+	return String.fromCharCode(65 + index);
 }
 
 export { ActiveBoardView };

@@ -19,24 +19,21 @@
 import React from 'react';
 import { clone } from 'ramda';
 
-import { Button } from '@material-ui/core';
-
 import { Grid } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
 
 import { ActiveBoardView } from './ActiveBoardView';
-import { AnalysisQuestionPanel } from './AnalysisQuestionPanel';
+import { AnalysisAnswerPanel } from './AnalysisAnswerPanel';
 import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
-import { newSerialNumber } from './SudokuUtilities';
+import { GameInfoDialog } from './GameInfoDialog';
+import { MechanicalTurkIdForm } from './MechanicalTurkIdForm';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
 import { CellActionPanel } from './CellActionPanel';
 import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
-
-import { DebugInfoPanel } from './DebugInfoPanel';
 
 
 class SudokuGame extends React.Component {
@@ -50,7 +47,9 @@ class SudokuGame extends React.Component {
             gameTree: null,
             gameTreeExpandedNodes: new Set(),
             logicalOperatorsSelected: false,
+            mechanicalTurkId: 'unspecified',
             selectedBoardSquare: null,
+            selectedCellAction: null,
             selectedLogicalOperators: [],
             selectedValue: null,
             selectLogicalOperatorsUpFront: false,
@@ -94,12 +93,6 @@ class SudokuGame extends React.Component {
         console.log(request);
         console.log('handleNewBoards: reply: ');
         console.log(newBoards);
-
-        // Each new board needs to know about the action taken to produce it
-        // so that it can come up with a meaningful name.
-        for (const board of newBoards) {
-            board.action = request.action
-        }
 
         this.setState({
             gameTree: GameTree.addBoards(
@@ -168,7 +161,9 @@ class SudokuGame extends React.Component {
             return false;
         }
 
-        if (this.state.selectedValue === null) {
+        if (this.state.selectedBoardSquare === null
+            && (this.state.selectedLogicalOperators === null
+                || this.state.selectedLogicalOperators.length === 0)) {
             return false;
         }
 
@@ -195,8 +190,8 @@ class SudokuGame extends React.Component {
             return 'This board has already been acted upon';
         }
 
-        if (this.state.selectedValue === null) {
-            return 'You must select a square to operate upon';
+        if (this.state.selectedBoardSquare === null) {
+            return 'You must select a square or some logical operators';
         }
 
         return 'ERROR: No reason given for disabled actions';
@@ -229,90 +224,123 @@ class SudokuGame extends React.Component {
                 defaultAction = this.props.cellActions[0];
             }
             const rootBoard = this.rootBoard();
-            const currentScore = this.computeScore();
-            const actionsEnabled = this.canCellActionsExecute();
+            const currentScore = this.props.initialScore - this.computeScore();
+            const actionsCanExecute = this.canCellActionsExecute();
             const disabledReason = this.cellActionsDisabledBecause();
-            const startingBoard = this.state.gameTree.data.board;
-            const analysisQuestion = "How is a raven like a writing desk?";
-
+            const userCanFinishPuzzle = (this.state.analysisAnswer !== "(no answer specified"
+                                         && this.state.mechanicalTurkId !== "unspecified");
+            let finishButtonDialogText = "Are you sure you want to submit your answer to this puzzle and move on?";
+            let finishButtonDialogTitle = "Sudoku: Please Confirm";
+            if (!userCanFinishPuzzle) {
+                finishButtonDialogText = "You must first answer the analysis question and provide your Mechanical Turk ID."
+                finishButtonDialogTitle = "Sudoku: Some Information Missing";
+            }
             const logicalOperatorsFrozen = (
                 this.state.selectLogicalOperatorsUpFront
                 && this.state.logicalOperatorsSelected
             );
 
+            const enabledActions = actionsEnabledGivenSelection(
+                this.state.selectedBoardSquare,
+                this.state.selectedValue,
+                this.state.selectedLogicalOperators,
+                this.state.selectLogicalOperatorsUpFront
+            );
+
             return (
                 <Grid container id="gameContainer">
-                    <Grid container item xs={12} id="actionsAndOperators">
-                        <Grid item xs={6}>
-                            <CellActionPanel
-                                allActions={this.props.cellActions}
-                                permittedActions={board.availableActions}
-                                defaultAction={defaultAction}
-                                selectedActionChanged={(newAction) => { this.handleCellActionSelection(newAction) }}
-                                executeAction={(action) => this.handleExecuteAction(action)}
-                                actionsEnabled={actionsEnabled}
-                                disabledReason={disabledReason}
-                                key={this.state.resetCount}
+                    <Grid item id="questionPanel">
+                        <Paper>
+                            <Typography variant="h2">The Question: {rootBoard.question}</Typography>
+                        </Paper>
+                    </Grid>
 
+                    <Grid container wrap="nowrap"
+                        justify="flex-start"
+                        id="boardAndOperators"
+                        spacing={2}
+                    >
+                        <Grid item xs={5} xl={4} id="gameBoard">
+                            <ActiveBoardView
+                                board={board}
+                                announceChoice={(board, cell, choice) => { this.boardAnnouncesChoice(board, cell, choice); }}
+                                selectedSquare={this.state.selectedBoardSquare}
+                                selectedValue={this.state.selectedValue}
+                            />
+                            <Typography variant="h5">Current Score: {currentScore}</Typography>
+                        </Grid>
+
+                        <Grid container item xs={3} xl={2} id="actionsAndOperators" direction="column">
+                            <Grid item>
+                                <Paper>
+                                    <CellActionPanel
+                                        allActions={this.props.cellActions}
+                                        defaultAction={defaultAction}
+                                        permittedActions={enabledActions}
+                                        actionsCanExecute={actionsCanExecute}
+                                        selectedActionChanged={(newAction) => { this.handleCellActionSelection(newAction) }}
+                                        executeAction={(action) => this.handleExecuteAction(action)}
+                                        disabledReason={disabledReason}
+                                        key={this.state.resetCount}
+                                    />
+                                </Paper>
+                                <Paper>
+                                    <LogicalOperatorPanel
+                                        operators={this.props.logicalOperators}
+                                        selectionChanged={(operators) => { this.handleLogicalOperatorSelection(operators); }}
+                                        selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
+                                        logicalOperatorsFrozen={logicalOperatorsFrozen}
+                                        confirmOperatorSelection={() => {
+                                            console.log("SudokuGame: Confirming logical operator selection.");
+                                            this.setState({ logicalOperatorsSelected: true });
+                                        }}
+                                        executeLogicalOperators={() => { this.handleExecuteLogicalOperators(); }}
+                                        key={this.state.resetCount}
+                                    />
+                                </Paper>
+                            </Grid>
+                        </Grid>
+
+                        <Grid item container
+                            id="gameTree"
+                            xs={4} med={5} xl={6}
+                            justify="flex-start"
+                            direction="column">
+                            <Typography variant="h5">Decision Tree</Typography>
+                            <GameTreeView
+                                gameTree={this.state.gameTree}
+                                activeBoardId={this.state.activeBoardId}
+                                expandedNodes={this.state.gameTreeExpandedNodes}
+                                changeActiveBoard={(serial) => { this.changeActiveBoard(serial); }}
+                                announceBoardToggled={(serial) => { this.announceBoardToggled(serial); }}
                             />
                         </Grid>
-                        <Grid item xs={6}>
-                            <LogicalOperatorPanel
-                                operators={this.props.logicalOperators}
-                                selectionChanged={(operators) => { this.handleLogicalOperatorSelection(operators); }}
-                                selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
-                                logicalOperatorsFrozen={logicalOperatorsFrozen}
-                                confirmOperatorSelection={() => {
-                                    console.log("SudokuGame: Confirming logical operator selection.");
-                                    this.setState({ logicalOperatorsSelected: true });
-                                }}
-                                key={this.state.resetCount}
+
+                    </Grid>
+
+                    <Grid container id="answerInput">
+                        <Grid item>
+                            <AnalysisAnswerPanel
+                                handleAnswerChanged={(answer) => { this.handleAnalysisAnswerChanged(answer) }}
                             />
                         </Grid>
-                        <Grid item xs={6}>
-                            <Paper>
-                                <Typography variant="h6">Current Puzzle: {startingBoard.displayName}</Typography>
-                            </Paper>
-                        </Grid>
-                        <Grid item xs={6}>
-                            <Paper>
-                                <Typography variant="h6">Current Score: {currentScore}</Typography>
-                            </Paper>
+                        <Grid item>
+                            <MechanicalTurkIdForm
+                                handleChange={(value) => { this.setState({ mechanicalTurkId: value }); }}
+                            />
                         </Grid>
                     </Grid>
-                    <Grid container item id="gameTree" xs={6}>
-                        <GameTreeView
-                            gameTree={this.state.gameTree}
-                            activeBoardId={this.state.activeBoardId}
-                            expandedNodes={this.state.gameTreeExpandedNodes}
-                            changeActiveBoard={(serial) => { this.changeActiveBoard(serial); }}
-                            announceBoardToggled={(serial) => { this.announceBoardToggled(serial); }}
-                        />
-                    </Grid>
-                    <Grid container item id="activeBoard" xs={6}>
-                        <ActiveBoardView
-                            board={board}
-                            announceChoice={(board, cell, choice) => { this.boardAnnouncesChoice(board, cell, choice); }}
-                            selectedSquare={this.state.selectedBoardSquare}
-                            selectedValue={this.state.selectedValue}
-                        />
-                    </Grid>
-                    <Grid container id="questionPanel">
-                        <AnalysisQuestionPanel
-                            question={rootBoard.question}
-                            handleAnswerChanged={(answer) => { this.handleAnalysisAnswerChanged(answer) }}
-                        />
-                    </Grid>
+
                     <Grid container id="finishOrResetButtonContainer">
-                        <Grid item xs={3}>
+                        <Grid item>
                             <ButtonWithAlertDialog
                                 buttonText={"Finish This Puzzle"}
-                                dialogTitle={"Sudoku: Please Confirm"}
-                                dialogText={"Are you sure you want to finish this puzzle and move on to the next one?"}
-                                handleConfirmation={() => this.handleFinishButton()}
+                                dialogTitle={finishButtonDialogTitle}
+                                dialogText={finishButtonDialogText}
+                                handleConfirmation={() => this.handleFinishButton(userCanFinishPuzzle)}
                             />
                         </Grid>
-                        <Grid item xs={3}>
+                        <Grid item>
                             <ButtonWithAlertDialog
                                 buttonColor="secondary"
                                 buttonText={"Reset This Puzzle"}
@@ -323,15 +351,23 @@ class SudokuGame extends React.Component {
 
                         </Grid>
                     </Grid>
-
-                    <Grid container id="debugInfo">
-                        <DebugInfoPanel
-                            gameConfiguration={this.props.gameConfiguration}
-                            puzzleInfo={rootBoard}
-                            puzzles={this.props.puzzles}
-                            answer={this.state.analysisAnswer}
-                        />
-                    </Grid>
+                    <GameInfoDialog
+                        dialogTitle={"Welcome!"}
+                        dialogText={"Hello! This web site is meant to be used from Amazon's Mechanical Turk."}
+                        defaultState={true}
+                    />
+                    <GameInfoDialog
+                        dialogTitle={"Game finished!"}
+                        dialogText={
+                            "Thank you for playing these Sudoku boards. " +
+                            "You have finished the last puzzle in this game; " +
+                            "please close this window. You may choose to play " +
+                            "additional games, if available, " +
+                            "by returning to whence you came."
+                        }
+                        handleConfirmation={() => this.handleCloseWindow()}
+                        registerOpen={(callback) => this.registerEndGameOpen(callback)}
+                    />
                 </Grid>
 
             );
@@ -350,25 +386,47 @@ class SudokuGame extends React.Component {
         });
     }
 
-    handleFinishButton() {
-        console.log('Finishing board and submitting result.');
-        this.props.submitFinishedGameTree(
-            this.state.gameTree,
-            this.state.abandonedGameTrees,
-            this.state.analysisAnswer
+    handleExecuteLogicalOperators() {
+        const shortNames = this.state.selectedLogicalOperators.map(
+            (op) => op.internal_name
         );
-        this.displayNextBoard();
+        console.log('handleExecuteLogicalOperators: Selected operators: ' + JSON.stringify(shortNames));
+    }
+
+    handleFinishButton(canFinish) {
+        if (canFinish) {
+            this.props.submitFinishedGameTree({
+                finishedTree: this.state.gameTree,
+                abandonedTrees: this.state.abandonedGameTrees,
+                answer: this.state.analysisAnswer,
+                mechanicalTurkId: this.state.mechanicalTurkId
+            });
+            this.displayNextBoard();
+        }   
     }
 
     handleResetButton() {
+        const abandonedTree = clone(this.state.gameTree);
+        this.setState({
+            abandonedGameTrees: this.state.abandonedGameTrees.concat(abandonedTree)
+        });
         this.resetState();
-        this.initializeGameTree(
+        this.configureNewBoard(
             this.props.puzzles[
             this.state.currentPuzzleIndex
             ]);
         this.setState({
             resetCount: this.state.resetCount + 1
         });
+    }
+
+    registerEndGameOpen(callback) {
+        this.openEndGame = callback;
+    }
+
+    handleCloseWindow() {
+        window.open("about:blank", "_self");
+        window.close();
     }
 
     handleLogicalOperatorSelection(operators) {
@@ -389,10 +447,10 @@ class SudokuGame extends React.Component {
             action: {
                 action: action.internal_name,
                 cell: this.state.selectedBoardSquare,
-                value: this.state.selectedValue
+                value: this.state.selectedValue,
+                operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
             },
             board: this.activeBoard(),
-            operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
         };
 
         console.log(request);
@@ -443,7 +501,8 @@ class SudokuGame extends React.Component {
         }
 
         if (nextBoardIndex === this.props.puzzles.length) {
-            throw new Error("ERROR: Can't advance past the last board");
+            this.openEndGame()
+            return
         }
 
         this.resetState();
@@ -457,23 +516,8 @@ class SudokuGame extends React.Component {
         //     selectLogicalOperatorsUpFront: selectUpFront,
         // })
 
-        this.initializeGameTree(nextPuzzle);
+        this.configureNewBoard(nextPuzzle);
 
-        // this.props.requestBoard({name: boardName})
-        //     .then(
-        //         (boardAsString) => {
-        //             this.setState({
-        //                 currentPuzzleIndex: nextBoardIndex
-        //             });
-        //             this.configureNewBoard(JSON.parse(boardAsString));
-        //         }
-        //         )
-        //     .catch(
-        //         (errorResponse) => {
-        //             console.log('ERROR fetching board ' + nextBoardIndex + ' (' + boardName + '): '
-        //                 + errorResponse);
-        //         }
-        //         );
     }
 
 
@@ -498,6 +542,29 @@ class SudokuGame extends React.Component {
     }
 }
 
+// Cell actions are available, or not, depending on whether their
+// prerequisites are selected on the game board.
+//
+// Assign and Exclude require the user to select an available value.
+//
+// Pivot just requires that the user select an available (unassigned)
+// cell -- whether or not they select a value in the cell is immaterial.
+
+function actionsEnabledGivenSelection(selectedCell, selectedValue, selectedLogicalOperators, selectLogicalOperatorsUpFront) {
+    return {
+        assign: (selectedValue !== null
+            && selectedValue !== -1
+            && selectedCell !== null),
+        exclude: (selectedValue !== null
+            && selectedValue !== -1
+            && selectedCell !== null),
+        pivot: (selectedCell !== null),
+        applyops: (selectedLogicalOperators !== null
+            && selectedLogicalOperators.length > 0
+            && selectLogicalOperatorsUpFront === false)
+    };
+}
+
 function findFirstNonBacktrackBoard(boardList) {
     for (const board of boardList) {
         if (board.backtrackingBoard === undefined
@@ -514,6 +581,10 @@ SudokuGame.propTypes = {
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
     puzzles: PropTypes.array,
-    gameName: PropTypes.string
+    initialScore: PropTypes.number
+}
+
+SudokuGame.defaultProps = {
+    initialScore: 100000
 }
 export default SudokuGame;
