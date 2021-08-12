@@ -92,7 +92,7 @@ class ConfigurationData():
 
         # If True, have score tracked per game instead of per board
         #   Should only be true if cost per requested application is also True
-        self.cost_per_game_not_per_board = False
+        self.cost_per_game_not_per_board = True
 
         # If True, we increase the cost of the board every time the operator matches a set.
         self.cost_per_matching_set = False
