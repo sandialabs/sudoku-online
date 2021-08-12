@@ -23,7 +23,7 @@ import { Grid } from '@material-ui/core';
 import { Paper } from '@material-ui/core';
 import { Typography } from '@material-ui/core';
 
-
+import { ActionSelectionPanel } from './ActionSelectionPanel';
 import { ActiveBoardView } from './ActiveBoardView';
 import { AnalysisAnswerPanel } from './AnalysisAnswerPanel';
 import { ButtonWithAlertDialog } from './ButtonWithAlertDialog';
@@ -31,8 +31,6 @@ import { GameInfoDialog } from './GameInfoDialog';
 import { MechanicalTurkIdForm } from './MechanicalTurkIdForm';
 import { GameTreeView } from './GameTreeView';
 import GameTree from './GameTree';
-import { CellActionPanel } from './CellActionPanel';
-import { LogicalOperatorPanel } from './LogicalOperatorPanel';
 import PropTypes from 'prop-types';
 
 
@@ -50,7 +48,6 @@ class SudokuGame extends React.Component {
             logicalOperatorsSelected: false,
             mechanicalTurkId: 'unspecified',
             selectedBoardSquare: null,
-            selectedCellAction: null,
             selectedLogicalOperators: [],
             selectedValue: null,
             selectLogicalOperatorsUpFront: false,
@@ -162,6 +159,7 @@ class SudokuGame extends React.Component {
             return false;
         }
 
+        // XXX REFACTOR -- need 'readyToExecute' flag from ActionSelectionPanel
         if (this.state.selectedBoardSquare === null
             && (this.state.selectedLogicalOperators === null
                 || this.state.selectedLogicalOperators.length === 0)) {
@@ -177,6 +175,7 @@ class SudokuGame extends React.Component {
 
     // These reasons are listed in descending order of priority.
     cellActionsDisabledBecause() {
+        // XXX REFACTOR -- need 'logicalOpsFrozen' flag
         if (this.state.selectLogicalOperatorsUpFront === true
             && this.state.logicalOperatorsSelected === false) {
             return 'Select Logical Operators First';
@@ -219,11 +218,7 @@ class SudokuGame extends React.Component {
             console.log(this.state.gameTree);
             const board = this.activeBoard();
 
-            let defaultAction = null;
-            if (this.props.cellActions !== null && this.props.cellActions.length > 0) {
-                // FIXME: make sure the default action is not disabled
-                defaultAction = this.props.cellActions[0];
-            }
+      
             const rootBoard = this.rootBoard();
             const currentScore = this.state.currentPuzzleInitialScore - this.computeScore();
             const actionsCanExecute = this.canCellActionsExecute();
@@ -241,12 +236,18 @@ class SudokuGame extends React.Component {
                 && this.state.logicalOperatorsSelected
             );
 
+            console.log('SudokuGame: props.cellActions:');
+            console.log(this.props.cellActions);
             const enabledActions = actionsEnabledGivenSelection(
                 this.state.selectedBoardSquare,
                 this.state.selectedValue,
                 this.state.selectedLogicalOperators,
                 this.state.selectLogicalOperatorsUpFront
             );
+
+            // Single Source Of Truth principle suggests that the decision 
+            // of whether or not cell actions can execute should be made
+            // entirely at this level.
 
             return (
                 <Grid container id="gameContainer">
@@ -272,34 +273,22 @@ class SudokuGame extends React.Component {
                         </Grid>
 
                         <Grid container item xs={3} xl={2} id="actionsAndOperators" direction="column">
-                            <Grid item>
-                                <Paper>
-                                    <CellActionPanel
-                                        allActions={this.props.cellActions}
-                                        defaultAction={defaultAction}
-                                        permittedActions={enabledActions}
-                                        actionsCanExecute={actionsCanExecute}
-                                        selectedActionChanged={(newAction) => { this.handleCellActionSelection(newAction) }}
-                                        executeAction={(action) => this.handleExecuteAction(action)}
-                                        disabledReason={disabledReason}
-                                        key={this.state.resetCount}
-                                    />
-                                </Paper>
-                                <Paper>
-                                    <LogicalOperatorPanel
-                                        operators={this.props.logicalOperators}
-                                        selectionChanged={(operators) => { this.handleLogicalOperatorSelection(operators); }}
-                                        selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
-                                        logicalOperatorsFrozen={logicalOperatorsFrozen}
-                                        confirmOperatorSelection={() => {
-                                            console.log("SudokuGame: Confirming logical operator selection.");
-                                            this.setState({ logicalOperatorsSelected: true });
-                                        }}
-                                        executeLogicalOperators={() => { this.handleExecuteLogicalOperators(); }}
-                                        key={this.state.resetCount}
-                                    />
-                                </Paper>
-                            </Grid>
+                            <ActionSelectionPanel
+                                cellActions={this.props.cellActions}
+                                // this stays here
+                                permittedActions={enabledActions}
+                                // refactor
+                                actionsCanExecute={actionsCanExecute}
+                                // refactor
+                                executeActionCallback={(action, operators) => this.handleExecuteAction(action, operators)}
+                                // refactor
+                                disabledReason={disabledReason}
+                                logicalOperators={this.props.logicalOperators}
+                                selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
+                                logicalOperatorsFrozenCallback={() => this.setState({logicalOperatorsSelected: true})}
+                                logicalOperatorSelectionChangedCallback={(opList) => this.handleLogicalOperatorSelection(opList)}
+                                resetCount={this.state.resetCount}
+                                />
                         </Grid>
 
                         <Grid item container
@@ -451,13 +440,26 @@ class SudokuGame extends React.Component {
         })
     }
 
-    handleExecuteAction(action) {
-        const request = {
+    handleExecuteAction(cellAction, selectedLogicalOperators) {
+        let operatorString = '(empty)';
+        if (selectedLogicalOperators.length > 0) {
+            operatorString = selectedLogicalOperators.map(
+                (operator) => operator.internal_name
+                ).join(', ');;
+        }
+
+        console.log('SudokuGame.executeAction: cellAction: '
+            + cellAction.internal_name
+            + ', operators: '
+            + operatorString
+            );
+
+            const request = {
             action: {
-                action: action.internal_name,
+                action: cellAction.internal_name,
                 cell: this.state.selectedBoardSquare,
                 value: this.state.selectedValue,
-                operators: this.state.selectedLogicalOperators.map(op => op.internal_name)
+                operators: selectedLogicalOperators.map(op => op.internal_name)
             },
             board: this.activeBoard(),
         };

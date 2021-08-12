@@ -104,7 +104,12 @@ class CellActionPanel extends React.Component {
 			this.props.permittedActions[action.internal_name] === true
 			);
 		
-		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
+		let actionCost = action.cost;
+		if (action.internal_name === 'applyops') {
+			actionCost = this.props.logicalOperatorCost;
+		}
+
+		const fullLabelText = action.user_name + ' (Cost: ' + actionCost + '): ' + action.short_description;
 		let forbiddenText = 'This action is not permitted right now';
 
 		if (action.internal_name === 'assign'
@@ -187,6 +192,7 @@ class CellActionPanel extends React.Component {
 				this.setState({
 					'selectedAction': action
 					});
+				this.props.selectedActionChanged(action);
 			} else {
 				console.log("ERROR: Couldn't find action object for new selected action " + changeEvent.target.value);
 			}
@@ -197,11 +203,15 @@ class CellActionPanel extends React.Component {
 CellActionPanel.propTypes = {
 	allActions: PropTypes.array.isRequired,
 	permittedActions: PropTypes.object.isRequired,
-	selectedActionChanged: PropTypes.func,
+	selectedActionChanged: PropTypes.func.isRequired,
 	defaultAction: PropTypes.object,
 	executeAction: PropTypes.func.isRequired,
 	actionsCanExecute: PropTypes.bool.isRequired,
 	disabledReason: PropTypes.string,
+	logicalOperatorCost: PropTypes.number,
 };
 
+CellActionPanel.defaultProps = {
+	logicalOperatorCost: 0
+}
 export { CellActionPanel };
