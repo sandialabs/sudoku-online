@@ -10,7 +10,6 @@ Requires python3.
 """
 
 # Imports from our own code
-import uuid
 import board
 import board_update_descriptions
 import config_data
@@ -219,6 +218,10 @@ def parse_and_apply_action(content):
     if not isinstance(board_dict, dict):
         raise SudokuServerException(
             "Failed assumption that the parsed board is a dict.")
+    # Remove the cost of boards so far so that we don't overcharge
+    # users for actions they've already taken.
+    if "cost" in board_dict:
+        board_dict.pop("cost")
     board_object = board.Board(board_dict)
 
     if "action" not in content:
@@ -260,9 +263,9 @@ def parse_and_apply_action(content):
         jsoned_result.append(full_board.getSimpleJson())
         if game_score and full_board.config.cost_per_game_not_per_board:
             if average_score == 0:
-                average_score = full_board.config.log.difficulty_score
+                average_score = full_board.config.parameters["cost"]
             else:
-                assert average_score == full_board.config.log.difficulty_score, \
+                assert average_score == full_board.config.parameters["cost"], \
                     "Can't average score when assuming that the scores are the same across child boards"
         else:
             game_score = False

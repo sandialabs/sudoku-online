@@ -112,7 +112,7 @@ class SudokuLogger():
             "name": self.name,
             "solution_state": self.solution_state,
             "puzzle": self.puzzle,
-            "cost": self.difficulty_score,
+#            "cost": self.difficulty_score,
             "level": self.getDifficultyLevel(),
             "solution": self.solution,
         }
