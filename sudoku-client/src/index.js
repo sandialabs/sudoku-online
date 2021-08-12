@@ -13,7 +13,7 @@ import {
 
 import '@fontsource/roboto';
 
-const deploy = false;
+const deploy = true;
 
 // In development mode, change this to the address of the server 
 let serverAddress = "http://localhost:5000";
