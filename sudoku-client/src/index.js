@@ -13,7 +13,19 @@ import {
 
 import '@fontsource/roboto';
 
-const serverAddress = "http://localhost:5000/";
+const deploy = false;
+
+// In development mode, change this to the address of the server 
+let serverAddress = "http://localhost:5000";
+
+// In deployment mode, the server and client are both accessible through
+// the same server namespace -- client at /, server at /sudoku.
+// 
+// See README.deployment and the config files in config_files_for_deployment.
+// Note that 'npm serve -s' after your build will NOT work.
+if (deploy) {
+    serverAddress = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
+}
 
 ReactDOM.render(
     <Router>
