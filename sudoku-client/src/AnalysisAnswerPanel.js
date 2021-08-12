@@ -53,7 +53,7 @@ AnalysisAnswerPanel.defaultProps = {
 
 AnalysisAnswerPanel.propTypes = {
     answers: PropTypes.array,
-    handleAnswerChanged: PropTypes.func
+    handleAnswerChanged: PropTypes.func,
 };
 
 export default AnalysisAnswerPanel;
