@@ -98,13 +98,13 @@ class ConfigurationData():
         self.cost_per_matching_set = False
         # If True, users get charged on a successful application
         #   no matter how many matches they get (>1) on that application
-        self.cost_per_matching_use = True
+        self.cost_per_matching_use = False
         # If True, increase the cost of the puzzle every time a logical operator is attempted,
         # whether or not it was successful
         self.cost_per_attempted_application = False
         # If True, increase the cost of the puzzle every time a logical operator is requested,
         # whether or not it was successful, and no matter how many times it was attempted during that request
-        self.cost_per_requested_application = False
+        self.cost_per_requested_application = True
 
         # If True, increase the count ofthe operator every time it matches a set.
         self.count_per_matching_set = True

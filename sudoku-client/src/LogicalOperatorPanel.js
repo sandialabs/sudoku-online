@@ -97,6 +97,17 @@ class LogicalOperatorPanel extends React.Component {
 			const operatorListPanel = this.renderOperatorList();
 			const freezeOperatorsButton = this.makeFreezeOperatorsButton();
 
+			const operatorsFreeText = "Selected operators will run (and incur their cost) "
+				+ "on each child of a cell action.  To execute on just one board, use the "
+				+ "Apply Operators action.";
+			const operatorsFrozenText = "Selected operators will run (and incur their cost) "
+				+ "on each child of each cell action during this game.";
+
+			let operatorExplanationText = operatorsFreeText;
+			if (this.props.selectLogicalOperatorsUpFront) {
+				operatorExplanationText = operatorsFrozenText;
+			}
+
 			if (this.props.selectLogicalOperatorsUpFront) {
 				return (
 					<Paper name='logicalOperators'>
@@ -110,8 +121,7 @@ class LogicalOperatorPanel extends React.Component {
 					<Paper name='logicalOperators' elevation={2}>
 						<Typography variant='h5'>Specialized Operations</Typography>
 						<Typography variant='body1'>
-							Selected operators will run (and incur a cost) with every cell action.  
-							To execute just the operators, use the Apply Operators action.
+							{operatorExplanationText}
 						</Typography>
 						{operatorListPanel}
 					</Paper>
@@ -121,7 +131,7 @@ class LogicalOperatorPanel extends React.Component {
 	}
 
 	makeCheckBox(operator) {
-		let labelText = operator.user_name + ' (Cost: ' + operator.cost + ')';
+		let labelText = operator.user_name + ' (Cost: ' + operator.cost + ' per node)';
 		const tooltipText = operator.user_name + ': ' + operator.description;
 		return (
 			<Tooltip title={tooltipText} key={operator.internal_name}>

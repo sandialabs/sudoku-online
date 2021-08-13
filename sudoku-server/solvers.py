@@ -233,20 +233,41 @@ def expand_cell(sboard, cell_id):
     If identified cell has only one possible value, simply returns [sboard]
     NOTE: propagation of the assigned value is not performed automatically.
     """
+
+    logger.info('BEGINNING EXPAND_CELL')
+
     sboard.computeAccessibleCells()
     if sboard.accessible_cells:
         assert cell_id in sboard.accessible_cells, \
             f'Cannot pivot on cell {cell_id} that is not accessible in {sboard.accessible_cells}'
     cell = sboard.getCell(cell_id)
+
+    # We don't need to do any work on cells that are already assigned.
     if(cell.isCertain()):
         return [sboard]
 
+    # Record the cost for a pivot operation in the starting board.  This 
+    # will get propagated into the child boards we're about to create.
+    sboard.config.log_operations_request(
+        ['pivot'],
+        'Requesting pivot on cell {}'.format(cell.getIdentifier()),
+        sboard
+        )
+    
+    # Go through all the possible values in this cell and create a child
+    # board for each one where that value is assigned.
     expansion = []
     for v in cell.getValueSet():
         b = board.Board(sboard)
         bcell = b.getCell(cell_id)
         bcell.assign(v)
         expansion.append(b)
+
+        # Divide the cost of the pivot operation N ways among the
+        # children.
+        if (b.config.cost_per_game_not_per_board
+              and 'cost' in b.config.parameters):
+            b.config.parameters['cost'] /= len(cell.getValueSet())
 
         progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
         b.config.complete_operation('pivot', progress, b, True)
@@ -317,27 +338,45 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
             cell_id in sboard.
     NOTE: propagation of the assigned value is not performed automatically.
     """
+
     sboard.computeAccessibleCells()
     if sboard.accessible_cells:
         assert cell_id in sboard.accessible_cells, \
             f'Cannot pivot on cell {cell_id} that is not accessible in {sboard.accessible_cells}'
     cell = sboard.getCell(cell_id)
+
+    # No need to work on cells that have already had a single value assigned
     if(cell.isCertain()):
         return [sboard]
+
+    # Request that the cost of either exclude or assign be assessed in
+    # the source board.  We'll push that cost down into the child boards
+    # once we're done.
+    action_to_request = 'exclude' if make_exclusion_primary else 'assign'
+    sboard.config.log_operations_request(
+        [action_to_request],
+        'Requesting {} on cell {}'.format(action_to_request, cell.getIdentifier()),
+        sboard
+        )
 
     expansion = []
     assigned = board.Board(sboard)
     removed = board.Board(sboard)
 
-    action = None
+    # Halve the cost in each of the child boards to amortize the single cost
+    # across all the children.
+    if assigned.config.cost_per_game_not_per_board:
+        if 'cost' in assigned.config.parameters:
+            assigned.config.parameters['cost'] /= 2
+        if 'cost' in removed.config.parameters:
+            removed.config.parameters['cost'] /= 2
+            
     if make_exclusion_primary:
         assigned.setToBackground()
-        action = 'exclude'
         expansion.append(removed)
         expansion.append(assigned)
     else:
         removed.setToBackground()
-        action = 'assign'
         expansion.append(assigned)
         expansion.append(removed)
 
@@ -346,18 +385,18 @@ def __expand_cell_with_assignment(sboard, cell_id, value, make_exclusion_primary
     bcell = assigned.getCell(cell_id)
     bcell.assign(value)
     progress = f'Assigning {str(bcell.getIdentifier())} = {board.Cell.displayValue(bcell.getCertainValue())}'
-    assigned.config.complete_operation(action, progress, assigned, True)
+    assigned.config.complete_operation(action_to_request, progress, assigned, True)
     assigned.addAction({'action': 'assign', 'cell': cell_loc, 'value': value})
 
     bcell = removed.getCell(cell_id)
     bcell.exclude(value)
     progress = f'Removing {board.Cell.displayValue(value)} from {str(bcell.getIdentifier())}, resulting in {board.Cell.displayValues(bcell.getValueSet())}'
-    removed.config.complete_operation(action, progress, removed, True)
+    removed.config.complete_operation(action_to_request, progress, removed, True)
     removed.addAction({'action': 'exclude', 'cell': cell_loc, 'value': value})
 
-    progress = f'Performed {action} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
-    sboard.config.complete_operation(action, progress, sboard, True)
-
+    progress = f'Performed {action_to_request} on {str(bcell.getIdentifier())} with {board.Cell.displayValue(value)} for {len(expansion)} new (unvalidated) boards'
+    sboard.config.complete_operation(action_to_request, progress, sboard, True)
+    
     return expansion
 
 
