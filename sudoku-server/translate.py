@@ -327,17 +327,26 @@ def _validate_and_craft_filename(tree_data):
         raise SudokuServerException(
             "Expect to receive a finished_tree with relevant info.")
 
-    filename = ""
+    filename_components = []
+
     # TODO MAL : do we need to worry about people pinging this and dropping a ton of data into the store?
     if 'id' not in tree_data['finishedTree']:
         raise SudokuServerException(
             "Expect to receive an id in finished_tree.")
-    filename += str(tree_data['finishedTree']['id']) + "-"
-    if 'timestamp' not in tree_data:
-        tree_data['timestamp'] = str(datetime.datetime.now())
-    filename += str(tree_data['timestamp'])
+    
+    # Right now the ID is a large integer.  This should protect us if we ever
+    # use the user's ID as an ID instead.
+    raw_id = str(tree_data['finishedTree']['id'])
+    print("debug: raw_id: {} ({})".format(raw_id, type(raw_id)))
+    sanitized_id = ''.join([char if char.isalnum() else 'X' for char in raw_id])
+    if len(sanitized_id) > 256:
+        sanitized_id = sanitized_id[0:256]
+    filename_components.append(sanitized_id)
 
-    return filename
+    file_timestamp = tree_data.get('timestamp', datetime.datetime.now())
+    filename_components.append(file_timestamp.strftime('%Y-%m-%d_%H%M%S%f'))
+
+    return '_'.join(filename_components)
 
 
 def submit_game_tree(tree_data):
