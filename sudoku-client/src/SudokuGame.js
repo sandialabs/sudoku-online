@@ -262,7 +262,7 @@ class SudokuGame extends React.Component {
                         id="boardAndOperators"
                         spacing={2}
                     >
-                        <Grid item xs={5} xl={4} id="gameBoard">
+                        <Grid item xs={5} xl={4} id="gameBoard" style={{minWidth: "650px"}}>
                             <ActiveBoardView
                                 board={board}
                                 announceChoice={(board, cell, choice) => { this.boardAnnouncesChoice(board, cell, choice); }}
@@ -349,8 +349,15 @@ class SudokuGame extends React.Component {
                     </Grid>
                     <GameInfoDialog
                         dialogTitle={"Welcome!"}
-                        dialogText={"Hello! This web site is meant to be used from Amazon's Mechanical Turk."}
-                        defaultState={false}
+
+                        dialogText={
+                            "Hello! This is the test puzzle used for " +
+                            "debugging.  If you are here for an experiment " +
+                            "or a Mechanical Turk task, please refer " +
+                            "to the URLs in the directions you were given."
+                        }
+                        defaultState={this.props.displayGreeting}
+
                     />
                     <GameInfoDialog
                         dialogTitle={"Game finished!"}
@@ -593,10 +600,12 @@ SudokuGame.propTypes = {
     issueActionRequest: PropTypes.func.isRequired,
     submitFinishedGameTree: PropTypes.func.isRequired,
     puzzles: PropTypes.array,
-    initialScore: PropTypes.number
+    initialScore: PropTypes.number,
+    displayGreeting: PropTypes.bool
 }
 
 SudokuGame.defaultProps = {
-    initialScore: 100000
+    initialScore: 100000,
+    displayGreeting: true
 }
 export default SudokuGame;

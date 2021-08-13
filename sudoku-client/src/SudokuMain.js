@@ -14,6 +14,9 @@ import { request } from './SudokuUtilities';
 import { ErrorBoundary } from './ErrorBoundary';
 import { PropTypes } from 'prop-types';
 
+import { Paper, Typography, Box } from '@material-ui/core';
+// import { spacing } from '@material-ui/system';
+
 import {
 	useParams
 } from 'react-router-dom';
@@ -65,6 +68,28 @@ function SudokuMain(props) {
 		[props.serverAddress, gameName]
 	);
 
+	if (props.blankFrontPage) {
+		return (
+			<div>
+				<Paper elevation={3}>
+					<Typography variant="h3" align="center">
+						This is not the site you're looking for.
+					</Typography>
+				</Paper>
+				<Box paddingTop="50px">
+					<Paper variant="outlined">
+						<Typography variant="body" m={8} align="center">
+							Sudoku Online is meant to be visited from game URLs 
+							rather than from the front page.  Please refer to
+							the instructions you received for how to access
+							the puzzles.
+						</Typography>
+					</Paper>
+				</Box>
+			</div>
+			);
+	}
+
 	// Wrap up the server address in helper functions so that 
 	// SudokuGame doesn't need to care
 	const _requestBoard = (boardName) => requestBoard(boardName, props.serverAddress);
@@ -82,6 +107,7 @@ function SudokuMain(props) {
 						issueActionRequest={_sendActionRequest}
 						submitFinishedGameTree={_submitFinishedGameTree}
 						requestBoard={_requestBoard}
+						displayGreeting={props.blankFrontPage}
 						/>
 				</ErrorBoundary>
 			</div>
@@ -171,6 +197,11 @@ function sendActionRequestToServer(action, serverAddress) {
 SudokuMain.propTypes = { 
 	degree: PropTypes.number.isRequired,
 	gameNameInUrl: PropTypes.bool.isRequired,
-	serverAddress: PropTypes.string.isRequired
+	serverAddress: PropTypes.string.isRequired,
+	blankFrontPage: PropTypes.bool
+}
+
+SudokuMain.defaultProps = {
+	blankFrontPage: false
 }
 export default SudokuMain;

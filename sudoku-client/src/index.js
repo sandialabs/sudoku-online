@@ -31,7 +31,6 @@ ReactDOM.render(
     <Router>
         <div key={6}>
             <Switch>
-
                 <Route path="/game/:gameName">
                     <SudokuMain 
                         key={2} degree={3}
@@ -45,6 +44,7 @@ ReactDOM.render(
                         gameNameInUrl={false}
                         serverAddress={serverAddress}
                         key={2} degree={3} 
+                        blankFrontPage={deploy}
                         />
                 </Route>
 
