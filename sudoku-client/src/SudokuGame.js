@@ -287,7 +287,7 @@ class SudokuGame extends React.Component {
                                 selectLogicalOperatorsUpFront={this.state.selectLogicalOperatorsUpFront}
                                 logicalOperatorsFrozenCallback={() => this.setState({logicalOperatorsSelected: true})}
                                 logicalOperatorSelectionChangedCallback={(opList) => this.handleLogicalOperatorSelection(opList)}
-                                resetCount={this.state.resetCount}
+                                key={this.state.resetCount}
                                 />
                         </Grid>
 
