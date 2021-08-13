@@ -262,7 +262,7 @@ class SudokuGame extends React.Component {
                         id="boardAndOperators"
                         spacing={2}
                     >
-                        <Grid item xs={5} xl={4} id="gameBoard">
+                        <Grid item xs={5} xl={4} id="gameBoard" style={{minWidth: "650px"}}>
                             <ActiveBoardView
                                 board={board}
                                 announceChoice={(board, cell, choice) => { this.boardAnnouncesChoice(board, cell, choice); }}
