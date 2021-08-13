@@ -257,26 +257,10 @@ def parse_and_apply_action(content):
         raise SudokuServerException from e
 
     jsoned_result = []
-    game_score = True
-    average_score = 0
+  
     for full_board in result:
         jsoned_result.append(full_board.getSimpleJson())
-        if game_score and full_board.config.cost_per_game_not_per_board:
-            if average_score == 0:
-                average_score = full_board.config.parameters["cost"]
-            else:
-                assert average_score == full_board.config.parameters["cost"], \
-                    "Can't average score when assuming that the scores are the same across child boards"
-        else:
-            game_score = False
-    if game_score and (len(jsoned_result) > 0):
-        # Amortize the game score across all the boards,
-        #   as each currently has the same score as a single board would
-        #   and we want to amortize that cost across all children boards
-        average_score /= len(jsoned_result)
-        for full_board in jsoned_result:
-            full_board["cost"] = average_score
-
+  
     return jsoned_result
 
 
