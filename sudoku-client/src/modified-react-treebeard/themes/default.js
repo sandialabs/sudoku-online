@@ -1,4 +1,4 @@
-export default {
+const defaultTheme = {
     tree: {
         base: {
             listStyle: 'none',
@@ -75,3 +75,5 @@ export default {
         }
     }
 };
+
+export default defaultTheme;

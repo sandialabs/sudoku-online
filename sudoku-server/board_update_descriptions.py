@@ -33,8 +33,8 @@ actions_description = {
     'applyops': {'function': 'logical_solve_action',
                  'arguments': ['operators'],
                  'cost': None,
-                 'user_name': 'Apply Operators',
-                 'short_description': 'Apply all selected logical operators.',
+                 'user_name': 'Apply Operators Only',
+                 'short_description': 'Apply all selected logical operators without a separate cell action.',
                  'description': 'Return a single board with the logical operators '
                  + 'and free operators applied.'},
 }

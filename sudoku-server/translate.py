@@ -18,18 +18,22 @@ import puzzles
 import solvers
 
 # Imports from Python standard library
+import datetime
 import enum
 import json
 import random
 import os
 import sys
+import uuid
 
 import logging
 logger = logging.getLogger(__name__)
 
+
 class SudokuServerException(Exception):
-    ### this is just a wrapper
+    # this is just a wrapper
     pass
+
 
 def get_initial_board(content):
     """
@@ -38,8 +42,10 @@ def get_initial_board(content):
     logger.debug("Calling get_initial_board with content %s.", str(content))
     puzzle = None
     if not isinstance(content, dict):
-        logger.warn("Failed assumption that request for initial board is formatted as a dict. Found %s", str(content))
-        raise SudokuServerException("Must format request for initial board as dict.")
+        logger.warn(
+            "Failed assumption that request for initial board is formatted as a dict. Found %s", str(content))
+        raise SudokuServerException(
+            "Must format request for initial board as dict.")
     name = content["name"] if "name" in content else None
     logger.debug(f"Name is {name}")
     degree = content["degree"] if "degree" in content else 3
@@ -55,7 +61,8 @@ def get_initial_board(content):
         else:
             # Just warn, and return an empty result
             logger.warn("Puzzle %s does not seem to exist.", str(basename))
-            raise SudokuServerException(f"You must specify an existing puzzle (one of {puzzles.puzzles.keys()}).")
+            raise SudokuServerException(
+                f"You must specify an existing puzzle (one of {puzzles.puzzles.keys()}).")
     else:
         (basename, puzzle) = random.choice(list(puzzles.puzzles.items()))
         name = basename
@@ -103,8 +110,9 @@ def get_boards_for_game(name):
 
     game_names = game["puzzles"]
     if "config_alterations" not in game:
-        logger.warn("Should at least provide empty list for 'config_alterations' in game description.")
-        game["config_alterations"] = []
+        logger.warn(
+            "Should at least provide empty list for 'config_alterations' in game description.")
+        game["config_alterations"] = {}
     if "randomly_apply" in game["config_alterations"]:
         game_names = __configure_games(
             list.copy(game["puzzles"]), list.copy(game["config_alterations"]["randomly_apply"]))
@@ -117,7 +125,7 @@ def get_boards_for_game(name):
     game_boards = []
     for name in game_names:
         logger.info("Getting initial board for puzzle %s", name)
-        gbrd = get_initial_board({"name" : name})
+        gbrd = get_initial_board({"name": name})
         if isinstance(gbrd, board.Board):
             # MAL TODO warn
             game_boards.append(gbrd)
@@ -128,7 +136,8 @@ def get_boards_for_game(name):
 def __parse_cell_arg(cell_loc):
     """ Parse a cell location into a cell_id. """
     if not(isinstance(cell_loc, list) and 2 == len(cell_loc)):
-        raise SudokuServerException("Must specify cell using [x,y] location notation.")
+        raise SudokuServerException(
+            "Must specify cell using [x,y] location notation.")
     cell_id = board.Board.getCellIDFromArrayIndex(cell_loc[0], cell_loc[1])
     logger.debug(f"Found cell argument {cell_id}")
     return cell_id
@@ -137,7 +146,8 @@ def __parse_cell_arg(cell_loc):
 def __parse_value_arg(value):
     """ Parse a value. """
     if not(isinstance(value, int) and value >= 0):
-        raise SudokuServerException("Assuming that all values are represented as non-negative ints. (offending value: %s)", str(value))
+        raise SudokuServerException(
+            "Assuming that all values are represented as non-negative ints. (offending value: %s)", str(value))
     logger.debug(f"Found value argument {value}")
     return value
 
@@ -160,7 +170,8 @@ def __collect_argument(arg_nm, action_dict):
     except AttributeError:
         raise SudokuServerException(f"Can't extract argument {arg_nm} needed")
     except KeyError:
-        raise SudokuServerException(f"Can't find value for argument {arg_nm} needed")
+        raise SudokuServerException(
+            f"Can't find value for argument {arg_nm} needed")
 
 
 def __collect_args(action, action_dict):
@@ -173,7 +184,8 @@ def __collect_args(action, action_dict):
     try:
         arg_names = board_update_descriptions.actions_description[action]["arguments"]
     except KeyError:
-        raise SudokuServerException(f"Cannot find description for action {action}")
+        raise SudokuServerException(
+            f"Cannot find description for action {action}")
 
     if len(arg_names) == 1:
         return __collect_argument(arg_names[0], action_dict)
@@ -181,7 +193,9 @@ def __collect_args(action, action_dict):
         return (__collect_argument(arg_names[0], action_dict),
                 __collect_argument(arg_names[1], action_dict))
     else:
-        raise SudokuServerException(f"Haven't implemented parsing for arguments {arg_names}")
+        raise SudokuServerException(
+            f"Haven't implemented parsing for arguments {arg_names}")
+
 
 
 def parse_and_apply_action(content):
@@ -196,21 +210,32 @@ def parse_and_apply_action(content):
         [Boards] : a collection of boards resulting from the selection action.
     """
     if not isinstance(content, dict):
-        raise SudokuServerException("Failed assumption that request for action on board is formatted as a dict")
+        raise SudokuServerException(
+            "Failed assumption that request for action on board is formatted as a dict")
+    logger.info("Full action request: {}".format(content))
     if "board" not in content:
         raise SudokuServerException("You must specify a board to act upon.")
     board_dict = content["board"]
     if not isinstance(board_dict, dict):
-        raise SudokuServerException("Failed assumption that the parsed board is a dict.")
+        raise SudokuServerException(
+            "Failed assumption that the parsed board is a dict.")
+    # Remove the cost of boards so far so that we don't overcharge
+    # users for actions they've already taken.
+    if "cost" in board_dict:
+        board_dict.pop("cost")
     board_object = board.Board(board_dict)
 
     if "action" not in content:
-        raise SudokuServerException("You must specify an action to take on the given board.")
+        raise SudokuServerException(
+            "You must specify an action to take on the given board.")
     action_dict = content["action"]
     if not isinstance(action_dict, dict):
-        raise SudokuServerException("Failed assumption that the parsed action is a dict.")
+        raise SudokuServerException(
+            "Failed assumption that the parsed action is a dict.")
     if "action" not in action_dict:
-        raise SudokuServerException("Failed assumption that action request specified the action to take.")
+        raise SudokuServerException(
+            "Failed assumption that action request specified the action to take.")
+
     action_choice = action_dict["action"]
 
     logger.info("Action choice: {}".format(action_choice))
@@ -220,10 +245,11 @@ def parse_and_apply_action(content):
         collected = solvers.take_action(
             board.Board(board_object), action_choice, args)
         result = []
-        if "heuristics" in content:
-            logicalops = content["heuristics"]
+        if "operators" in action_dict:
+            logicalops = action_dict["operators"]
             if not isinstance(logicalops, list):
-                raise SudokuServerException("Failed assumption that the parsed action argument heuristics is a list.")
+                raise SudokuServerException(
+                    "Failed assumption that the parsed action argument heuristics is a list.")
             for brd in collected:
                 result.extend(solvers.take_action(brd, "applyops", logicalops))
         else:
@@ -233,26 +259,10 @@ def parse_and_apply_action(content):
         raise SudokuServerException from e
 
     jsoned_result = []
-    game_score = True
-    average_score = 0
+  
     for full_board in result:
         jsoned_result.append(full_board.getSimpleJson())
-        if game_score and full_board.config.cost_per_game_not_per_board:
-            if average_score == 0:
-                average_score = full_board.config.log.difficulty_score
-            else:
-                assert average_score == full_board.config.log.difficulty_score, \
-                    "Can't average score when assuming that the scores are the same across child boards"
-        else:
-            game_score = False
-    if game_score and (len(jsoned_result) > 0):
-        # Amortize the game score across all the boards,
-        #   as each currently has the same score as a single board would
-        #   and we want to amortize that cost across all children boards
-        average_score /= len(jsoned_result)
-        for full_board in jsoned_result:
-            full_board["cost"] = average_score
-
+  
     return jsoned_result
 
 
@@ -291,31 +301,55 @@ def get_cell_actions():
 
     return actions
 
+
 def _validate_and_craft_filename(tree_data):
     """ Given a json tree per the specifications in server_api.md,
         do some lightweight validation that it is what we expect,
         and that it won't be too big, and then save it. """
     logger.debug("Received tree data %s", str(tree_data))
-    if "session_id" not in tree_data:
-        raise SudokuServerException("Expect to receive a session ID with game_tree.")
-    if "game_id" not in tree_data:
-        raise SudokuServerException("Expect to receive a game ID with game_tree.")
-    if "timestamp" not in tree_data:
-        raise SudokuServerException("Expect to receive a timestamp with game_tree.")
+    # if "session_id" not in tree_data:
+    #     raise SudokuServerException("Expect to receive a session ID with game_tree.")
+    if "finishedTree" not in tree_data:
+        raise SudokuServerException(
+            "Expect to receive a finished_tree with relevant info.")
 
-    return f"{tree_data['session_id']}-{tree_data['game_id']}-{tree_data['timestamp']}"
+    filename_components = []
+
+    # TODO MAL : do we need to worry about people pinging this and dropping a ton of data into the store?
+    if 'id' not in tree_data['finishedTree']:
+        raise SudokuServerException(
+            "Expect to receive an id in finished_tree.")
+    
+    # Right now the ID is a large integer.  This should protect us if we ever
+    # use the user's ID as an ID instead.
+    raw_id = str(tree_data['finishedTree']['id'])
+    print("debug: raw_id: {} ({})".format(raw_id, type(raw_id)))
+    sanitized_id = ''.join([char if char.isalnum() else 'X' for char in raw_id])
+    if len(sanitized_id) > 256:
+        sanitized_id = sanitized_id[0:256]
+    filename_components.append(sanitized_id)
+
+    file_timestamp = tree_data.get('timestamp', datetime.datetime.now())
+    filename_components.append(file_timestamp.strftime('%Y-%m-%d_%H%M%S%f'))
+
+    return '_'.join(filename_components)
+
+
 
 def submit_game_tree(tree_data):
     """ Given a json tree per the specifications in server_api.md,
         do some lightweight validation that it is what we expect
         and then save it. """
-    logger.info("Saving game tree data.")
+    logger.info("Saving game tree data (%s).", str(tree_data))
     filename = _validate_and_craft_filename(tree_data)
 
     if not os.path.exists("data"):
         os.makedirs("data")
+    file_path = f"data/{filename}"
+    if os.path.exists(f"{file_path}.json"):
+        file_path += str(uuid.uuid4())
 
-    with open(f"data/{filename}.json", "w") as outfile:
+    with open(f"{file_path}.json", "w") as outfile:
         json.dump(tree_data, outfile)
     return {
         "message": "Game tree successfully saved."

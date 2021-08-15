@@ -95,31 +95,35 @@ class LogicalOperatorPanel extends React.Component {
 		
 		} else {
 			const operatorListPanel = this.renderOperatorList();
+			const freezeOperatorsButton = this.makeFreezeOperatorsButton();
+
+			const operatorsFreeText = "Selected operators will run (and incur their cost) "
+				+ "on each child of a cell action.  To execute on just one board, use the "
+				+ "Apply Operators action.";
+			const operatorsFrozenText = "Selected operators will run (and incur their cost) "
+				+ "on each child of each cell action during this game.";
+
+			let operatorExplanationText = operatorsFreeText;
 			if (this.props.selectLogicalOperatorsUpFront) {
-				let selectOperatorButtonText = "Confirm Operator Selection";
-				if (this.props.logicalOperatorsFrozen) {
-					selectOperatorButtonText = "Specialized Operators Frozen";
-				}
+				operatorExplanationText = operatorsFrozenText;
+			}
+
+			if (this.props.selectLogicalOperatorsUpFront) {
 				return (
 					<Paper name='logicalOperators'>
 						<Typography variant="h5">Specialized Operations</Typography>
 						{operatorListPanel}
-						<Button onClick={() => this.props.confirmOperatorSelection()}
-							variant="contained"
-							color="primary"
-							disabled={this.props.logicalOperatorsFrozen}>
-						{selectOperatorButtonText}
-						</Button>	
+						{freezeOperatorsButton}
 					</Paper>
 					);
 			} else {
 				return (
-					<Paper name='logicalOperators'>
-						<Typography variant="h5">Specialized Operators</Typography>
+					<Paper name='logicalOperators' elevation={2}>
+						<Typography variant='h5'>Specialized Operations</Typography>
+						<Typography variant='body1'>
+							{operatorExplanationText}
+						</Typography>
 						{operatorListPanel}
-						<p>
-							Operator selection can change freely.
-						</p>
 					</Paper>
 					);
 			}
@@ -127,7 +131,7 @@ class LogicalOperatorPanel extends React.Component {
 	}
 
 	makeCheckBox(operator) {
-		const labelText = operator.user_name + ' (Cost: ' + operator.cost + ')';
+		let labelText = operator.user_name + ' (Cost: ' + operator.cost + ' per node)';
 		const tooltipText = operator.user_name + ': ' + operator.description;
 		return (
 			<Tooltip title={tooltipText} key={operator.internal_name}>
@@ -170,6 +174,31 @@ class LogicalOperatorPanel extends React.Component {
 
 		this.props.selectionChanged(selectedOperators);
 	}
+
+    makeFreezeOperatorsButton() {
+    	let selectOperatorButtonText = "ERROR: LOGICAL OPERATOR BUTTON TEXT UNDEFINED";
+    	let onClick = null;
+    	let disabled = false;
+
+    	if (this.props.selectLogicalOperatorsUpFront) {
+    		selectOperatorButtonText = "Confirm Operator Selection";
+			disabled = false;
+			onClick = () => this.props.confirmOperatorSelection(); 
+			if (this.props.logicalOperatorsFrozen) {
+				selectOperatorButtonText = "Specialized Operator Selection Fixed";
+				disabled = true;
+			}
+		} 
+
+		return (
+			<Button onClick={onClick}
+				variant="contained"
+				color="primary"
+				disabled={disabled} >
+				{selectOperatorButtonText}
+			</Button>	
+			);
+    }
 }
 
 LogicalOperatorPanel.propTypes = {

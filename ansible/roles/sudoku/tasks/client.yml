@@ -1,0 +1,43 @@
+---
+
+- name: sync client
+  ansible.posix.synchronize:
+    src: ../sudoku-client
+    dest: "{{ app_dir }}"
+
+- name: install packages
+  package:
+    name:
+      - fonts-roboto
+
+- name: npm install
+  community.general.npm:
+    path: "{{ app_dir }}/sudoku-client"
+    production: true
+    state: present
+
+- name: npm install
+  community.general.npm:
+    name: "{{ item }}"
+    path: "{{ app_dir }}/sudoku-client"
+    production: true
+    state: present
+  with_items:
+      - fontsource-roboto
+      - "@material-ui/core"
+
+- name: build client
+  command:
+    cmd: npm run build
+    chdir: "{{ app_dir }}/sudoku-client"
+    creates: "{{ app_dir }}/sudoku-client/build/index.html"
+
+- name: serve sudoku client 
+  copy:
+    dest: /var/www/sudoku-client
+    src: "{{ app_dir }}/sudoku-client/build"
+    remote_src: true
+    owner: root
+    group: root
+    mode: 0644
+

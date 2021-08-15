@@ -15,9 +15,7 @@ code {
 table.active-board {
 	table-layout: fixed;
 	border-collapse: collapse;
-    border-style: solid;
-    border-color: black;
-    border-width: 5px;
+    border: 3px solid gray;
 }
 
 
@@ -42,7 +40,6 @@ td.active-board.square.degree-3:nth-child(3n+3) {
     margin: 0;
     padding: 0;
 }
-
 
 /* The rest of the internal borders - not between blocks, just squares */
 tr.active-board {
@@ -88,6 +85,44 @@ td.active-board.square.degree-3.goal-cell:nth-child(3n+3) {
  * Styles for the choice grid within the unassigned cells in the 
  * active board
  */
+
+.no-borders {
+    border: none;
+    margin: 0px;
+    padding: 0px;
+ /*   display: inline-block; */
+}
+
+div#activeBoardContainer {
+    margin:  0px;
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+div#sideLabelsAndBoard {
+    margin: 0px;
+    padding: 0px;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+}
+
+table.label.rows {
+    padding-top: 0px;
+}
+
+table.label.columns {
+    padding-left: 5px;
+}
+
+td.label {
+    margin: 0px;
+    padding: 0px;
+    width: 60.5px;
+    height: 65.5px;
+    text-align: center;
+}
 
 table.sudoku-choice-grid {
 	margin: 0;

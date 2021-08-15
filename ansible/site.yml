@@ -1,0 +1,65 @@
+# setup of site resources
+
+---
+- hosts: all
+  vars:
+    app_dir: /usr/local/sudoku
+    app_py_version: "3.8.5"
+    app_user: sudoku
+    admin_users:
+      - name: caleb
+        fullname: Caleb Gosnell
+        id: 13174
+        optional_groups: ["sudo"]
+        shell: /bin/bash
+        ssh_auth:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCy1CDRSzg9DEVZQ5fze52rjl6HjeiXFUQogKVR838mCrojPeHIeM/HYZ2ten7zFZ9vpwLA3hBf+z92FwN6lM4jEEz4VU15QDRFcLtEnsstOfp10sR0Kbnc7PhV79IlyYkRtHBDlW7unGbflIrFAA6PzQklFGJrGH/9unRcRkFLlOPd4MCiU3kORK+yDrDmDn+aT9ajHTY6XvjiYqWF3ThzXuvo1nRccb3SBvCddmi2MKoMPPq5Z6dJqDJkdWy9UXcT3QlsXE6XUL2GuL6oZ/e10mAad74VvtUAII7p7tHSLhZbrp+92MXq2dYC/wJapJZdXbEpycgcq2BmeKdKaqkF calebgosnell@Calebs-MacBook-Pro.local
+      - name: shelley
+        fullname: Shelley Leger
+        id: 13175
+        optional_groups: ["sudo"]
+        shell: /bin/bash
+        ssh_auth:
+          - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDE4jmEVOsyoAhSex2hMlBjwr9swjFvqf681vXzZ2NHR8+Mdrm2dMi0cmE3kC2w+s96wMNA/SFA0m/vD3CtMqb9mKRTmQCvc1rrRiZb013DnKCOSdl3GZYu+d62tU1ajhQF6jaEuKwlYTmm9lc4wDRtqcSQsDHLD5SA2mAuMQViwtCI6UBhHM+u9ReT8ridNs/A9ZpX/9Jp4uuzc1cpElc3yP9y0eObzci/5GS5nUnFpW/bszEl+0pBf5ufGQF9Bc9tEJmobqanpbvXtftqIJOJhdufENmDyZrqEn75tbjEQOJ+NhEMA4P3AlwEGG/TwsXnmgMQ8pKbuerb5hlAYiNxRtXICowj7bFo9MInIpVgD3cJzj6svjsHVsXJeNY8cgdUV8pgTa4aIUVHJvC3fRhQZs8GjTcoTEdzfZ/FUPRINtWOH/UXsvEf8ytIVo0Pi6oBpuHPPDxtEF+uX4AGQWllJoD7j4aUd0xi71d+9AZo2KmMq2jFnhg/vTW+urMug8Y6vFEMyaaFJO84k9euJU+seefx67tKdDgLHRHWdrQk6R408aJ1PnvG2vLazVxLHRo5DFkitPdKK3kDavakqSKfApg6t4X7Ku0S1KOtSFRBXpQwEGC3KhNTx7Jl4ltv8v0YI9odc11PDzUghZqD0OveuLuV7m0sC9foi98Y9eIJDQ== maleger
+      - name: ubuntu
+        fullname: default ubuntu user
+        remove_directories: true
+        state: absent
+    certbot:
+      domains: 
+        - sandia-sudoku.sixfeetup.com
+      email: support@sixfeetup.com
+      webroot: /var/www/letsencrypt
+
+    pyenv_root: /usr/local/pyenv
+    pyenv_python_versions:
+      - "{{ app_py_version }}"
+    pyenv_global: "{{ app_py_version }} system"
+
+
+  tasks:
+    - name: apt update
+      apt:
+        update_cache: true
+      changed_when: false
+
+    - name: ensure unattended-upgrades
+      apt:
+        name: unattended-upgrades
+        state: present
+
+    - name: users role
+      import_role:
+        name: users
+      tags: users
+
+    - name: sudoku role
+      import_role:
+        name: sudoku
+      tags: sudoku
+
+
+
+
+
+

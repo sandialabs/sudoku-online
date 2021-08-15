@@ -1,0 +1,59 @@
+---
+
+- name: set sudoers
+  lineinfile:
+    dest: /etc/sudoers
+    line: "%sudo ALL=(ALL) NOPASSWD:ALL"
+    regexp: "^%sudo"
+    validate: "visudo -cf %s"
+    state: present
+
+- name: install packages
+  package:
+    name:
+      - npm
+      - supervisor
+      - nginx
+      - certbot
+
+
+- name: import server
+  import_tasks: server.yml
+  tags: server
+
+- name: import client
+  import_tasks: client.yml
+  tags: client
+
+
+- name: nginx http
+  copy:
+    dest: /etc/nginx/conf.d/http.conf
+    src: http.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload_nginx
+  tags: this
+
+- name: start nginx
+  service:
+    name: nginx
+    enabled: true
+    state: started
+  tags: this
+
+- name: import certbot
+  import_tasks: certbot.yml
+  tags: certbot
+
+- name: nginx sudoku
+  copy:
+    dest: /etc/nginx/conf.d/sudoku.conf
+    src: sudoku.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: post_letsencrypt_cert.stat.exists
+  notify: reload_nginx
+  tags: this

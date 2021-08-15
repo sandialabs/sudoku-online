@@ -49,9 +49,31 @@ class CellActionPanel extends React.Component {
 	renderActionList() {
 		let radioButtons = this.makeRadioButtons();
 		let buttonText = "Execute Selected Action";
-		if (!this.props.actionsEnabled) {
+		
+		const anyActionsEnabled = (
+			this.props.permittedActions['assign'] === true
+			|| this.props.permittedActions['exclude'] === true
+			|| this.props.permittedActions['pivot'] === true
+			|| this.props.permittedActions['applyops'] === true
+			);
+
+		const someActionCanExecute = (
+			this.props.actionsCanExecute 
+			&& anyActionsEnabled
+			);
+
+		const thisActionCanExecute = (
+			this.props.permittedActions[this.state.selectedAction.internal_name] === true
+			)
+
+		if (!someActionCanExecute) {
 			buttonText = this.props.disabledReason;
+		} else if (!thisActionCanExecute) {
+			buttonText = 'Please select an available action';
 		}
+
+		const enableExecuteButton = (someActionCanExecute && thisActionCanExecute);
+
 		return (
 			<FormControl component="fieldset">
 				<RadioGroup defaultValue={this.props.defaultAction.internal_name}
@@ -64,7 +86,7 @@ class CellActionPanel extends React.Component {
 				<Button onClick={() => this.handleExecuteAction()}
 						variant="contained"
 						color="primary"
-						disabled={!this.props.actionsEnabled}>
+						disabled={!enableExecuteButton}>
 					{buttonText}
 				</Button>
 			</FormControl>
@@ -79,17 +101,26 @@ class CellActionPanel extends React.Component {
 
 	makeMaterialRadioButton(action) {
 		const actionPermitted = (
-			this.props.permittedActions.length === 0
-            || this.props.permittedActions.indexOf(action.internal_name) !== -1
-            || (
-            	// XXX This is a hack -- selectops is not working as expected
-            	this.props.actionsEnabled &&
-            	this.props.permittedActions.indexOf('selectops') !== -1
-            	)
-            	);
+			this.props.permittedActions[action.internal_name] === true
+			);
 		
-		const fullLabelText = action.user_name + ' (Cost: ' + action.cost + '): ' + action.short_description;
-		const forbiddenText = 'This action is not permitted on this board.';
+		let actionCost = action.cost;
+		if (action.internal_name === 'applyops') {
+			actionCost = this.props.logicalOperatorCost;
+		}
+
+		const fullLabelText = action.user_name + ' (Cost: ' + actionCost + '): ' + action.short_description;
+		let forbiddenText = 'This action is not permitted right now';
+
+		if (action.internal_name === 'assign'
+			|| action.internal_name === 'exclude') {
+			forbiddenText = 'You must select a value in an unassigned square in order to execute this operation.';
+		} else if (action.internal_name === 'pivot') {
+			forbiddenText = 'You must select an unassigned square to execute this operation.';
+		} else if (action.internal_name === 'applyops') {
+			forbiddenText = 'You must select at least one operator to apply.';
+		}
+
 		let toolTipText = action.user_name + ': ' + action.description;
 
 		if (!actionPermitted) {
@@ -104,8 +135,8 @@ class CellActionPanel extends React.Component {
 					control={<Radio />}
 					label={fullLabelText}
 					/>
-				</Tooltip>
-			);
+			</Tooltip>
+		);
 	}
 
 	actionsAvailable() {
@@ -161,6 +192,7 @@ class CellActionPanel extends React.Component {
 				this.setState({
 					'selectedAction': action
 					});
+				this.props.selectedActionChanged(action);
 			} else {
 				console.log("ERROR: Couldn't find action object for new selected action " + changeEvent.target.value);
 			}
@@ -170,12 +202,16 @@ class CellActionPanel extends React.Component {
 
 CellActionPanel.propTypes = {
 	allActions: PropTypes.array.isRequired,
-	permittedActions: PropTypes.array.isRequired,
-	selectedActionChanged: PropTypes.func,
+	permittedActions: PropTypes.object.isRequired,
+	selectedActionChanged: PropTypes.func.isRequired,
 	defaultAction: PropTypes.object,
 	executeAction: PropTypes.func.isRequired,
-	actionsEnabled: PropTypes.bool.isRequired,
+	actionsCanExecute: PropTypes.bool.isRequired,
 	disabledReason: PropTypes.string,
+	logicalOperatorCost: PropTypes.number,
 };
 
+CellActionPanel.defaultProps = {
+	logicalOperatorCost: 0
+}
 export { CellActionPanel };

@@ -11,8 +11,42 @@ Scoring and dispatch system configuration data for sudoku game actions.
 import sudoku_logger
 import copy
 import board_update_descriptions
-import traceback
-import sys
+
+import logging
+logger = logging.getLogger(__name__)
+
+
+def parse_name_config(name, initial_config=None):
+    """ Given a board name with embedded config information, return a dictionary mapping config variables to values. """
+    config_dict = initial_config if initial_config is not None else {}
+    if 'cost' not in config_dict:
+        config_dict['cost'] = 0
+    if not name:
+        return config_dict
+
+    parameters = name.split('...')
+    assert len(parameters) > 0, "Was unable to get any data from name."
+    config_dict['puzzleName'] = name
+    config_dict['displayName'] = parameters[0]
+    for param in parameters[1:]:
+        if '=' in param:
+            assigned = param.split('=')
+            assert(len(
+                assigned) == 2), f"Assumed that the parameter would only have one '=': key=value, not {assigned}."
+            if ',' in assigned[1]:
+                value_list = assigned[1].split(',')
+                config_dict[assigned[0]] = value_list
+            else:
+                config_dict[assigned[0]] = assigned[1]
+            logger.debug("Found %s to set to %s (from %s).", str(assigned[0]),
+                         str(config_dict[assigned[0]]), str(param))
+        else:
+            config_dict[param] = True
+            logger.debug("Found %s to set to %s (from %s).", str(param),
+                         str(config_dict[param]), str(param))
+    logger.info("Final config dict is %s (from %s)",
+                str(config_dict), str(name))
+    return config_dict
 
 import logging
 logger = logging.getLogger(__name__)
@@ -51,7 +85,8 @@ class ConfigurationData():
     """ Collect all the configuration data for a board and its SudokuLogger and the solver.
     """
 
-    def __init__(self, puzzle=None, name=None, initial_config : dict = None):
+
+    def __init__(self, puzzle=None, name=None, initial_config: dict = None):
         if name:
             name = name.strip()
         self.log = sudoku_logger.SudokuLogger(puzzle, name)
@@ -66,9 +101,12 @@ class ConfigurationData():
         self.actions = [
             k for k in board_update_descriptions.actions_description.keys()]
         self.free_operations = ['exclusion']
-        self.costly_operations = [op for op in
-                                  filter(lambda op: op not in self.free_operations,
-                                         board_update_descriptions.operators_description.keys())]
+        self.costly_operations = ['inclusion',
+                                  'pointingpairs', 'nakedpairs', 'ywings']
+        # Limiting costly_operations for the test
+        # self.costly_operations = [op for op in
+        #                           filter(lambda op: op not in self.free_operations,
+        #                                  board_update_descriptions.operators_description.keys())]
 
         # Keep track of configuration for control flow
 
@@ -87,19 +125,19 @@ class ConfigurationData():
 
         # If True, have score tracked per game instead of per board
         #   Should only be true if cost per requested application is also True
-        self.cost_per_game_not_per_board = False
+        self.cost_per_game_not_per_board = True
 
         # If True, we increase the cost of the board every time the operator matches a set.
         self.cost_per_matching_set = False
         # If True, users get charged on a successful application
         #   no matter how many matches they get (>1) on that application
-        self.cost_per_matching_use = True
+        self.cost_per_matching_use = False
         # If True, increase the cost of the puzzle every time a logical operator is attempted,
         # whether or not it was successful
         self.cost_per_attempted_application = False
         # If True, increase the cost of the puzzle every time a logical operator is requested,
         # whether or not it was successful, and no matter how many times it was attempted during that request
-        self.cost_per_requested_application = False
+        self.cost_per_requested_application = True
 
         # If True, increase the count ofthe operator every time it matches a set.
         self.count_per_matching_set = True
@@ -133,14 +171,14 @@ class ConfigurationData():
         """ Add the mapping to our parameters storage. """
         if key in self.parameters and self.parameters[key] != value:
             logger.info("Overwriting config parameters %s (which was %s) with %s",
-                str(key), str(self.parameters[key]), str(value))
+                        str(key), str(self.parameters[key]), str(value))
         self.parameters[key] = value
 
     def getParam(self, key):
         """ Add the mapping to our parameters storage. """
         if key not in self.parameters:
             logger.info("Returning None from non-existent config parameter %s",
-                str(key))
+                        str(key))
             return None
         return self.parameters[key]
 
@@ -211,7 +249,8 @@ class ConfigurationData():
                 False (unneeded, but to indicate that the operator should not terminate).
         """
         board_string = board.getStateStr(True, False) if board else None
-        logger.debug("Logging: %s %s on %s", str(op), str(msg2), str(board_string))
+        logger.debug("Logging: %s %s on %s", str(
+            op), str(msg2), str(board_string))
         return False
 
     def adjust_cost(self, op):
@@ -286,7 +325,8 @@ class ConfigurationData():
         Returns:
             None
         """
-        self.log.logOperator(op, "call", f"attempted application.", board, False)
+        self.log.logOperator(
+            op, "call", f"attempted application.", board, False)
 
         return None
 
@@ -315,7 +355,8 @@ class ConfigurationData():
         """ Over-use a convenient function to do logging.
         """
         board_string = board.getStateStr(True, False) if board else None
-        logger.debug("Logging: %s %s on %s", str(msg1), str(msg2), str(board_string))
+        logger.debug("Logging: %s %s on %s", str(
+            msg1), str(msg2), str(board_string))
 
 
 defaultConfig = ConfigurationData()

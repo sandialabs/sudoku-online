@@ -1,0 +1,26 @@
+---
+
+- name: collect uids
+  command: "awk -F : '{print $3}' /etc/passwd"
+  register: uids
+  changed_when: false
+
+- name: collect gids
+  command: "awk -F : '{print $3}' /etc/group"
+  register: gids
+  changed_when: false
+
+- name: collect groups
+  command: "awk -F : '{print $1}' /etc/group"
+  register: group_names
+  changed_when: false
+
+- name: setup users
+  include_tasks: present_user.yml
+  when: (item.state | default('present')) == 'present'
+  with_items: "{{ admin_users }}"
+
+- name: remove users
+  include_tasks: absent_user.yml
+  when: (item.state | default('present')) == 'absent'
+  with_items: "{{ admin_users }}"

@@ -1,0 +1,63 @@
+---
+
+- name: get certbot path
+  command:
+    cmd: which certbot
+  register: certbot_path
+  changed_when: false
+
+- name: create webroot directory
+  file:
+    dest: "{{ certbot.webroot }}/.well-known/acme-challenge"
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: get public ip
+  community.general.ipify_facts:
+
+- name: check that domains resolve
+  shell:
+    cmd: "host {{ item }} | grep {{ ipify_public_ip }}"
+  with_items: "{{ certbot.domains }}"
+  changed_when: false
+
+- name: check that webroot works
+  vars:
+    test_url: /.well-known/acme-challenge/ansible-check
+    test_content: "{{ 10000 | random(seed=inventory_hostname) }}"
+  shell:  # noqa command-instead-of-shell
+    cmd: "{{ item }}"
+  with_items:
+    - "touch {{ certbot.webroot }}{{ test_url }}"
+    - "echo '{{ test_content }}' > {{ certbot.webroot }}{{ test_url }}"
+    - "curl http://{{ certbot.domains | first }}{{ test_url }} | grep '{{ test_content }}'"
+    - "rm {{ certbot.webroot }}{{ test_url }}"
+  changed_when: false
+
+- name: check for existing certificate
+  stat:
+    path: "/etc/letsencrypt/archive/{{ certbot.domains | first }}"
+  register: pre_letsencrypt_cert
+
+- name: request letsencrypt cert via certbot
+  command:  # noqa command-instead-of-shell
+    cmd: "{{ certbot_path.stdout }} certonly --noninteractive --agree-tos --email {{ certbot.email }} --webroot --webroot-path {{ certbot.webroot }} -d {{ certbot.domains | join(',') }}"
+  when: not pre_letsencrypt_cert.stat.exists
+  register: certbot_gen
+
+- name: check for existing certificate
+  stat:
+    path: "/etc/letsencrypt/archive/{{ certbot.domains | first }}"
+  register: post_letsencrypt_cert
+
+- name: add cron for certbot renewal
+  vars:
+    certbot_auto_renew_options: "--quiet --no-self-upgrade"
+  cron:
+    name: certbot renew
+    job: "{{ certbot_path.stdout }} renew {{ certbot_auto_renew_options }}"
+    minute: "{{ 60 |random(seed=inventory_hostname) }}"
+    hour: "{{ 24 |random(seed=inventory_hostname) }}"
+    user: root
