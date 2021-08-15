@@ -13,7 +13,6 @@ function GameInfoDialog(props) {
     const [open, setInfoOpen] = React.useState(props.defaultState);
 
     const handleOpen = () => setInfoOpen(true);
-    const handleClose = () => setInfoOpen(false);
     const handleOk = () => {
         setInfoOpen(false);
         if (props.handleConfirmation !== null) {

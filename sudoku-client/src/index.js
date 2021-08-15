@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 import SudokuMain from './SudokuMain';
@@ -27,30 +27,40 @@ if (deploy) {
     serverAddress = window.location.protocol + '//' + window.location.hostname + ':' + window.location.port;
 }
 
+const App = () => {
+    // This effect runs after the first render.
+    useEffect(() => {
+        document.title = "SNL Sudoku"
+    }, []);
+
+    return (
+        <Router>
+            <div key={6}>
+                <Switch>
+                    <Route path="/game/:gameName">
+                        <SudokuMain 
+                            key={2} degree={3}
+                            gameNameInUrl={true}
+                            serverAddress={serverAddress}
+                            />
+                    </Route>
+
+                    <Route path="/">
+                        <SudokuMain 
+                            gameNameInUrl={false}
+                            serverAddress={serverAddress}
+                            key={2} degree={3} 
+                            blankFrontPage={deploy}
+                            />
+                    </Route>
+
+                </Switch>
+            </div>
+        </Router>
+    );
+}
+
 ReactDOM.render(
-    <Router>
-        <div key={6}>
-            <Switch>
-                <Route path="/game/:gameName">
-                    <SudokuMain 
-                        key={2} degree={3}
-                        gameNameInUrl={true}
-                        serverAddress={serverAddress}
-                        />
-                </Route>
-
-                <Route path="/">
-                    <SudokuMain 
-                        gameNameInUrl={false}
-                        serverAddress={serverAddress}
-                        key={2} degree={3} 
-                        blankFrontPage={deploy}
-                        />
-                </Route>
-
-            </Switch>
-        </div>
-    </Router>,
-
-  document.getElementById('root')
+    <App />,
+    document.getElementById('root')
 );
