@@ -1,6 +1,6 @@
 {
   "name": "sudoku-client",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "private": true,
   "dependencies": {
     "@babel/core": "^7.14.3",
