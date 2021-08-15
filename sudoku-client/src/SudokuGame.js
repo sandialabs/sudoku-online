@@ -231,10 +231,6 @@ class SudokuGame extends React.Component {
                 finishButtonDialogText = "You must first answer the analysis question and provide your Mechanical Turk ID."
                 finishButtonDialogTitle = "Sudoku: Some Information Missing";
             }
-            const logicalOperatorsFrozen = (
-                this.state.selectLogicalOperatorsUpFront
-                && this.state.logicalOperatorsSelected
-            );
 
             console.log('SudokuGame: props.cellActions:');
             console.log(this.props.cellActions);
