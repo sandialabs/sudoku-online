@@ -449,6 +449,8 @@ class SudokuGame extends React.Component {
                 ).join(', ');;
         }
 
+        cellAction.timestamp_in_ms_since_epoch = Date.now();
+        
         console.log('SudokuGame.executeAction: cellAction: '
             + cellAction.internal_name
             + ', operators: '

@@ -61,6 +61,7 @@ function addBoards(tree, parentId, newBoards) {
     for (const board of newBoards) {
         // console.log('inside addBoards: about to add board ' + board);
         // console.log(board);
+        board.timestamp_in_ms_since_epoch = Date.now();
         myTree = addBoard(myTree, parentId, board);
     }
     return myTree;
