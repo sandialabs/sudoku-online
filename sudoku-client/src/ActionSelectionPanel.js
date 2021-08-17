@@ -79,7 +79,6 @@ ActionSelectionPanel.propTypes = {
     logicalOperators: PropTypes.array.isRequired,
     logicalOperatorSelectionChangedCallback: PropTypes.func.isRequired,
     logicalOperatorsFrozenCallback: PropTypes.func.isRequired,
-    resetCount: PropTypes.number.isRequired,
     selectLogicalOperatorsUpFront: PropTypes.bool.isRequired,
 }
 

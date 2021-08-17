@@ -85,13 +85,6 @@ class SudokuGame extends React.Component {
     }
 
     handleNewBoards(parentSerial, newBoards, request) {
-
-        console.log('handleNewBoards: parentSerial is ' + parentSerial);
-        console.log('handleNewBoards: request: ');
-        console.log(request);
-        console.log('handleNewBoards: reply: ');
-        console.log(newBoards);
-
         this.setState({
             gameTree: GameTree.addBoards(
                 this.state.gameTree,
@@ -127,7 +120,6 @@ class SudokuGame extends React.Component {
 
     changeActiveBoard(boardSerial) {
         if (boardSerial !== this.state.activeBoardId) {
-            console.log('SudokuGame: Request received to change active board to ' + boardSerial + '.');
             this.setState({
                 activeBoardId: boardSerial,
                 selectedBoardSquare: null,
@@ -214,8 +206,6 @@ class SudokuGame extends React.Component {
         } else {
             console.assert(this.state.gameTree !== undefined,
                 "SudokuGame: this.state.gameTree is undefined");
-            console.log("Game tree:");
-            console.log(this.state.gameTree);
             const board = this.activeBoard();
 
       
@@ -232,8 +222,6 @@ class SudokuGame extends React.Component {
                 finishButtonDialogTitle = "Sudoku: Some Information Missing";
             }
 
-            console.log('SudokuGame: props.cellActions:');
-            console.log(this.props.cellActions);
             const enabledActions = actionsEnabledGivenSelection(
                 this.state.selectedBoardSquare,
                 this.state.selectedValue,
@@ -416,9 +404,6 @@ class SudokuGame extends React.Component {
             this.props.puzzles[
             this.state.currentPuzzleIndex
             ]);
-        this.setState({
-            resetCount: this.state.resetCount + 1
-        });
     }
 
     registerEndGameOpen(callback) {
@@ -451,6 +436,8 @@ class SudokuGame extends React.Component {
                 ).join(', ');;
         }
 
+        cellAction.timestamp_in_ms_since_epoch = Date.now();
+        
         console.log('SudokuGame.executeAction: cellAction: '
             + cellAction.internal_name
             + ', operators: '
@@ -490,11 +477,18 @@ class SudokuGame extends React.Component {
 
     configureNewBoard(board) {
         if (board.puzzleName.indexOf("select_ops_upfront") !== -1) {
+            console.log(
+                "configureNewBoard: Up-front logical operator selection "
+                + "requested");
+
             this.setState({
                 selectLogicalOperatorsUpFront: true,
                 logicalOperatorsSelected: false
             });
         } else {
+            console.log(
+                "configureNewBoard: Logical operator selection free");
+
             this.setState({
                 selectLogicalOperatorsUpFront: false,
                 logicalOperatorsSelected: false
@@ -525,10 +519,6 @@ class SudokuGame extends React.Component {
         });
 
         const nextPuzzle = this.props.puzzles[nextBoardIndex];
-        // const selectUpFront = !nextPuzzle.rules.canChangeLogicalOperators;
-        // this.setState({
-        //     selectLogicalOperatorsUpFront: selectUpFront,
-        // })
 
         this.configureNewBoard(nextPuzzle);
 
@@ -536,7 +526,10 @@ class SudokuGame extends React.Component {
 
 
     resetState() {
-        // TODO reset analysis question state
+        const newResetCount = this.state.resetCount + 1;
+        console.log(
+            "SudokuGame: resetState: Increasing reset count "
+            + "to " + newResetCount);
         this.setState({
             selectLogicalOperatorsUpFront: false,
             logicalOperatorsSelected: false,
@@ -546,7 +539,8 @@ class SudokuGame extends React.Component {
             gameTreeExpandedNodes: new Set(),
             selectedBoardSquare: null,
             selectedValue: null,
-            analysisAnswer: "(no answer specified)"
+            analysisAnswer: "(no answer specified)",
+            resetCount: newResetCount
         });
     }
 

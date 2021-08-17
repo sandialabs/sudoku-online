@@ -51,8 +51,6 @@ class GameTreeView extends Component {
         this.decorators.Header = GameTreeBoardHeader;
 
         this.treebeardBaseTheme = clone(defaultTheme);
-        console.log('this.treebeardBaseTheme: ');
-        console.log(this.treebeardBaseTheme);
         
         this.configureTreebeardTheme(this.treebeardBaseTheme);
 
