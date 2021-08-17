@@ -42,7 +42,6 @@ function treeSize(tree) {
 }
 
 function addBoard(tree, parentId, newBoard) {
-    console.log('addBoard: newBoard is ' + newBoard + ', serial ' + newBoard.serialNumber);
     return addChild(
         tree,
         parentId,
@@ -55,8 +54,6 @@ function addBoard(tree, parentId, newBoard) {
 // 
 function addBoards(tree, parentId, newBoards) {
     let myTree = tree;
-    console.log('addBoards: parentId is ' + parentId
-        + ', newBoards are ' + newBoards);
 
     for (const board of newBoards) {
         // console.log('inside addBoards: about to add board ' + board);

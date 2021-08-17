@@ -366,9 +366,6 @@ function makeBoard(degree, assignments, availableMoves) {
 function request(requestObject) {
 	let xhr = new XMLHttpRequest();
 	return new Promise((resolve, reject) => {
-		console.log('DEBUG: request: Preparing \''
-			+ (requestObject.method || 'GET[default]') + ' '
-			+ requestObject.url + '\'');
         xhr.open(requestObject.method || "GET", requestObject.url);
         if (requestObject.headers) {
             Object.keys(requestObject.headers).forEach(key => {
