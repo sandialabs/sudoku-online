@@ -122,6 +122,7 @@ function SudokuMain(props) {
 
 
 function submitFinishedGameTree(completedTree, serverAddress) { 
+	completedTree.submit_timestamp_as_ms_since_epoch = Date.now();
 	const myRequest = {
 		method: 'POST',
 		url: serverAddress + '/sudoku/request/submit_game_tree',
