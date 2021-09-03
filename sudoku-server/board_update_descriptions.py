@@ -23,6 +23,13 @@ actions_description = {
                 'short_description': 'Remove given potential value from cell.',
                 'description': 'Return one board with the exclusion '
                 + 'and another (backup) with the assignment done.'},
+    'pivot': {'function': 'expand_cell',
+              'arguments': ['cell'],
+              'cost': 500,
+              'user_name': 'Pivot',
+              'short_description': 'Expand all choices for cell.',
+              'description': 'Return a separate board for each possible value '
+              + 'in cell.'},
     'applyops': {'function': 'logical_solve_action',
                  'arguments': ['operators'],
                  'cost': None,
