@@ -68,7 +68,7 @@ class SudokuChoiceGrid extends React.Component {
 			const squaresInRow = [];
 			for (let col = 0; col < D; ++col) {
 				const value = row*D + col;
-				if (this.props.moveList.includes(value)) {
+				if (this.props.moveList.length > 0) {
 					squaresInRow.push(
 						this.makeChoiceButton(row, col, value)
 						);
